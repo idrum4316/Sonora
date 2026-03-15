@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { getCoverArtUrl } from '../api/subsonic';
 
@@ -23,18 +23,23 @@ interface CoverArtProps {
   alt?: string;
 }
 
-export function CoverArt({ coverArt, id = '', size = 300, className = '', style, alt = '' }: CoverArtProps) {
+export const CoverArt = memo(function CoverArt({ coverArt, id = '', size = 300, className = '', style, alt = '' }: CoverArtProps) {
   const config = useStore(s => s.config);
   const [failed, setFailed] = useState(false);
   const artClass = ART_CLASSES[hashStr(id || coverArt || 'x') % ART_CLASSES.length];
 
-  if (!coverArt || failed || !config) {
+  const src = useMemo(
+    () => (config && coverArt ? getCoverArtUrl(config, coverArt, size) : undefined),
+    [config, coverArt, size],
+  );
+
+  if (!coverArt || failed || !config || !src) {
     return <div className={`${artClass} ${className}`} style={style} aria-hidden={!alt || undefined} />;
   }
 
   return (
     <img
-      src={getCoverArtUrl(config, coverArt, size)}
+      src={src}
       alt={alt}
       className={className}
       style={{ objectFit: 'cover', width: '100%', height: '100%', ...style }}
@@ -42,7 +47,7 @@ export function CoverArt({ coverArt, id = '', size = 300, className = '', style,
       loading="lazy"
     />
   );
-}
+});
 
 export function artClass(id: string): string {
   return ART_CLASSES[hashStr(id) % ART_CLASSES.length];

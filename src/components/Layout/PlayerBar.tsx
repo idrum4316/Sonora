@@ -5,24 +5,68 @@ import { CoverArt, artClass } from '../CoverArt';
 import { fmt, IconPlay, IconPause, IconPrev, IconNext, IconShuffle, IconRepeat, IconHeart, IconVolumeUp, IconVolumeMute } from '../ui';
 import type { RepeatMode } from '../../store/useStore';
 
-export function PlayerBar() {
-  const navigate = useNavigate();
-  const {
-    currentTrack, isPlaying, currentTime, duration,
-    volume, isMuted, shuffle, repeat,
-    togglePlay, next, prev, seekTo, setVolume, toggleMute,
-    toggleShuffle, setRepeat,
-    starCurrentTrack,
-  } = useStore();
-
+/** Separated so currentTime changes only re-render the progress bar, not the whole PlayerBar. */
+function ProgressBar() {
+  const currentTime = useStore(s => s.currentTime);
+  const duration = useStore(s => s.duration);
+  const seekTo = useStore(s => s.seekTo);
   const progressRef = useRef<HTMLDivElement>(null);
-  const volumeRef = useRef<HTMLDivElement>(null);
 
   const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = progressRef.current!.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     seekTo(ratio * duration);
   }, [seekTo, duration]);
+
+  const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+  return (
+    <div className="player-progress" role="group" aria-label="Track progress">
+      <span className="player-time" aria-label={`Current time: ${fmt(Math.floor(currentTime))}`}>
+        {fmt(Math.floor(currentTime))}
+      </span>
+      <div
+        ref={progressRef}
+        className="progress-track"
+        role="slider"
+        aria-valuemin={0}
+        aria-valuemax={Math.floor(duration)}
+        aria-valuenow={Math.floor(currentTime)}
+        aria-label="Seek"
+        tabIndex={0}
+        onClick={handleProgressClick}
+        onKeyDown={e => {
+          if (e.key === 'ArrowRight') seekTo(Math.min(duration, currentTime + 5));
+          if (e.key === 'ArrowLeft') seekTo(Math.max(0, currentTime - 5));
+        }}
+      >
+        <div className="progress-fill" style={{ width: `${progressPct}%` }} />
+      </div>
+      <span className="player-time end" aria-label={`Duration: ${fmt(Math.floor(duration))}`}>
+        {fmt(Math.floor(duration))}
+      </span>
+    </div>
+  );
+}
+
+export function PlayerBar() {
+  const navigate = useNavigate();
+  const currentTrack = useStore(s => s.currentTrack);
+  const isPlaying = useStore(s => s.isPlaying);
+  const volume = useStore(s => s.volume);
+  const isMuted = useStore(s => s.isMuted);
+  const shuffle = useStore(s => s.shuffle);
+  const repeat = useStore(s => s.repeat);
+  const togglePlay = useStore(s => s.togglePlay);
+  const next = useStore(s => s.next);
+  const prev = useStore(s => s.prev);
+  const setVolume = useStore(s => s.setVolume);
+  const toggleMute = useStore(s => s.toggleMute);
+  const toggleShuffle = useStore(s => s.toggleShuffle);
+  const setRepeat = useStore(s => s.setRepeat);
+  const starCurrentTrack = useStore(s => s.starCurrentTrack);
+
+  const volumeRef = useRef<HTMLDivElement>(null);
 
   const handleVolumeClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = volumeRef.current!.getBoundingClientRect();
@@ -36,7 +80,6 @@ export function PlayerBar() {
     setRepeat(modes[(idx + 1) % modes.length]);
   }, [repeat, setRepeat]);
 
-  const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
   const track = currentTrack;
   const isStarred = !!track?.starred;
 
@@ -111,31 +154,7 @@ export function PlayerBar() {
           </button>
         </div>
 
-        <div className="player-progress" role="group" aria-label="Track progress">
-          <span className="player-time" aria-label={`Current time: ${fmt(Math.floor(currentTime))}`}>
-            {fmt(Math.floor(currentTime))}
-          </span>
-          <div
-            ref={progressRef}
-            className="progress-track"
-            role="slider"
-            aria-valuemin={0}
-            aria-valuemax={Math.floor(duration)}
-            aria-valuenow={Math.floor(currentTime)}
-            aria-label="Seek"
-            tabIndex={0}
-            onClick={handleProgressClick}
-            onKeyDown={e => {
-              if (e.key === 'ArrowRight') seekTo(Math.min(duration, currentTime + 5));
-              if (e.key === 'ArrowLeft') seekTo(Math.max(0, currentTime - 5));
-            }}
-          >
-            <div className="progress-fill" style={{ width: `${progressPct}%` }} />
-          </div>
-          <span className="player-time end" aria-label={`Duration: ${fmt(Math.floor(duration))}`}>
-            {fmt(Math.floor(duration))}
-          </span>
-        </div>
+        <ProgressBar />
       </div>
 
       {/* Extras */}

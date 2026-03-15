@@ -135,15 +135,27 @@ function md5(input: string): string {
 }
 
 // ── Auth helpers ──────────────────────────────────────────────────────────────
+let cachedAuth: { key: string; params: Record<string, string> } | null = null;
+
 function buildAuthParams(config: SubsonicConfig): Record<string, string> {
   const salt = Math.random().toString(36).substring(2, 10);
   const token = md5(config.password + salt);
   return { u: config.username, t: token, s: salt, v: '1.16.1', c: 'sonora', f: 'json' };
 }
 
-function buildUrl(config: SubsonicConfig, endpoint: string, extra: Record<string, string | number> = {}): string {
+/** Return stable auth params for a given config (cached across calls). */
+function getStableAuthParams(config: SubsonicConfig): Record<string, string> {
+  const key = `${config.serverUrl}|${config.username}|${config.password}`;
+  if (cachedAuth && cachedAuth.key === key) return cachedAuth.params;
+  const params = buildAuthParams(config);
+  cachedAuth = { key, params };
+  return params;
+}
+
+function buildUrl(config: SubsonicConfig, endpoint: string, extra: Record<string, string | number> = {}, stable = false): string {
   const base = config.serverUrl.replace(/\/$/, '');
-  const params = new URLSearchParams({ ...buildAuthParams(config), ...Object.fromEntries(Object.entries(extra).map(([k, v]) => [k, String(v)])) });
+  const auth = stable ? getStableAuthParams(config) : buildAuthParams(config);
+  const params = new URLSearchParams({ ...auth, ...Object.fromEntries(Object.entries(extra).map(([k, v]) => [k, String(v)])) });
   return `${base}/rest/${endpoint}?${params}`;
 }
 
@@ -286,7 +298,7 @@ export async function unstar(config: SubsonicConfig, id: string): Promise<void> 
 }
 
 export function getCoverArtUrl(config: SubsonicConfig, coverArt: string, size = 300): string {
-  return buildUrl(config, 'getCoverArt', { id: coverArt, size });
+  return buildUrl(config, 'getCoverArt', { id: coverArt, size }, true);
 }
 
 export function getStreamUrl(config: SubsonicConfig, songId: string): string {
