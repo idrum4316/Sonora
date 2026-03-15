@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import type { Song } from '../api/subsonic';
 import { useStore } from '../store/useStore';
+import { AddToPlaylistDialog } from './AddToPlaylistDialog';
 
 /* ── Icons ──────────────────────────────────────────────────── */
 
@@ -31,6 +32,17 @@ const IconAddQueue = () => (
   </svg>
 );
 
+const IconAddPlaylist = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <line x1="8" y1="6" x2="21" y2="6" />
+    <line x1="8" y1="12" x2="21" y2="12" />
+    <line x1="3" y1="6" x2="3.01" y2="6" />
+    <line x1="3" y1="12" x2="3.01" y2="12" />
+    <line x1="12" y1="18" x2="12" y2="24" />
+    <line x1="9" y1="21" x2="15" y2="21" />
+  </svg>
+);
+
 /* ── Dropdown menu ──────────────────────────────────────────── */
 
 interface MenuPosition { x: number; y: number }
@@ -43,6 +55,7 @@ function TrackDropdown({ song, position, onClose }: {
   const menuRef = useRef<HTMLDivElement>(null);
   const addToQueue = useStore(s => s.addToQueue);
   const playNext = useStore(s => s.playNext);
+  const [showPlaylistDialog, setShowPlaylistDialog] = useState(false);
 
   // Adjust position if menu overflows viewport
   const [adjusted, setAdjusted] = useState(position);
@@ -61,6 +74,7 @@ function TrackDropdown({ song, position, onClose }: {
 
   // Close on Escape, outside click, scroll
   useEffect(() => {
+    if (showPlaylistDialog) return; // Dialog handles its own closing
     const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     const handleClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) onClose();
@@ -75,26 +89,36 @@ function TrackDropdown({ song, position, onClose }: {
       document.removeEventListener('mousedown', handleClick);
       document.removeEventListener('scroll', handleScroll, true);
     };
-  }, [onClose]);
+  }, [onClose, showPlaylistDialog]);
 
   const handlePlayNext = () => { playNext(song); onClose(); };
   const handleAddToQueue = () => { addToQueue(song); onClose(); };
+  const handleAddToPlaylist = () => { setShowPlaylistDialog(true); };
 
   return createPortal(
-    <div
-      ref={menuRef}
-      className="track-menu"
-      role="menu"
-      aria-label={`Options for ${song.title}`}
-      style={{ left: adjusted.x, top: adjusted.y }}
-    >
-      <button className="track-menu-item" role="menuitem" onClick={handlePlayNext}>
-        <IconPlayNext /> Play Next
-      </button>
-      <button className="track-menu-item" role="menuitem" onClick={handleAddToQueue}>
-        <IconAddQueue /> Add to Queue
-      </button>
-    </div>,
+    <>
+      <div
+        ref={menuRef}
+        className="track-menu"
+        role="menu"
+        aria-label={`Options for ${song.title}`}
+        style={{ left: adjusted.x, top: adjusted.y }}
+      >
+        <button className="track-menu-item" role="menuitem" onClick={handlePlayNext}>
+          <IconPlayNext /> Play Next
+        </button>
+        <button className="track-menu-item" role="menuitem" onClick={handleAddToQueue}>
+          <IconAddQueue /> Add to Queue
+        </button>
+        <div className="track-menu-separator" />
+        <button className="track-menu-item" role="menuitem" onClick={handleAddToPlaylist}>
+          <IconAddPlaylist /> Add to Playlist…
+        </button>
+      </div>
+      {showPlaylistDialog && (
+        <AddToPlaylistDialog songIds={[song.id]} onClose={onClose} />
+      )}
+    </>,
     document.body,
   );
 }

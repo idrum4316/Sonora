@@ -348,3 +348,72 @@ export async function search3(
     song: sr.searchResult3?.song ?? [],
   };
 }
+
+// ── Playlist management ───────────────────────────────────────────────────────
+
+/** Create a new playlist or overwrite an existing one. Pass songId array for initial tracks. */
+export async function createPlaylist(
+  config: SubsonicConfig,
+  name: string,
+  songIds: string[] = [],
+): Promise<PlaylistDetail> {
+  const url = buildUrl(config, 'createPlaylist');
+  const params = new URLSearchParams();
+  // Auth params are already in the url, add additional params
+  params.append('name', name);
+  for (const sid of songIds) params.append('songId', sid);
+
+  const fullUrl = `${url}&${params}`;
+  const res = await fetch(fullUrl);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  const sr = json['subsonic-response'];
+  if (sr.status !== 'ok') throw new Error(sr.error?.message ?? 'Subsonic error');
+  return sr.playlist;
+}
+
+/** Add songs to an existing playlist by index. Uses updatePlaylist with songIdToAdd. */
+export async function addToPlaylist(
+  config: SubsonicConfig,
+  playlistId: string,
+  songIds: string[],
+): Promise<void> {
+  const url = buildUrl(config, 'updatePlaylist');
+  const params = new URLSearchParams();
+  params.append('playlistId', playlistId);
+  for (const sid of songIds) params.append('songIdToAdd', sid);
+
+  const fullUrl = `${url}&${params}`;
+  const res = await fetch(fullUrl);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  const sr = json['subsonic-response'];
+  if (sr.status !== 'ok') throw new Error(sr.error?.message ?? 'Subsonic error');
+}
+
+/** Remove songs from a playlist by their indices (0-based). */
+export async function removeFromPlaylist(
+  config: SubsonicConfig,
+  playlistId: string,
+  songIndexes: number[],
+): Promise<void> {
+  const url = buildUrl(config, 'updatePlaylist');
+  const params = new URLSearchParams();
+  params.append('playlistId', playlistId);
+  for (const idx of songIndexes) params.append('songIndexToRemove', String(idx));
+
+  const fullUrl = `${url}&${params}`;
+  const res = await fetch(fullUrl);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  const sr = json['subsonic-response'];
+  if (sr.status !== 'ok') throw new Error(sr.error?.message ?? 'Subsonic error');
+}
+
+/** Delete a playlist. */
+export async function deletePlaylist(
+  config: SubsonicConfig,
+  id: string,
+): Promise<void> {
+  await call(config, 'deletePlaylist', { id });
+}

@@ -627,6 +627,317 @@ svg { flex-shrink: 0; }
   flex-shrink: 0;
   color: var(--text-secondary);
 }
+.track-menu-separator {
+  height: 1px;
+  margin: 4px 8px;
+  background: var(--border);
+}
+
+/* ── Track Remove Button ─────────────────────────────────────── */
+.track-remove-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  opacity: 0;
+  transition: color var(--transition), background var(--transition), opacity var(--transition);
+}
+.track-row:hover .track-remove-btn,
+.pl-track-row:hover .track-remove-btn {
+  opacity: 1;
+}
+.track-remove-btn:hover {
+  color: #f87171;
+  background: rgba(248,113,113,0.12);
+}
+
+/* ── Add to Playlist Dialog ──────────────────────────────────── */
+.playlist-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(8px);
+  animation: playlistBackdropIn 200ms ease;
+}
+@keyframes playlistBackdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.playlist-dialog {
+  width: 380px;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3);
+  animation: playlistDialogIn 250ms cubic-bezier(0.16,1,0.3,1);
+  overflow: hidden;
+}
+.playlist-dialog-narrow {
+  width: 340px;
+  max-height: none;
+}
+@keyframes playlistDialogIn {
+  from { opacity: 0; transform: scale(0.95) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.playlist-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 12px;
+}
+.playlist-dialog-header h2 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.playlist-dialog-count {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* Create form inside dialog */
+.playlist-dialog-create {
+  padding: 0 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.playlist-dialog-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-family: var(--font-ui);
+  color: var(--text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.playlist-dialog-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+.playlist-dialog-input::placeholder {
+  color: var(--text-tertiary);
+}
+.playlist-dialog-create-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* "New Playlist" button inside dialog */
+.playlist-dialog-new-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: calc(100% - 32px);
+  margin: 0 16px 4px;
+  padding: 10px 14px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+.playlist-dialog-new-btn:hover {
+  background: var(--surface-1);
+  color: var(--text-primary);
+  border-color: var(--text-tertiary);
+}
+.playlist-dialog-new-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+
+.playlist-dialog-divider {
+  height: 1px;
+  margin: 8px 16px;
+  background: var(--border);
+}
+
+/* Scrollable playlist list */
+.playlist-dialog-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 8px 12px;
+  min-height: 0;
+}
+
+/* Individual playlist row */
+.playlist-dialog-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--transition);
+  text-align: left;
+}
+.playlist-dialog-item:hover {
+  background: var(--surface-2);
+}
+.playlist-dialog-item-art {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-xs);
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  color: var(--text-tertiary);
+}
+.playlist-dialog-item-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.playlist-dialog-item-info {
+  flex: 1;
+  min-width: 0;
+}
+.playlist-dialog-item-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.playlist-dialog-item-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+}
+
+/* Loading / empty */
+.playlist-dialog-loading,
+.playlist-dialog-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 16px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+/* Success state */
+.playlist-dialog-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 24px;
+}
+.playlist-dialog-success-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: rgba(74,222,128,0.15);
+  color: #4ade80;
+}
+.playlist-dialog-success p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+.playlist-dialog-success strong {
+  color: var(--text-primary);
+}
+
+/* Confirm dialog actions */
+.playlist-dialog-confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 16px 20px 20px;
+}
+
+/* Danger button */
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+  border: none;
+}
+.btn-danger:hover {
+  background: #ef4444;
+  box-shadow: 0 4px 20px rgba(239,68,68,0.25);
+}
+.btn-danger-hover:hover {
+  color: #f87171;
+  border-color: rgba(248,113,113,0.25);
+}
+
+/* ── Library Create Playlist ─────────────────────────────────── */
+.library-playlist-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.library-create-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.library-create-input {
+  flex: 1;
+  max-width: 320px;
+  padding: 8px 14px;
+  font-size: 13.5px;
+  font-family: var(--font-ui);
+  color: var(--text-primary);
+  background: var(--surface-1);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.library-create-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+.library-create-input::placeholder {
+  color: var(--text-tertiary);
+}
 
 /* ── Album Page ──────────────────────────────────────────────── */
 .album-hero {

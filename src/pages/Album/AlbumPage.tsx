@@ -7,6 +7,7 @@ import { CoverArt, artClass } from '../../components/CoverArt';
 import { fmtDuration, Skeleton, IconPlay, IconHeart, IconShuffle, IconPlayNext, IconAddQueue } from '../../components/ui';
 import { TrackRow } from '../../components/TrackRow';
 import { useTrackMenu } from '../../components/TrackMenu';
+import { AddToPlaylistDialog } from '../../components/AddToPlaylistDialog';
 
 // ── AlbumPage ─────────────────────────────────────────────────────────────────
 export function AlbumPage() {
@@ -22,6 +23,7 @@ export function AlbumPage() {
 
   const { openMenu, menuPortal } = useTrackMenu();
 
+  const [showPlaylistDialog, setShowPlaylistDialog] = useState(false);
   const [album, setAlbum] = useState<(Album & { song: Song[] }) | null>(null);
   const [relatedAlbums, setRelatedAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
@@ -268,6 +270,18 @@ export function AlbumPage() {
                     <IconAddQueue />
                     Add to Queue
                   </button>
+                  <button
+                    className="btn btn-secondary"
+                    aria-label={`Add ${album.name} to playlist`}
+                    onClick={() => setShowPlaylistDialog(true)}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" />
+                      <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" />
+                      <line x1="12" y1="18" x2="12" y2="24" /><line x1="9" y1="21" x2="15" y2="21" />
+                    </svg>
+                    Add to Playlist
+                  </button>
                 </div>
               </>
             ) : null}
@@ -386,6 +400,12 @@ export function AlbumPage() {
         </div>
       </div>
       {menuPortal}
+      {showPlaylistDialog && album?.song && (
+        <AddToPlaylistDialog
+          songIds={album.song.map(s => s.id)}
+          onClose={() => setShowPlaylistDialog(false)}
+        />
+      )}
     </>
   );
 }

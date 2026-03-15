@@ -26,6 +26,8 @@ export interface TrackRowProps {
   className?: string;
   /** Right-click handler for context menu (provided by useTrackMenu) */
   onContextMenu?: (e: React.MouseEvent) => void;
+  /** Remove track callback (playlist editing context) */
+  onRemove?: (e: React.MouseEvent) => void;
 }
 
 export function TrackRow({
@@ -44,6 +46,7 @@ export function TrackRow({
   onAlbumClick,
   className,
   onContextMenu,
+  onRemove,
 }: TrackRowProps) {
   const isCurrentPlaying = isCurrentTrack && isPlaying;
   const showArtist = alwaysShowArtist || song.artist !== albumArtist;
@@ -107,7 +110,7 @@ export function TrackRow({
         </div>
       )}
 
-      {/* Like + more + duration */}
+      {/* Like + more + remove + duration */}
       <div className="track-meta">
         <button
           className={`track-like${isStarred ? ' liked' : ''}`}
@@ -118,6 +121,17 @@ export function TrackRow({
           <IconHeart filled={isStarred} />
         </button>
         <TrackMoreButton song={song} />
+        {onRemove && (
+          <button
+            className="track-remove-btn"
+            aria-label={`Remove ${song.title} from playlist`}
+            onClick={onRemove}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        )}
         <span>{fmt(song.duration)}</span>
       </div>
     </li>

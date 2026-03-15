@@ -17,6 +17,10 @@ interface StoreState {
   // ── UI ────────────────────────────────────────────────────────
   showNowPlaying: boolean;
 
+  // ── Playlists (cache-bust counter) ────────────────────────────
+  playlistVersion: number;
+  bumpPlaylistVersion: () => void;
+
   // ── Playback ──────────────────────────────────────────────────
   currentTrack: Song | null;
   queue: Song[];
@@ -66,6 +70,7 @@ export const useStore = create<StoreState>()(
       config: null,
       isConnected: false,
       showNowPlaying: false,
+      playlistVersion: 0,
       scrobbleThreshold: 75,
       currentTrack: null,
       queue: [],
@@ -80,6 +85,7 @@ export const useStore = create<StoreState>()(
       repeat: 'none',
 
       toggleNowPlaying: () => set(s => ({ showNowPlaying: !s.showNowPlaying })),
+      bumpPlaylistVersion: () => set(s => ({ playlistVersion: s.playlistVersion + 1 })),
 
       setConfig: (config) => {
         set({ config, isConnected: true });

@@ -41,6 +41,7 @@ const IconLogo = () => (
 
 export function Sidebar() {
   const config = useStore(s => s.config);
+  const playlistVersion = useStore(s => s.playlistVersion);
   const navigate = useNavigate();
   const location = useLocation();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
@@ -48,7 +49,7 @@ export function Sidebar() {
   useEffect(() => {
     if (!config) return;
     getPlaylists(config).then(setPlaylists).catch(console.error);
-  }, [config]);
+  }, [config, playlistVersion]);
 
   const username = config?.username ?? '';
   const initials = username.slice(0, 2).toUpperCase() || 'ME';

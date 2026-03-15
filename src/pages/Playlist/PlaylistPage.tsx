@@ -1,12 +1,14 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
-import { getPlaylist, star, unstar, getCoverArtUrl } from '../../api/subsonic';
+import { getPlaylist, star, unstar, getCoverArtUrl, removeFromPlaylist, deletePlaylist } from '../../api/subsonic';
 import type { PlaylistDetail, Song } from '../../api/subsonic';
 import { CoverArt, artClass } from '../../components/CoverArt';
 import { fmtDuration, Skeleton, IconPlay, IconShuffle, IconPlayNext, IconAddQueue } from '../../components/ui';
 import { TrackRow } from '../../components/TrackRow';
 import { useTrackMenu } from '../../components/TrackMenu';
+import { AddToPlaylistDialog } from '../../components/AddToPlaylistDialog';
 
 // ── PlaylistPage ───────────────────────────────────────────────────────────────
 export function PlaylistPage() {
@@ -19,12 +21,15 @@ export function PlaylistPage() {
   const currentTrack = useStore(s => s.currentTrack);
   const isPlaying = useStore(s => s.isPlaying);
   const togglePlay = useStore(s => s.togglePlay);
+  const bumpPlaylistVersion = useStore(s => s.bumpPlaylistVersion);
 
   const { openMenu, menuPortal } = useTrackMenu();
 
   const [playlist, setPlaylist] = useState<PlaylistDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [starredSongs, setStarredSongs] = useState<Set<string>>(new Set());
+  const [showPlaylistDialog, setShowPlaylistDialog] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -85,6 +90,32 @@ export function PlaylistPage() {
       });
     }
   }, [starredSongs, config]);
+
+  const handleRemoveTrack = useCallback(async (index: number) => {
+    if (!id || !playlist) return;
+    try {
+      await removeFromPlaylist(config, id, [index]);
+      // Optimistically update local state
+      setPlaylist(prev => {
+        if (!prev) return prev;
+        const newEntry = prev.entry.filter((_, i) => i !== index);
+        return { ...prev, entry: newEntry, songCount: newEntry.length };
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }, [id, playlist, config]);
+
+  const handleDeletePlaylist = useCallback(async () => {
+    if (!id) return;
+    try {
+      await deletePlaylist(config, id);
+      bumpPlaylistVersion();
+      navigate('/library/playlists');
+    } catch (e) {
+      console.error(e);
+    }
+  }, [id, config, navigate]);
 
   const totalDuration = songs.reduce((acc, s) => acc + (s.duration ?? 0), 0);
 
@@ -220,6 +251,16 @@ export function PlaylistPage() {
                     <IconAddQueue size={15} />
                     Add to Queue
                   </button>
+                  <button
+                    className="btn btn-secondary btn-danger-hover"
+                    aria-label={`Delete playlist ${playlist.name}`}
+                    onClick={() => setShowDeleteConfirm(true)}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                    </svg>
+                    Delete
+                  </button>
                 </div>
               </>
             ) : null}
@@ -268,6 +309,7 @@ export function PlaylistPage() {
                       onToggleStar={e => toggleStar(song, e)}
                       onAlbumClick={() => navigate(`/album/${song.albumId}`)}
                       onContextMenu={e => openMenu(e, song)}
+                      onRemove={e => { e.stopPropagation(); handleRemoveTrack(i); }}
                     />
                   );
                 })}
@@ -353,6 +395,21 @@ export function PlaylistPage() {
         </div>
       </div>
       {menuPortal}
+
+      {showPlaylistDialog && songs.length > 0 && (
+        <AddToPlaylistDialog
+          songIds={songs.map(s => s.id)}
+          onClose={() => setShowPlaylistDialog(false)}
+        />
+      )}
+
+      {showDeleteConfirm && (
+        <DeleteConfirmDialog
+          playlistName={playlist?.name ?? ''}
+          onConfirm={handleDeletePlaylist}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
     </>
   );
 }
@@ -404,5 +461,44 @@ function SidebarSkeleton() {
         </div>
       ))}
     </div>
+  );
+}
+
+// ── Delete Confirm Dialog ─────────────────────────────────────────────────────
+function DeleteConfirmDialog({
+  playlistName,
+  onConfirm,
+  onCancel,
+}: {
+  playlistName: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCancel(); };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [onCancel]);
+
+  return createPortal(
+    <div className="playlist-dialog-backdrop" onMouseDown={e => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) onCancel();
+    }}>
+      <div ref={panelRef} className="playlist-dialog playlist-dialog-narrow" role="alertdialog" aria-label="Delete playlist">
+        <div className="playlist-dialog-header">
+          <h2>Delete Playlist</h2>
+        </div>
+        <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6, padding: '0 20px' }}>
+          Are you sure you want to delete <strong style={{ color: 'var(--text-primary)' }}>{playlistName}</strong>? This action cannot be undone.
+        </p>
+        <div className="playlist-dialog-confirm-actions">
+          <button className="btn btn-secondary btn-sm" onClick={onCancel}>Cancel</button>
+          <button className="btn btn-sm btn-danger" onClick={onConfirm}>Delete</button>
+        </div>
+      </div>
+    </div>,
+    document.body,
   );
 }

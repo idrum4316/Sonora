@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
-import { getPlaylists, getPlaylist } from '../../api/subsonic';
+import { getPlaylists, getPlaylist, createPlaylist } from '../../api/subsonic';
 import type { Playlist } from '../../api/subsonic';
 import { CoverArt, artClass } from '../../components/CoverArt';
 import { LibraryNav } from './LibraryNav';
@@ -10,10 +10,14 @@ import { PlaylistCardSkeleton } from './LibraryShared';
 export function PlaylistsPage() {
   const config = useStore(s => s.config)!;
   const playTrack = useStore(s => s.playTrack);
+  const bumpPlaylistVersion = useStore(s => s.bumpPlaylistVersion);
   const navigate = useNavigate();
 
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -30,11 +34,76 @@ export function PlaylistsPage() {
     } catch (e) { console.error(e); }
   }, [config, playTrack]);
 
+  const handleCreate = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    setCreating(true);
+    try {
+      const created = await createPlaylist(config, trimmed);
+      bumpPlaylistVersion();
+      setShowCreate(false);
+      setNewName('');
+      // Navigate to the new playlist
+      if (created?.id) {
+        navigate(`/playlist/${created.id}`);
+      } else {
+        // Refresh list
+        const pls = await getPlaylists(config);
+        setPlaylists(pls);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setCreating(false);
+    }
+  }, [config, newName, navigate]);
+
   return (
     <>
       <LibraryNav />
 
       <div className="library-content">
+        {/* Create playlist header */}
+        <div className="library-playlist-header">
+          {showCreate ? (
+            <form className="library-create-form" onSubmit={handleCreate}>
+              <input
+                className="library-create-input"
+                type="text"
+                placeholder="Playlist name…"
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                disabled={creating}
+                maxLength={120}
+                autoFocus
+              />
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => { setShowCreate(false); setNewName(''); }}
+                disabled={creating}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary btn-sm"
+                disabled={!newName.trim() || creating}
+              >
+                {creating ? 'Creating…' : 'Create'}
+              </button>
+            </form>
+          ) : (
+            <button className="btn btn-secondary" onClick={() => setShowCreate(true)}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              New Playlist
+            </button>
+          )}
+        </div>
+
         {loading ? (
           <div className="library-playlist-grid" aria-hidden="true">
             {Array.from({ length: 8 }, (_, i) => <PlaylistCardSkeleton key={i} />)}
