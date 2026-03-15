@@ -4,7 +4,7 @@ import { useStore } from '../../store/useStore';
 import { getPlaylist, star, unstar, getCoverArtUrl } from '../../api/subsonic';
 import type { PlaylistDetail, Song } from '../../api/subsonic';
 import { CoverArt, artClass } from '../../components/CoverArt';
-import { fmtDuration, Skeleton, TopbarNav, IconPlay, IconHeart, IconShuffle } from '../../components/ui';
+import { fmtDuration, Skeleton, TopbarNav, IconPlay, IconShuffle } from '../../components/ui';
 import { TrackRow } from '../../components/TrackRow';
 
 // ── PlaylistPage ───────────────────────────────────────────────────────────────
@@ -19,7 +19,6 @@ export function PlaylistPage() {
 
   const [playlist, setPlaylist] = useState<PlaylistDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [liked, setLiked] = useState(false);
   const [starredSongs, setStarredSongs] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -208,16 +207,6 @@ export function PlaylistPage() {
                   >
                     <IconShuffle size={16} />
                     Shuffle
-                  </button>
-                  <button
-                    className="btn btn-secondary"
-                    aria-label={liked ? `Unlike ${playlist.name}` : `Like ${playlist.name}`}
-                    aria-pressed={liked}
-                    onClick={() => setLiked(v => !v)}
-                    style={liked ? { color: 'var(--accent)', borderColor: 'var(--accent-dim)' } : undefined}
-                  >
-                    <IconHeart filled={liked} />
-                    {liked ? 'Liked' : 'Like'}
                   </button>
                   <button className="btn btn-secondary btn-icon" aria-label="More options">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
