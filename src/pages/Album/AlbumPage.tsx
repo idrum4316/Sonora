@@ -316,7 +316,7 @@ export function AlbumPage() {
         </div>
 
         {/* Sidebar */}
-        <div>
+        <div className="album-sidebar">
           {loading ? (
             <SidebarSkeleton />
           ) : (

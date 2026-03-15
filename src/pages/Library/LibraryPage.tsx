@@ -50,7 +50,10 @@ export function LibraryPage() {
 
   // ── Artists state ──
   const [artistIndices, setArtistIndices] = useState<ArtistIndex[]>([]);
-  const [artistView, setArtistView] = useState<ViewMode>('list');
+  const [artistView, setArtistView] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem('library-artist-view');
+    return saved === 'grid' || saved === 'list' ? saved : 'list';
+  });
   const [artistSearch, setArtistSearch] = useState('');
   const [artistsLoading, setArtistsLoading] = useState(false);
 
@@ -214,7 +217,7 @@ export function LibraryPage() {
           indices={filteredArtists}
           loading={artistsLoading}
           view={artistView}
-          onViewChange={setArtistView}
+          onViewChange={(v: ViewMode) => { setArtistView(v); localStorage.setItem('library-artist-view', v); }}
           search={artistSearch}
           onSearchChange={setArtistSearch}
           totalCount={totalArtists}
@@ -379,6 +382,7 @@ function AlbumsTab({
                       left: 0,
                       width: '100%',
                       transform: `translateY(${virtualRow.start}px)`,
+                      gridTemplateColumns: `repeat(${columns}, 1fr)`,
                     }}
                   >
                     {rowAlbums.map(album => (

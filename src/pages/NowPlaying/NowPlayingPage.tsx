@@ -16,6 +16,38 @@ import type { RepeatMode } from '../../store/useStore';
 // Fallback colors when image extraction isn't available
 const FALLBACK_COLORS: [string, string] = ['#667eea', '#764ba2'];
 
+function useDragReorder(moveInQueue: (from: number, to: number) => void) {
+  const dragIdx = useRef<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
+  const handleDragStart = (realIndex: number) => (e: React.DragEvent) => {
+    dragIdx.current = realIndex;
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (realIndex: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIdx(realIndex);
+  };
+
+  const handleDrop = (realIndex: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    if (dragIdx.current !== null && dragIdx.current !== realIndex) {
+      moveInQueue(dragIdx.current, realIndex);
+    }
+    dragIdx.current = null;
+    setDragOverIdx(null);
+  };
+
+  const handleDragEnd = () => {
+    dragIdx.current = null;
+    setDragOverIdx(null);
+  };
+
+  return { dragOverIdx, handleDragStart, handleDragOver, handleDrop, handleDragEnd };
+}
+
 type PanelTab = 'queue' | 'lyrics' | 'related';
 
 export function NowPlayingPage() {
@@ -24,12 +56,13 @@ export function NowPlayingPage() {
     currentTrack, queue, queueIndex, isPlaying, currentTime, duration,
     volume, isMuted, shuffle, repeat, config,
     togglePlay, next, prev, seekTo, setVolume, toggleMute,
-    toggleShuffle, setRepeat, playTrack, starCurrentTrack,
+    toggleShuffle, setRepeat, playTrack, starCurrentTrack, moveInQueue,
   } = useStore();
 
   const [activeTab, setActiveTab] = useState<PanelTab>('queue');
   const progressRef = useRef<HTMLDivElement>(null);
   const volumeRef = useRef<HTMLDivElement>(null);
+  const { dragOverIdx, handleDragStart, handleDragOver, handleDrop, handleDragEnd } = useDragReorder(moveInQueue);
 
   const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = progressRef.current!.getBoundingClientRect();
@@ -258,14 +291,23 @@ export function NowPlayingPage() {
                   {upNext.length > 0 && (
                     <>
                       <div className="queue-section-label">Up Next</div>
-                      {upNext.map((song, i) => (
-                        <QueueItem
-                          key={`${song.id}-${i}`}
-                          song={song}
-                          compact
-                          onClick={() => playTrack(song, queue, queueIndex + 1 + i)}
-                        />
-                      ))}
+                      {upNext.map((song, i) => {
+                        const realIndex = queueIndex + 1 + i;
+                        return (
+                          <QueueItem
+                            key={`${song.id}-${i}`}
+                            song={song}
+                            compact
+                            onClick={() => playTrack(song, queue, realIndex)}
+                            draggable
+                            onDragStart={handleDragStart(realIndex)}
+                            onDragOver={handleDragOver(realIndex)}
+                            onDrop={handleDrop(realIndex)}
+                            onDragEnd={handleDragEnd}
+                            isDragOver={dragOverIdx === realIndex}
+                          />
+                        );
+                      })}
                     </>
                   )}
 

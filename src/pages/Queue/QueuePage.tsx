@@ -10,6 +10,38 @@ import {
 } from '../../components/ui';
 import type { RepeatMode } from '../../store/useStore';
 
+function useDragReorder(moveInQueue: (from: number, to: number) => void) {
+  const dragIdx = useRef<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
+  const handleDragStart = (realIndex: number) => (e: React.DragEvent) => {
+    dragIdx.current = realIndex;
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (realIndex: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIdx(realIndex);
+  };
+
+  const handleDrop = (realIndex: number) => (e: React.DragEvent) => {
+    e.preventDefault();
+    if (dragIdx.current !== null && dragIdx.current !== realIndex) {
+      moveInQueue(dragIdx.current, realIndex);
+    }
+    dragIdx.current = null;
+    setDragOverIdx(null);
+  };
+
+  const handleDragEnd = () => {
+    dragIdx.current = null;
+    setDragOverIdx(null);
+  };
+
+  return { dragOverIdx, handleDragStart, handleDragOver, handleDrop, handleDragEnd };
+}
+
 type QueueTab = 'queue' | 'history';
 
 export function QueuePage() {
@@ -19,11 +51,12 @@ export function QueuePage() {
     currentTime, duration, shuffle, repeat,
     togglePlay, next, prev, seekTo, playTrack,
     toggleShuffle, setRepeat, starCurrentTrack,
-    clearQueue, removeFromQueue,
+    clearQueue, removeFromQueue, moveInQueue,
   } = useStore();
 
   const [activeTab, setActiveTab] = useState<QueueTab>('queue');
   const progressRef = useRef<HTMLDivElement>(null);
+  const { dragOverIdx, handleDragStart, handleDragOver, handleDrop, handleDragEnd } = useDragReorder(moveInQueue);
 
   const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = progressRef.current!.getBoundingClientRect();
@@ -132,6 +165,12 @@ export function QueuePage() {
                         onClick={() => playTrack(song, queue, realIndex)}
                         onRemove={() => removeFromQueue(realIndex)}
                         showHandle
+                        draggable
+                        onDragStart={handleDragStart(realIndex)}
+                        onDragOver={handleDragOver(realIndex)}
+                        onDrop={handleDrop(realIndex)}
+                        onDragEnd={handleDragEnd}
+                        isDragOver={dragOverIdx === realIndex}
                       />
                     );
                   })}

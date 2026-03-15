@@ -11,6 +11,13 @@ interface QueueItemProps {
   showHandle?: boolean;
   /** Compact mode for inline panels (smaller art, no handle/remove) */
   compact?: boolean;
+  /** Drag-and-drop props for reordering */
+  draggable?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent) => void;
+  onDragEnd?: (e: React.DragEvent) => void;
+  isDragOver?: boolean;
 }
 
 const IconDragHandle = () => (
@@ -26,9 +33,9 @@ const IconRemove = () => (
   </svg>
 );
 
-export function QueueItem({ song, isCurrent, isHistory, onClick, onRemove, showHandle, compact }: QueueItemProps) {
+export function QueueItem({ song, isCurrent, isHistory, onClick, onRemove, showHandle, compact, draggable, onDragStart, onDragOver, onDrop, onDragEnd, isDragOver }: QueueItemProps) {
   const base = compact ? 'q-item-compact' : 'q-item';
-  const cls = `${base}${isCurrent ? ` ${base}--playing` : ''}${isHistory ? ` ${base}--history` : ''}`;
+  const cls = `${base}${isCurrent ? ` ${base}--playing` : ''}${isHistory ? ` ${base}--history` : ''}${isDragOver ? ` ${base}--drag-over` : ''}`;
 
   return (
     <div
@@ -39,6 +46,11 @@ export function QueueItem({ song, isCurrent, isHistory, onClick, onRemove, showH
       onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onClick()}
       aria-label={`${isCurrent ? 'Now playing: ' : ''}${song.title} by ${song.artist}, ${fmt(song.duration)}`}
       aria-current={isCurrent || undefined}
+      draggable={draggable}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
     >
       {!compact && (
         showHandle && !isCurrent ? (

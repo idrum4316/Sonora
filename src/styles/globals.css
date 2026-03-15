@@ -659,6 +659,7 @@ svg { flex-shrink: 0; }
   padding: 32px 32px 48px;
 }
 .album-tracks-col { min-width: 0; }
+.album-sidebar { position: sticky; top: 72px; align-self: start; }
 
 .album-stats {
   display: flex;
@@ -688,9 +689,6 @@ svg { flex-shrink: 0; }
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 20px;
-  height: fit-content;
-  position: sticky;
-  top: 72px;
 }
 .credits-title {
   font-size: 11px;
@@ -2685,8 +2683,22 @@ mark {
   place-items: center;
   opacity: 0;
   transition: opacity var(--transition);
+  cursor: grab;
 }
 .q-item:hover .q-item-handle { opacity: 1; }
+
+.q-item[draggable="true"] { cursor: grab; }
+.q-item[draggable="true"]:active { cursor: grabbing; }
+.q-item--drag-over {
+  border-top: 2px solid var(--accent);
+  margin-top: -2px;
+}
+.q-item-compact[draggable="true"] { cursor: grab; }
+.q-item-compact[draggable="true"]:active { cursor: grabbing; }
+.q-item-compact--drag-over {
+  border-top: 2px solid var(--accent);
+  margin-top: -2px;
+}
 
 .q-item-indicator {
   width: 24px;
