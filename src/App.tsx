@@ -13,7 +13,6 @@ import { PlaylistsPage } from './pages/Library/PlaylistsPage';
 import { GenresPage } from './pages/Library/GenresPage';
 import { FavoritesPage } from './pages/Library/FavoritesPage';
 import { SearchPage } from './pages/Search/SearchPage';
-import { NowPlayingPage } from './pages/NowPlaying/NowPlayingPage';
 import { QueuePage } from './pages/Queue/QueuePage';
 import { GenrePage } from './pages/Genre/GenrePage';
 import { SettingsPage } from './pages/Settings/SettingsPage';
@@ -36,10 +35,6 @@ export function App() {
         <Route
           path="/connect"
           element={isConnected ? <Navigate to="/" replace /> : <ConnectPage />}
-        />
-        <Route
-          path="/now-playing"
-          element={isConnected ? <NowPlayingPage /> : <Navigate to="/connect" replace />}
         />
         <Route element={<ProtectedLayout />}>
           <Route path="/" element={<HomePage />} />

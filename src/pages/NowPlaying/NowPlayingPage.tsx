@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { CoverArt, artClass } from '../../components/CoverArt';
 import { QueueItem } from '../../components/QueueItem';
@@ -58,7 +58,7 @@ function useDragReorder(moveInQueue: (from: number, to: number) => void) {
 type PanelTab = 'queue' | 'lyrics' | 'related';
 
 export function NowPlayingPage() {
-  const navigate = useNavigate();
+  const toggleNowPlaying = useStore(s => s.toggleNowPlaying);
   const {
     currentTrack, queue, queueIndex, isPlaying, currentTime, duration,
     volume, isMuted, shuffle, repeat, config,
@@ -84,9 +84,8 @@ export function NowPlayingPage() {
     setRepeat(modes[(idx + 1) % modes.length]);
   }, [repeat, setRepeat]);
 
-  // If nothing is playing, go home
+  // If nothing is playing, don't render
   if (!currentTrack) {
-    navigate('/', { replace: true });
     return null;
   }
 
@@ -118,7 +117,7 @@ export function NowPlayingPage() {
         <div className="np-topbar">
           <button
             className="np-close-btn"
-            onClick={() => navigate(-1)}
+            onClick={toggleNowPlaying}
             aria-label="Minimize player"
           >
             <IconChevronDown size={16} />

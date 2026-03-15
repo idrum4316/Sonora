@@ -14,6 +14,9 @@ interface StoreState {
   // ── Settings ─────────────────────────────────────────────────
   scrobbleThreshold: number; // 0–100, percent of track to play before scrobbling
 
+  // ── UI ────────────────────────────────────────────────────────
+  showNowPlaying: boolean;
+
   // ── Playback ──────────────────────────────────────────────────
   currentTrack: Song | null;
   queue: Song[];
@@ -30,6 +33,7 @@ interface StoreState {
   // ── Actions ───────────────────────────────────────────────────
   setConfig: (config: SubsonicConfig) => void;
   clearConfig: () => void;
+  toggleNowPlaying: () => void;
 
   playTrack: (song: Song, queue?: Song[], index?: number) => void;
   pause: () => void;
@@ -61,6 +65,7 @@ export const useStore = create<StoreState>()(
     (set, get) => ({
       config: null,
       isConnected: false,
+      showNowPlaying: false,
       scrobbleThreshold: 75,
       currentTrack: null,
       queue: [],
@@ -73,6 +78,8 @@ export const useStore = create<StoreState>()(
       isMuted: false,
       shuffle: false,
       repeat: 'none',
+
+      toggleNowPlaying: () => set(s => ({ showNowPlaying: !s.showNowPlaying })),
 
       setConfig: (config) => {
         set({ config, isConnected: true });

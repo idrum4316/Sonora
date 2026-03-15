@@ -280,7 +280,7 @@ export function ArtistPage() {
                 <AlbumCard
                   key={album.id}
                   album={album}
-                  onPlay={playAlbum}
+                  onPlay={() => playAlbum(album)}
                   onClick={() => navigate(`/album/${album.id}`)}
                 />
               ))}

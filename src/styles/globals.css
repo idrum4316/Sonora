@@ -2124,13 +2124,29 @@ mark {
 }
 
 /* ============================================================
-   Now Playing — Full-screen player view
+   Now Playing — Full-screen player overlay
    ============================================================ */
 
-.np-page {
+/* Overlay wrapper — slides up/down */
+.np-overlay {
   position: fixed;
   inset: 0;
   z-index: 200;
+  pointer-events: none;
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 350ms cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 250ms ease;
+}
+.np-overlay.open {
+  pointer-events: auto;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.np-page {
+  position: absolute;
+  inset: 0;
   overflow: hidden;
   background: var(--bg);
 }

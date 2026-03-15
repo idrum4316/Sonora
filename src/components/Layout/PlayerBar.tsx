@@ -66,6 +66,7 @@ export function PlayerBar() {
   const toggleShuffle = useStore(s => s.toggleShuffle);
   const setRepeat = useStore(s => s.setRepeat);
   const starCurrentTrack = useStore(s => s.starCurrentTrack);
+  const toggleNowPlaying = useStore(s => s.toggleNowPlaying);
 
   const volumeRef = useRef<HTMLDivElement>(null);
   const volumeDrag = useSliderDrag(volumeRef, setVolume);
@@ -88,7 +89,7 @@ export function PlayerBar() {
           <>
             <div
               className={`player-art ${artClass(track.albumId || track.id)}`}
-              onClick={() => navigate('/now-playing')}
+              onClick={toggleNowPlaying}
               role="link"
               aria-label="Open full player"
             >
