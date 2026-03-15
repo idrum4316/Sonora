@@ -148,10 +148,10 @@ export function NowPlayingPage() {
           <div className="np-info-col">
             <h1 className="np-track-title">{track.title}</h1>
             <div className="np-track-artist">
-              <Link to={`/artist/${track.artistId}`}>{track.artist}</Link>
+              <Link to={`/artist/${track.artistId}`} onClick={toggleNowPlaying}>{track.artist}</Link>
             </div>
             <div className="np-track-album">
-              <Link to={`/album/${track.albumId}`}>{track.album}</Link>
+              <Link to={`/album/${track.albumId}`} onClick={toggleNowPlaying}>{track.album}</Link>
               {track.year ? <> &middot; {track.year}</> : null}
             </div>
 
