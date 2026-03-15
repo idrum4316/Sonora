@@ -115,7 +115,7 @@ export function HomePage() {
       )}
 
       {/* ── Recently Played ── */}
-      <PageSection title="Recently Played" seeAllLabel="See all">
+      <PageSection title="Recently Played" seeAllLabel="See all" onSeeAll={() => navigate('/library/albums')}>
         <div className="shelf" role="list" aria-label="Recently played albums">
           {loading
             ? Array.from({ length: 6 }, (_, i) => <AlbumCardSkeleton key={i} width={160} />)
@@ -146,7 +146,7 @@ export function HomePage() {
 
       {/* ── Artists You Love ── */}
       {(loading || artists.length > 0) && (
-        <PageSection title="Artists You Love" seeAllLabel="All artists" onSeeAll={() => navigate('/library?tab=artists')}>
+        <PageSection title="Artists You Love" seeAllLabel="All artists" onSeeAll={() => navigate('/library/artists')}>
           <div className="shelf" role="list" aria-label="Favourite artists">
             {loading
               ? Array.from({ length: 6 }, (_, i) => <ArtistBubbleSkeleton key={i} />)
@@ -158,7 +158,7 @@ export function HomePage() {
       )}
 
       {/* ── Recently Added ── */}
-      <PageSection title="Recently Added" seeAllLabel="Browse all">
+      <PageSection title="Recently Added" seeAllLabel="Browse all" onSeeAll={() => navigate('/library/albums')}>
         <div className="albums-grid" role="list" aria-label="Recently added albums">
           {loading
             ? Array.from({ length: 6 }, (_, i) => <AlbumCardSkeleton key={i} />)

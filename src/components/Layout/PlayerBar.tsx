@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { CoverArt, artClass } from '../CoverArt';
 import { fmt, IconPlay, IconPause, IconPrev, IconNext, IconShuffle, IconRepeat, IconHeart, IconVolumeUp, IconVolumeMute } from '../ui';
+import { useSliderDrag } from '../../utils/useSliderDrag';
 import type { RepeatMode } from '../../store/useStore';
 
 /** Separated so currentTime changes only re-render the progress bar, not the whole PlayerBar. */
@@ -67,12 +68,7 @@ export function PlayerBar() {
   const starCurrentTrack = useStore(s => s.starCurrentTrack);
 
   const volumeRef = useRef<HTMLDivElement>(null);
-
-  const handleVolumeClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = volumeRef.current!.getBoundingClientRect();
-    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    setVolume(ratio);
-  }, [setVolume]);
+  const volumeDrag = useSliderDrag(volumeRef, setVolume);
 
   const cycleRepeat = useCallback(() => {
     const modes: RepeatMode[] = ['none', 'all', 'one'];
@@ -100,7 +96,11 @@ export function PlayerBar() {
             </div>
             <div className="player-track-info">
               <div className="player-track-title" title={track.title}>{track.title}</div>
-              <div className="player-track-artist" title={track.artist}>{track.artist}</div>
+              <div className="player-track-artist" title={track.artist}>
+                <a onClick={(e) => { e.stopPropagation(); navigate(`/artist/${track.artistId}`); }} role="link" style={{ cursor: 'pointer' }}>
+                  {track.artist}
+                </a>
+              </div>
             </div>
             <button
               className={`player-like-btn${isStarred ? ' liked' : ''}`}
@@ -176,7 +176,8 @@ export function PlayerBar() {
             aria-valuenow={Math.round((isMuted ? 0 : volume) * 100)}
             aria-label="Volume"
             tabIndex={0}
-            onClick={handleVolumeClick}
+            onMouseDown={volumeDrag.onMouseDown}
+            onTouchStart={volumeDrag.onTouchStart}
             onKeyDown={e => {
               if (e.key === 'ArrowRight') setVolume(Math.min(1, volume + 0.05));
               if (e.key === 'ArrowLeft') setVolume(Math.max(0, volume - 0.05));

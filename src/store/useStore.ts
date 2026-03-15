@@ -47,6 +47,10 @@ interface StoreState {
   setIsPlaying: (v: boolean) => void;
   starCurrentTrack: () => void;
   setScrobbleThreshold: (v: number) => void;
+  addToQueue: (song: Song) => void;
+  addMultipleToQueue: (songs: Song[]) => void;
+  playNext: (song: Song) => void;
+  playMultipleNext: (songs: Song[]) => void;
   clearQueue: () => void;
   removeFromQueue: (index: number) => void;
   moveInQueue: (from: number, to: number) => void;
@@ -179,6 +183,32 @@ export const useStore = create<StoreState>()(
 
       setScrobbleThreshold: (v) => set({ scrobbleThreshold: v }),
 
+      addToQueue: (song: Song) => {
+        set(s => ({ queue: [...s.queue, song] }));
+      },
+
+      addMultipleToQueue: (songs: Song[]) => {
+        if (!songs.length) return;
+        set(s => ({ queue: [...s.queue, ...songs] }));
+      },
+
+      playNext: (song: Song) => {
+        const { queue, queueIndex } = get();
+        const insertAt = queueIndex + 1;
+        const newQueue = [...queue];
+        newQueue.splice(insertAt, 0, song);
+        set({ queue: newQueue });
+      },
+
+      playMultipleNext: (songs: Song[]) => {
+        if (!songs.length) return;
+        const { queue, queueIndex } = get();
+        const insertAt = queueIndex + 1;
+        const newQueue = [...queue];
+        newQueue.splice(insertAt, 0, ...songs);
+        set({ queue: newQueue });
+      },
+
       clearQueue: () => {
         const { currentTrack } = get();
         if (currentTrack) {
@@ -198,14 +228,19 @@ export const useStore = create<StoreState>()(
 
       moveInQueue: (from: number, to: number) => {
         const { queue, queueIndex } = get();
-        if (from === to || from < 0 || to < 0 || from >= queue.length || to >= queue.length) return;
+        if (from < 0 || from >= queue.length || to < 0 || to > queue.length) return;
+        if (from === to || from + 1 === to) return;
         const newQueue = [...queue];
         const [moved] = newQueue.splice(from, 1);
-        newQueue.splice(to, 0, moved);
+        const insertAt = from < to ? to - 1 : to;
+        newQueue.splice(insertAt, 0, moved);
         let newIdx = queueIndex;
-        if (from === queueIndex) newIdx = to;
-        else if (from < queueIndex && to >= queueIndex) newIdx = queueIndex - 1;
-        else if (from > queueIndex && to <= queueIndex) newIdx = queueIndex + 1;
+        if (from === queueIndex) {
+          newIdx = insertAt;
+        } else {
+          if (from < queueIndex) newIdx--;
+          if (insertAt <= newIdx) newIdx++;
+        }
         set({ queue: newQueue, queueIndex: newIdx });
       },
     }),

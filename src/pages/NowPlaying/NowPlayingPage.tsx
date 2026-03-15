@@ -10,6 +10,7 @@ import {
   IconVolumeUp, IconVolumeMute, IconVolumeLow, IconChevronDown,
 } from '../../components/ui';
 import { useImageColors } from '../../utils/useImageColors';
+import { useSliderDrag } from '../../utils/useSliderDrag';
 import { getCoverArtUrl } from '../../api/subsonic';
 import type { RepeatMode } from '../../store/useStore';
 
@@ -18,7 +19,7 @@ const FALLBACK_COLORS: [string, string] = ['#667eea', '#764ba2'];
 
 function useDragReorder(moveInQueue: (from: number, to: number) => void) {
   const dragIdx = useRef<number | null>(null);
-  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const [dragOver, setDragOver] = useState<{ index: number; half: 'top' | 'bottom' } | null>(null);
 
   const handleDragStart = (realIndex: number) => (e: React.DragEvent) => {
     dragIdx.current = realIndex;
@@ -28,24 +29,30 @@ function useDragReorder(moveInQueue: (from: number, to: number) => void) {
   const handleDragOver = (realIndex: number) => (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setDragOverIdx(realIndex);
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const half = e.clientY < rect.top + rect.height / 2 ? 'top' : 'bottom';
+    setDragOver({ index: realIndex, half });
   };
 
-  const handleDrop = (realIndex: number) => (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    if (dragIdx.current !== null && dragIdx.current !== realIndex) {
-      moveInQueue(dragIdx.current, realIndex);
+    if (dragIdx.current !== null && dragOver) {
+      const from = dragIdx.current;
+      const to = dragOver.half === 'top' ? dragOver.index : dragOver.index + 1;
+      if (from !== to && from + 1 !== to) {
+        moveInQueue(from, to);
+      }
     }
     dragIdx.current = null;
-    setDragOverIdx(null);
+    setDragOver(null);
   };
 
   const handleDragEnd = () => {
     dragIdx.current = null;
-    setDragOverIdx(null);
+    setDragOver(null);
   };
 
-  return { dragOverIdx, handleDragStart, handleDragOver, handleDrop, handleDragEnd };
+  return { dragOver, handleDragStart, handleDragOver, handleDrop, handleDragEnd };
 }
 
 type PanelTab = 'queue' | 'lyrics' | 'related';
@@ -62,19 +69,14 @@ export function NowPlayingPage() {
   const [activeTab, setActiveTab] = useState<PanelTab>('queue');
   const progressRef = useRef<HTMLDivElement>(null);
   const volumeRef = useRef<HTMLDivElement>(null);
-  const { dragOverIdx, handleDragStart, handleDragOver, handleDrop, handleDragEnd } = useDragReorder(moveInQueue);
+  const volumeDrag = useSliderDrag(volumeRef, setVolume);
+  const { dragOver, handleDragStart, handleDragOver, handleDrop, handleDragEnd } = useDragReorder(moveInQueue);
 
   const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = progressRef.current!.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     seekTo(ratio * duration);
   }, [seekTo, duration]);
-
-  const handleVolumeClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = volumeRef.current!.getBoundingClientRect();
-    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    setVolume(ratio);
-  }, [setVolume]);
 
   const cycleRepeat = useCallback(() => {
     const modes: RepeatMode[] = ['none', 'all', 'one'];
@@ -248,7 +250,8 @@ export function NowPlayingPage() {
                   aria-valuenow={Math.round(effectiveVolume * 100)}
                   aria-label="Volume"
                   tabIndex={0}
-                  onClick={handleVolumeClick}
+                  onMouseDown={volumeDrag.onMouseDown}
+                  onTouchStart={volumeDrag.onTouchStart}
                   onKeyDown={e => {
                     if (e.key === 'ArrowRight') setVolume(Math.min(1, volume + 0.05));
                     if (e.key === 'ArrowLeft') setVolume(Math.max(0, volume - 0.05));
@@ -302,9 +305,10 @@ export function NowPlayingPage() {
                             draggable
                             onDragStart={handleDragStart(realIndex)}
                             onDragOver={handleDragOver(realIndex)}
-                            onDrop={handleDrop(realIndex)}
+                            onDrop={handleDrop}
                             onDragEnd={handleDragEnd}
-                            isDragOver={dragOverIdx === realIndex}
+                            isDragOverTop={dragOver?.index === realIndex && dragOver?.half === 'top'}
+                            isDragOverBottom={dragOver?.index === realIndex && dragOver?.half === 'bottom'}
                           />
                         );
                       })}

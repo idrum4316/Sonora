@@ -5,8 +5,9 @@ import { search3, getGenres, getAlbum } from '../../api/subsonic';
 import type { Album, Artist, Song, Genre } from '../../api/subsonic';
 import { AlbumCard } from '../../components/AlbumCard';
 import { CoverArt, artClass } from '../../components/CoverArt';
-import { fmt, TopbarNav, Skeleton } from '../../components/ui';
+import { fmt, Skeleton } from '../../components/ui';
 import { genreGradient } from '../../utils/genreGradients';
+import { TrackMoreButton, useTrackMenu } from '../../components/TrackMenu';
 
 const RECENT_KEY = 'sonora-recent-searches';
 const MAX_RECENT = 8;
@@ -59,6 +60,8 @@ export function SearchPage() {
   const playTrack = useStore(s => s.playTrack);
   const currentTrack = useStore(s => s.currentTrack);
   const togglePlay = useStore(s => s.togglePlay);
+
+  const { openMenu, menuPortal } = useTrackMenu();
 
   const initialQuery = searchParams.get('q') ?? '';
   const [query, setQuery] = useState(initialQuery);
@@ -159,8 +162,6 @@ export function SearchPage() {
 
   return (
     <>
-      <TopbarNav onBack={() => navigate(-1)} onForward={() => navigate(1)} />
-
       {/* Search hero */}
       <div className="search-hero">
         <h1 className="search-hero-title">Search</h1>
@@ -246,6 +247,7 @@ export function SearchPage() {
                             aria-label={`${song.title} by ${song.artist}, ${fmt(song.duration)}`}
                             onClick={() => handleSongClick(song, i)}
                             onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && handleSongClick(song, i)}
+                            onContextMenu={e => openMenu(e, song)}
                           >
                             <div className={`tr-art ${artClass(song.albumId)}`}>
                               <CoverArt coverArt={song.coverArt} id={song.albumId} size={80} alt="" />
@@ -256,6 +258,7 @@ export function SearchPage() {
                               </div>
                               <div className="tr-sub">{song.artist} · {song.album}</div>
                             </div>
+                            <TrackMoreButton song={song} />
                             <div className="tr-dur">{fmt(song.duration)}</div>
                           </div>
                         );
@@ -329,6 +332,7 @@ export function SearchPage() {
                       aria-label={`${song.title} by ${song.artist}, ${fmt(song.duration)}`}
                       onClick={() => handleSongClick(song, idx)}
                       onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && handleSongClick(song, idx)}
+                      onContextMenu={e => openMenu(e, song)}
                     >
                       <div className={`result-art ${artClass(song.albumId)}`}>
                         <CoverArt coverArt={song.coverArt} id={song.albumId} size={80} alt="" />
@@ -339,6 +343,7 @@ export function SearchPage() {
                         </div>
                         <div className="result-sub">{song.artist} · {song.album}</div>
                       </div>
+                      <TrackMoreButton song={song} />
                       <div className="result-dur">{fmt(song.duration)}</div>
                     </div>
                   );
@@ -422,6 +427,7 @@ export function SearchPage() {
           )}
         </div>
       )}
+      {menuPortal}
     </>
   );
 }

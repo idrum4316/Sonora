@@ -27,8 +27,13 @@ export function ConnectPage() {
     setServerInfo('');
     setLoading(true);
 
+    let normalizedUrl = serverUrl.trim().replace(/\/$/, '');
+    if (!/^https?:\/\//i.test(normalizedUrl)) {
+      normalizedUrl = 'https://' + normalizedUrl;
+    }
+
     const config: SubsonicConfig = {
-      serverUrl: serverUrl.trim().replace(/\/$/, ''),
+      serverUrl: normalizedUrl,
       username: username.trim(),
       password,
     };
@@ -70,7 +75,7 @@ export function ConnectPage() {
               type="url"
               value={serverUrl}
               onChange={e => setServerUrl(e.target.value)}
-              placeholder="http://localhost:4533"
+              placeholder="https://your-server:4533"
               style={styles.input}
               required
               autoFocus

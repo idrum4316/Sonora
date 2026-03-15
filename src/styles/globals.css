@@ -193,28 +193,7 @@ svg { flex-shrink: 0; }
 .main::-webkit-scrollbar-track { background: transparent; }
 .main::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
 
-.topbar {
-  position: sticky;
-  top: 0; z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
-  height: 60px;
-  background: linear-gradient(to bottom, var(--bg) 60%, transparent);
-  gap: 16px;
-}
-.topbar-nav { display: flex; gap: 2px; }
-.topbar-nav button {
-  width: 28px; height: 28px;
-  border-radius: var(--radius-full);
-  background: var(--surface-2);
-  display: grid; place-items: center;
-  color: var(--text-secondary);
-  transition: background var(--transition), color var(--transition);
-}
-.topbar-nav button:hover { background: var(--surface-3); color: var(--text-primary); }
-.topbar-right { display: flex; align-items: center; gap: 8px; }
+
 
 /* ── Player Bar ──────────────────────────────────────────────── */
 .player-bar {
@@ -400,6 +379,7 @@ svg { flex-shrink: 0; }
   color: var(--text-secondary);
   letter-spacing: 0.02em;
   transition: color var(--transition);
+  cursor: pointer;
 }
 .section-link:hover { color: var(--text-primary); }
 
@@ -577,9 +557,67 @@ svg { flex-shrink: 0; }
   place-items: center;
 }
 .track-row:hover .track-like,
+.pl-track-row:hover .track-like,
 .track-like.liked { opacity: 1; }
 .track-like.liked { color: var(--accent); }
 .track-like:hover { color: var(--accent); }
+
+/* ── Track More Button (three-dot) ───────────────────────────── */
+.track-more-btn {
+  color: var(--text-tertiary);
+  opacity: 0;
+  transition: color var(--transition), opacity var(--transition);
+  padding: 4px;
+  border-radius: var(--radius-xs);
+  display: grid;
+  place-items: center;
+}
+.track-row:hover .track-more-btn,
+.pl-track-row:hover .track-more-btn,
+.tr-row:hover .track-more-btn,
+.result-row:hover .track-more-btn,
+.track-more-btn[aria-expanded="true"] { opacity: 1; }
+.track-more-btn:hover { color: var(--text-primary); }
+
+/* ── Track Context Menu ──────────────────────────────────────── */
+.track-menu {
+  position: fixed;
+  z-index: 9999;
+  min-width: 180px;
+  padding: 4px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2);
+  animation: trackMenuIn 120ms ease;
+}
+@keyframes trackMenuIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.track-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-xs);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition);
+  white-space: nowrap;
+}
+.track-menu-item:hover {
+  background: var(--surface-3, rgba(255,255,255,0.08));
+}
+.track-menu-item svg {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
 
 /* ── Album Page ──────────────────────────────────────────────── */
 .album-hero {
@@ -908,16 +946,7 @@ svg { flex-shrink: 0; }
   font-size: 12px;
   color: var(--text-tertiary);
 }
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--text-tertiary);
-}
-.breadcrumb a { transition: color var(--transition); }
-.breadcrumb a:hover { color: var(--text-primary); }
-.breadcrumb-sep { color: var(--text-tertiary); }
+
 
 /* ── Playlist Page ───────────────────────────────────────────── */
 
@@ -2689,16 +2718,30 @@ mark {
 
 .q-item[draggable="true"] { cursor: grab; }
 .q-item[draggable="true"]:active { cursor: grabbing; }
-.q-item--drag-over {
-  border-top: 2px solid var(--accent);
-  margin-top: -2px;
+.q-item--drag-over-top,
+.q-item--drag-over-bottom,
+.q-item-compact--drag-over-top,
+.q-item-compact--drag-over-bottom { position: relative; }
+.q-item--drag-over-top::before,
+.q-item--drag-over-bottom::after,
+.q-item-compact--drag-over-top::before,
+.q-item-compact--drag-over-bottom::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 0;
+  pointer-events: none;
+  z-index: 2;
 }
+.q-item--drag-over-top::before,
+.q-item-compact--drag-over-top::before { top: -1px; }
+.q-item--drag-over-bottom::after,
+.q-item-compact--drag-over-bottom::after { bottom: -1px; }
 .q-item-compact[draggable="true"] { cursor: grab; }
 .q-item-compact[draggable="true"]:active { cursor: grabbing; }
-.q-item-compact--drag-over {
-  border-top: 2px solid var(--accent);
-  margin-top: -2px;
-}
 
 .q-item-indicator {
   width: 24px;
@@ -2746,6 +2789,8 @@ mark {
   font-size: 12px;
   color: var(--text-tertiary);
   font-variant-numeric: tabular-nums;
+  min-width: 3.5ch;
+  text-align: right;
 }
 .q-item-remove {
   color: var(--text-tertiary);
@@ -2758,6 +2803,18 @@ mark {
 }
 .q-item:hover .q-item-remove { opacity: 1; }
 .q-item-remove:hover { color: var(--accent); background: var(--surface-2); }
+.q-item-star {
+  color: var(--text-tertiary);
+  padding: 4px;
+  border-radius: var(--radius-xs);
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: color var(--transition), opacity var(--transition);
+}
+.q-item:hover .q-item-star { opacity: 1; }
+.q-item-star.liked { opacity: 1; color: var(--accent); }
+.q-item-star:hover { color: var(--accent); }
 
 /* ── Queue item compact variant (for inline panels like NowPlaying) ── */
 .q-item-compact {

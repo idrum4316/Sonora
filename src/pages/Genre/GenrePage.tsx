@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import {
   getGenres, getAlbumsByGenre, getSongsByGenre, getAlbum,
@@ -7,8 +7,9 @@ import {
 import type { Album, Song, Genre } from '../../api/subsonic';
 import { AlbumCard } from '../../components/AlbumCard';
 import { CoverArt, artClass } from '../../components/CoverArt';
-import { TopbarNav, fmt, IconPlay, IconShuffle, AlbumCardSkeleton, Skeleton } from '../../components/ui';
+import { fmt, IconPlay, IconShuffle, AlbumCardSkeleton, Skeleton } from '../../components/ui';
 import { genreGradient } from '../../utils/genreGradients';
+import { TrackMoreButton, useTrackMenu } from '../../components/TrackMenu';
 
 // ── GenrePage ─────────────────────────────────────────────────────────────────
 export function GenrePage() {
@@ -20,6 +21,8 @@ export function GenrePage() {
   const currentTrack = useStore(s => s.currentTrack);
   const isPlaying = useStore(s => s.isPlaying);
   const togglePlay = useStore(s => s.togglePlay);
+
+  const { openMenu, menuPortal } = useTrackMenu();
 
   const [genre, setGenre] = useState<Genre | null>(null);
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -94,19 +97,6 @@ export function GenrePage() {
 
   return (
     <>
-      {/* ── Topbar ── */}
-      <div className="topbar">
-        <TopbarNav onBack={() => navigate(-1)} onForward={() => navigate(1)} />
-        <nav className="breadcrumb" aria-label="Breadcrumb">
-          <Link to="/">Home</Link>
-          <span className="breadcrumb-sep" aria-hidden="true">›</span>
-          <Link to="/library?tab=genres">Genres</Link>
-          <span className="breadcrumb-sep" aria-hidden="true">›</span>
-          <span aria-current="page">{genreName}</span>
-        </nav>
-        <div className="topbar-right" />
-      </div>
-
       {/* ── Hero ── */}
       <div className="genre-hero" style={{ background: gradient }}>
         <div className="genre-hero-overlay" aria-hidden="true" />
@@ -233,6 +223,7 @@ export function GenrePage() {
                       aria-label={`${song.title} by ${song.artist}, ${fmt(song.duration)}`}
                       onClick={() => handleSongClick(song, idx)}
                       onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && handleSongClick(song, idx)}
+                      onContextMenu={e => openMenu(e, song)}
                     >
                       <div className="track-num">
                         {playing && isPlaying ? (
@@ -260,6 +251,7 @@ export function GenrePage() {
                         {song.album}
                       </div>
                       <div className="track-meta">
+                        <TrackMoreButton song={song} />
                         <span>{fmt(song.duration)}</span>
                       </div>
                     </div>
@@ -270,6 +262,7 @@ export function GenrePage() {
           )}
         </section>
       </div>
+      {menuPortal}
     </>
   );
 }

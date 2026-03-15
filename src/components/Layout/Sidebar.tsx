@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useStore } from '../../store/useStore';
 import { getPlaylists } from '../../api/subsonic';
@@ -42,6 +42,7 @@ const IconLogo = () => (
 export function Sidebar() {
   const config = useStore(s => s.config);
   const navigate = useNavigate();
+  const location = useLocation();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
 
   useEffect(() => {
@@ -68,7 +69,7 @@ export function Sidebar() {
           <NavLink to="/search" className={({ isActive }) => `sidebar-nav-item${isActive ? ' active' : ''}`}>
             <IconSearch /> Search
           </NavLink>
-          <NavLink to="/library" className={({ isActive }) => `sidebar-nav-item${isActive ? ' active' : ''}`}>
+          <NavLink to="/library/albums" className={() => `sidebar-nav-item${location.pathname.startsWith('/library') ? ' active' : ''}`}>
             <IconLibrary /> Library
           </NavLink>
           <NavLink to="/queue" className={({ isActive }) => `sidebar-nav-item${isActive ? ' active' : ''}`}>

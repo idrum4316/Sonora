@@ -21,24 +21,6 @@ export function Skeleton({ w, h, style }: { w?: string | number; h?: string | nu
   return <div className="skeleton" style={{ width: w, height: h, borderRadius: 6, ...style }} />;
 }
 
-// ── Back / Forward nav buttons ────────────────────────────────────────────────
-export function TopbarNav({ onBack, onForward }: { onBack: () => void; onForward: () => void }) {
-  return (
-    <div className="topbar-nav">
-      <button aria-label="Go back" onClick={onBack}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <polyline points="15 18 9 12 15 6" />
-        </svg>
-      </button>
-      <button aria-label="Go forward" onClick={onForward}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <polyline points="9 18 15 12 9 6" />
-        </svg>
-      </button>
-    </div>
-  );
-}
-
 // ── Icons ─────────────────────────────────────────────────────────────────────
 export const IconPlay = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -112,6 +94,24 @@ export const IconVolumeLow = ({ size = 16 }: { size?: number }) => (
 export const IconChevronDown = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <polyline points="6 9 12 15 18 9"/>
+  </svg>
+);
+
+export const IconPlayNext = ({ size = 15 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polygon points="5,3 15,12 5,21" fill="currentColor" stroke="none" />
+    <line x1="19" y1="5" x2="19" y2="19" />
+  </svg>
+);
+
+export const IconAddQueue = ({ size = 15 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <line x1="8" y1="6" x2="21" y2="6" />
+    <line x1="8" y1="12" x2="21" y2="12" />
+    <line x1="8" y1="18" x2="21" y2="18" />
+    <line x1="3" y1="6" x2="3.01" y2="6" />
+    <line x1="3" y1="12" x2="3.01" y2="12" />
+    <line x1="3" y1="18" x2="3.01" y2="18" />
   </svg>
 );
 

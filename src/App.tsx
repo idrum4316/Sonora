@@ -7,7 +7,11 @@ import { HomePage } from './pages/Home/HomePage';
 import { AlbumPage } from './pages/Album/AlbumPage';
 import { ArtistPage } from './pages/Artist/ArtistPage';
 import { PlaylistPage } from './pages/Playlist/PlaylistPage';
-import { LibraryPage } from './pages/Library/LibraryPage';
+import { AlbumsPage } from './pages/Library/AlbumsPage';
+import { ArtistsPage } from './pages/Library/ArtistsPage';
+import { PlaylistsPage } from './pages/Library/PlaylistsPage';
+import { GenresPage } from './pages/Library/GenresPage';
+import { FavoritesPage } from './pages/Library/FavoritesPage';
 import { SearchPage } from './pages/Search/SearchPage';
 import { NowPlayingPage } from './pages/NowPlaying/NowPlayingPage';
 import { QueuePage } from './pages/Queue/QueuePage';
@@ -43,7 +47,12 @@ export function App() {
           <Route path="/album/:id" element={<AlbumPage />} />
           <Route path="/artist/:id" element={<ArtistPage />} />
           <Route path="/playlist/:id" element={<PlaylistPage />} />
-          <Route path="/library" element={<LibraryPage />} />
+          <Route path="/library" element={<Navigate to="/library/albums" replace />} />
+          <Route path="/library/albums" element={<AlbumsPage />} />
+          <Route path="/library/artists" element={<ArtistsPage />} />
+          <Route path="/library/playlists" element={<PlaylistsPage />} />
+          <Route path="/library/genres" element={<GenresPage />} />
+          <Route path="/library/favorites" element={<FavoritesPage />} />
           <Route path="/genre/:name" element={<GenrePage />} />
           <Route path="/queue" element={<QueuePage />} />
           <Route path="/settings" element={<SettingsPage />} />

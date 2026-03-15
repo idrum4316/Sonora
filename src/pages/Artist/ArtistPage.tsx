@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
-import { getArtist, getArtistInfo, star, unstar, getCoverArtUrl } from '../../api/subsonic';
+import { getArtist, getArtistInfo, getAlbum, star, unstar, getCoverArtUrl } from '../../api/subsonic';
 import type { ArtistDetail, ArtistInfo, Album } from '../../api/subsonic';
 import { CoverArt, artClass } from '../../components/CoverArt';
 import { ArtistCard } from '../../components/ArtistCard';
-import { Skeleton, TopbarNav, IconPlay, IconHeart, IconShuffle } from '../../components/ui';
+import { Skeleton, IconPlay, IconHeart, IconShuffle } from '../../components/ui';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function initials(name: string): string {
@@ -35,6 +35,7 @@ export function ArtistPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const config = useStore(s => s.config)!;
+  const playTrack = useStore(s => s.playTrack);
 
   const [artist, setArtist] = useState<ArtistDetail | null>(null);
   const [info, setInfo] = useState<ArtistInfo | null>(null);
@@ -80,6 +81,13 @@ export function ArtistPage() {
   const albums = artist?.album ?? [];
   const sortedAlbums = [...albums].sort((a, b) => (b.year ?? 0) - (a.year ?? 0));
 
+  const playAlbum = useCallback(async (album: Album) => {
+    try {
+      const detail = await getAlbum(config, album.id);
+      if (detail.song?.length) playTrack(detail.song[0], detail.song, 0);
+    } catch (e) { console.error(e); }
+  }, [config, playTrack]);
+
   const playAll = useCallback(() => {
     if (!sortedAlbums.length) return;
     navigate(`/album/${sortedAlbums[0].id}`);
@@ -116,17 +124,6 @@ export function ArtistPage() {
 
   return (
     <>
-      {/* ── Topbar ── */}
-      <div className="topbar">
-        <TopbarNav onBack={() => navigate(-1)} onForward={() => navigate(1)} />
-        <nav className="breadcrumb" aria-label="Breadcrumb">
-          <Link to="/">Home</Link>
-          <span className="breadcrumb-sep" aria-hidden="true">›</span>
-          <span aria-current="page">{loading ? '…' : (artist?.name ?? 'Artist')}</span>
-        </nav>
-        <div className="topbar-right" />
-      </div>
-
       {/* ── Hero ── */}
       <div className="artist-hero">
         {/* Blurred photo background */}
@@ -251,11 +248,7 @@ export function ArtistPage() {
                     <IconHeart filled={followed} />
                     {followed ? 'Following' : 'Follow'}
                   </button>
-                  <button className="btn btn-secondary btn-icon" aria-label="More options">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <circle cx="5" cy="12" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="19" cy="12" r="1.5" />
-                    </svg>
-                  </button>
+
                 </div>
               </>
             ) : null}
@@ -287,7 +280,7 @@ export function ArtistPage() {
                 <AlbumCard
                   key={album.id}
                   album={album}
-                  onPlay={() => navigate(`/album/${album.id}`)}
+                  onPlay={playAlbum}
                   onClick={() => navigate(`/album/${album.id}`)}
                 />
               ))}

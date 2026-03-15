@@ -4,8 +4,9 @@ import { useStore } from '../../store/useStore';
 import { getAlbum, getArtist, star, unstar, getCoverArtUrl } from '../../api/subsonic';
 import type { Album, Song } from '../../api/subsonic';
 import { CoverArt, artClass } from '../../components/CoverArt';
-import { fmtDuration, Skeleton, TopbarNav, IconPlay, IconHeart, IconShuffle } from '../../components/ui';
+import { fmtDuration, Skeleton, IconPlay, IconHeart, IconShuffle, IconPlayNext, IconAddQueue } from '../../components/ui';
 import { TrackRow } from '../../components/TrackRow';
+import { useTrackMenu } from '../../components/TrackMenu';
 
 // ── AlbumPage ─────────────────────────────────────────────────────────────────
 export function AlbumPage() {
@@ -13,9 +14,13 @@ export function AlbumPage() {
   const navigate = useNavigate();
   const config = useStore(s => s.config)!;
   const playTrack = useStore(s => s.playTrack);
+  const playMultipleNext = useStore(s => s.playMultipleNext);
+  const addMultipleToQueue = useStore(s => s.addMultipleToQueue);
   const currentTrack = useStore(s => s.currentTrack);
   const isPlaying = useStore(s => s.isPlaying);
   const togglePlay = useStore(s => s.togglePlay);
+
+  const { openMenu, menuPortal } = useTrackMenu();
 
   const [album, setAlbum] = useState<(Album & { song: Song[] }) | null>(null);
   const [relatedAlbums, setRelatedAlbums] = useState<Album[]>([]);
@@ -111,11 +116,6 @@ export function AlbumPage() {
 
   return (
     <>
-      {/* ── Back nav ── */}
-      <div className="topbar">
-        <TopbarNav onBack={() => navigate(-1)} onForward={() => navigate(1)} />
-      </div>
-
       {/* ── Hero ── */}
       <div className="album-hero">
         {/* Blurred art background */}
@@ -252,10 +252,21 @@ export function AlbumPage() {
                     <IconHeart filled={albumLiked} />
                     {albumLiked ? 'Liked' : 'Like'}
                   </button>
-                  <button className="btn btn-secondary btn-icon" aria-label="More options">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <circle cx="5" cy="12" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="19" cy="12" r="1.5" />
-                    </svg>
+                  <button
+                    className="btn btn-secondary"
+                    aria-label={`Play ${album.name} next`}
+                    onClick={() => playMultipleNext(album.song ?? [])}
+                  >
+                    <IconPlayNext />
+                    Play Next
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    aria-label={`Add ${album.name} to queue`}
+                    onClick={() => addMultipleToQueue(album.song ?? [])}
+                  >
+                    <IconAddQueue />
+                    Add to Queue
                   </button>
                 </div>
               </>
@@ -300,6 +311,7 @@ export function AlbumPage() {
                       albumArtist={album.artist}
                       onClick={() => handleTrackClick(song, i)}
                       onToggleStar={e => toggleStar(song, e)}
+                      onContextMenu={e => openMenu(e, song)}
                     />
                   );
                 })}
@@ -373,6 +385,7 @@ export function AlbumPage() {
           )}
         </div>
       </div>
+      {menuPortal}
     </>
   );
 }

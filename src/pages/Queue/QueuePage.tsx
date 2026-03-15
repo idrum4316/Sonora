@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
+import { star, unstar } from '../../api/subsonic';
 import { CoverArt, artClass } from '../../components/CoverArt';
 import { QueueItem } from '../../components/QueueItem';
 import {
@@ -12,7 +13,7 @@ import type { RepeatMode } from '../../store/useStore';
 
 function useDragReorder(moveInQueue: (from: number, to: number) => void) {
   const dragIdx = useRef<number | null>(null);
-  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const [dragOver, setDragOver] = useState<{ index: number; half: 'top' | 'bottom' } | null>(null);
 
   const handleDragStart = (realIndex: number) => (e: React.DragEvent) => {
     dragIdx.current = realIndex;
@@ -22,24 +23,30 @@ function useDragReorder(moveInQueue: (from: number, to: number) => void) {
   const handleDragOver = (realIndex: number) => (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setDragOverIdx(realIndex);
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const half = e.clientY < rect.top + rect.height / 2 ? 'top' : 'bottom';
+    setDragOver({ index: realIndex, half });
   };
 
-  const handleDrop = (realIndex: number) => (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    if (dragIdx.current !== null && dragIdx.current !== realIndex) {
-      moveInQueue(dragIdx.current, realIndex);
+    if (dragIdx.current !== null && dragOver) {
+      const from = dragIdx.current;
+      const to = dragOver.half === 'top' ? dragOver.index : dragOver.index + 1;
+      if (from !== to && from + 1 !== to) {
+        moveInQueue(from, to);
+      }
     }
     dragIdx.current = null;
-    setDragOverIdx(null);
+    setDragOver(null);
   };
 
   const handleDragEnd = () => {
     dragIdx.current = null;
-    setDragOverIdx(null);
+    setDragOver(null);
   };
 
-  return { dragOverIdx, handleDragStart, handleDragOver, handleDrop, handleDragEnd };
+  return { dragOver, handleDragStart, handleDragOver, handleDrop, handleDragEnd };
 }
 
 type QueueTab = 'queue' | 'history';
@@ -52,11 +59,28 @@ export function QueuePage() {
     togglePlay, next, prev, seekTo, playTrack,
     toggleShuffle, setRepeat, starCurrentTrack,
     clearQueue, removeFromQueue, moveInQueue,
+    config,
   } = useStore();
 
   const [activeTab, setActiveTab] = useState<QueueTab>('queue');
   const progressRef = useRef<HTMLDivElement>(null);
-  const { dragOverIdx, handleDragStart, handleDragOver, handleDrop, handleDragEnd } = useDragReorder(moveInQueue);
+  const { dragOver, handleDragStart, handleDragOver, handleDrop, handleDragEnd } = useDragReorder(moveInQueue);
+
+  const toggleStarInQueue = useCallback((song: import('../../api/subsonic').Song, queueIdx: number) => {
+    if (!config) return;
+    const wasStarred = !!song.starred;
+    const updated = { ...song, starred: wasStarred ? undefined : new Date().toISOString() };
+    const newQueue = queue.map((s, i) => i === queueIdx ? updated : s);
+    const updates: Record<string, unknown> = { queue: newQueue };
+    if (queueIdx === queueIndex) updates.currentTrack = updated;
+    useStore.setState(updates);
+    (wasStarred ? unstar(config, song.id) : star(config, song.id)).catch(() => {
+      const revertQueue = useStore.getState().queue.map((s, i) => i === queueIdx && s.id === song.id ? song : s);
+      const revertUpdates: Record<string, unknown> = { queue: revertQueue };
+      if (queueIdx === queueIndex) revertUpdates.currentTrack = song;
+      useStore.setState(revertUpdates);
+    });
+  }, [config, queue, queueIndex]);
 
   const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const rect = progressRef.current!.getBoundingClientRect();
@@ -145,7 +169,9 @@ export function QueuePage() {
                 <QueueItem
                   song={track}
                   isCurrent
+                  isStarred={!!track.starred}
                   onClick={togglePlay}
+                  onToggleStar={() => toggleStarInQueue(track, queueIndex)}
                   showHandle={false}
                 />
               </div>
@@ -162,15 +188,18 @@ export function QueuePage() {
                       <QueueItem
                         key={`${song.id}-${realIndex}`}
                         song={song}
+                        isStarred={!!song.starred}
                         onClick={() => playTrack(song, queue, realIndex)}
                         onRemove={() => removeFromQueue(realIndex)}
+                        onToggleStar={() => toggleStarInQueue(song, realIndex)}
                         showHandle
                         draggable
                         onDragStart={handleDragStart(realIndex)}
                         onDragOver={handleDragOver(realIndex)}
-                        onDrop={handleDrop(realIndex)}
+                        onDrop={handleDrop}
                         onDragEnd={handleDragEnd}
-                        isDragOver={dragOverIdx === realIndex}
+                        isDragOverTop={dragOver?.index === realIndex && dragOver?.half === 'top'}
+                        isDragOverBottom={dragOver?.index === realIndex && dragOver?.half === 'bottom'}
                       />
                     );
                   })}

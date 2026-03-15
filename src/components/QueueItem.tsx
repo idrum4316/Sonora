@@ -1,13 +1,15 @@
 import type { Song } from '../api/subsonic';
 import { CoverArt, artClass } from './CoverArt';
-import { fmt } from './ui';
+import { fmt, IconHeart } from './ui';
 
 interface QueueItemProps {
   song: Song;
   isCurrent?: boolean;
   isHistory?: boolean;
+  isStarred?: boolean;
   onClick: () => void;
   onRemove?: () => void;
+  onToggleStar?: (e: React.MouseEvent) => void;
   showHandle?: boolean;
   /** Compact mode for inline panels (smaller art, no handle/remove) */
   compact?: boolean;
@@ -17,7 +19,8 @@ interface QueueItemProps {
   onDragOver?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent) => void;
   onDragEnd?: (e: React.DragEvent) => void;
-  isDragOver?: boolean;
+  isDragOverTop?: boolean;
+  isDragOverBottom?: boolean;
 }
 
 const IconDragHandle = () => (
@@ -33,9 +36,9 @@ const IconRemove = () => (
   </svg>
 );
 
-export function QueueItem({ song, isCurrent, isHistory, onClick, onRemove, showHandle, compact, draggable, onDragStart, onDragOver, onDrop, onDragEnd, isDragOver }: QueueItemProps) {
+export function QueueItem({ song, isCurrent, isHistory, isStarred, onClick, onRemove, onToggleStar, showHandle, compact, draggable, onDragStart, onDragOver, onDrop, onDragEnd, isDragOverTop, isDragOverBottom }: QueueItemProps) {
   const base = compact ? 'q-item-compact' : 'q-item';
-  const cls = `${base}${isCurrent ? ` ${base}--playing` : ''}${isHistory ? ` ${base}--history` : ''}${isDragOver ? ` ${base}--drag-over` : ''}`;
+  const cls = `${base}${isCurrent ? ` ${base}--playing` : ''}${isHistory ? ` ${base}--history` : ''}${isDragOverTop ? ` ${base}--drag-over-top` : ''}${isDragOverBottom ? ` ${base}--drag-over-bottom` : ''}`;
 
   return (
     <div
@@ -74,6 +77,16 @@ export function QueueItem({ song, isCurrent, isHistory, onClick, onRemove, showH
       </div>
 
       <div className={compact ? 'q-item-compact-dur' : 'q-item-end'}>
+        {!compact && onToggleStar && (
+          <button
+            className={`q-item-star${isStarred ? ' liked' : ''}`}
+            aria-label={isStarred ? `Unlike ${song.title}` : `Like ${song.title}`}
+            aria-pressed={!!isStarred}
+            onClick={e => { e.stopPropagation(); onToggleStar(e); }}
+          >
+            <IconHeart filled={!!isStarred} />
+          </button>
+        )}
         {!compact && onRemove && !isCurrent && (
           <button
             className="q-item-remove"

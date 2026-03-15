@@ -1,6 +1,7 @@
 import type { Song } from '../api/subsonic';
 import { CoverArt, artClass } from './CoverArt';
 import { fmt, IconPlay, IconPause, IconHeart } from './ui';
+import { TrackMoreButton } from './TrackMenu';
 
 export interface TrackRowProps {
   song: Song;
@@ -23,6 +24,8 @@ export interface TrackRowProps {
   onAlbumClick?: () => void;
   /** Additional CSS class name for the row */
   className?: string;
+  /** Right-click handler for context menu (provided by useTrackMenu) */
+  onContextMenu?: (e: React.MouseEvent) => void;
 }
 
 export function TrackRow({
@@ -40,6 +43,7 @@ export function TrackRow({
   albumArtist,
   onAlbumClick,
   className,
+  onContextMenu,
 }: TrackRowProps) {
   const isCurrentPlaying = isCurrentTrack && isPlaying;
   const showArtist = alwaysShowArtist || song.artist !== albumArtist;
@@ -54,6 +58,7 @@ export function TrackRow({
       aria-label={`${song.title} by ${song.artist}${showAlbum ? `, from ${song.album}` : ''}, ${fmt(song.duration)}`}
       onClick={onClick}
       onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onClick()}
+      onContextMenu={onContextMenu}
     >
       {/* Track number / playing indicator */}
       <div className="track-num" aria-hidden="true">
@@ -102,7 +107,7 @@ export function TrackRow({
         </div>
       )}
 
-      {/* Like + duration */}
+      {/* Like + more + duration */}
       <div className="track-meta">
         <button
           className={`track-like${isStarred ? ' liked' : ''}`}
@@ -112,6 +117,7 @@ export function TrackRow({
         >
           <IconHeart filled={isStarred} />
         </button>
+        <TrackMoreButton song={song} />
         <span>{fmt(song.duration)}</span>
       </div>
     </li>

@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { getPlaylist, star, unstar, getCoverArtUrl } from '../../api/subsonic';
 import type { PlaylistDetail, Song } from '../../api/subsonic';
 import { CoverArt, artClass } from '../../components/CoverArt';
-import { fmtDuration, Skeleton, TopbarNav, IconPlay, IconShuffle } from '../../components/ui';
+import { fmtDuration, Skeleton, IconPlay, IconShuffle, IconPlayNext, IconAddQueue } from '../../components/ui';
 import { TrackRow } from '../../components/TrackRow';
+import { useTrackMenu } from '../../components/TrackMenu';
 
 // ── PlaylistPage ───────────────────────────────────────────────────────────────
 export function PlaylistPage() {
@@ -13,9 +14,13 @@ export function PlaylistPage() {
   const navigate = useNavigate();
   const config = useStore(s => s.config)!;
   const playTrack = useStore(s => s.playTrack);
+  const playMultipleNext = useStore(s => s.playMultipleNext);
+  const addMultipleToQueue = useStore(s => s.addMultipleToQueue);
   const currentTrack = useStore(s => s.currentTrack);
   const isPlaying = useStore(s => s.isPlaying);
   const togglePlay = useStore(s => s.togglePlay);
+
+  const { openMenu, menuPortal } = useTrackMenu();
 
   const [playlist, setPlaylist] = useState<PlaylistDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -85,17 +90,6 @@ export function PlaylistPage() {
 
   return (
     <>
-      {/* ── Topbar ── */}
-      <div className="topbar">
-        <TopbarNav onBack={() => navigate(-1)} onForward={() => navigate(1)} />
-        <nav className="breadcrumb" aria-label="Breadcrumb">
-          <Link to="/">Home</Link>
-          <span className="breadcrumb-sep" aria-hidden="true">›</span>
-          <span aria-current="page">{loading ? '…' : (playlist?.name ?? 'Playlist')}</span>
-        </nav>
-        <div className="topbar-right" />
-      </div>
-
       {/* ── Hero ── */}
       <div className="album-hero">
         {/* Blurred cover background */}
@@ -208,10 +202,23 @@ export function PlaylistPage() {
                     <IconShuffle size={16} />
                     Shuffle
                   </button>
-                  <button className="btn btn-secondary btn-icon" aria-label="More options">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <circle cx="5" cy="12" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="19" cy="12" r="1.5" />
-                    </svg>
+                  <button
+                    className="btn btn-secondary"
+                    aria-label={`Play ${playlist.name} next`}
+                    onClick={() => playMultipleNext(songs)}
+                    disabled={!songs.length}
+                  >
+                    <IconPlayNext size={15} />
+                    Play Next
+                  </button>
+                  <button
+                    className="btn btn-secondary"
+                    aria-label={`Add ${playlist.name} to queue`}
+                    onClick={() => addMultipleToQueue(songs)}
+                    disabled={!songs.length}
+                  >
+                    <IconAddQueue size={15} />
+                    Add to Queue
                   </button>
                 </div>
               </>
@@ -260,6 +267,7 @@ export function PlaylistPage() {
                       onClick={() => handleTrackClick(song, i)}
                       onToggleStar={e => toggleStar(song, e)}
                       onAlbumClick={() => navigate(`/album/${song.albumId}`)}
+                      onContextMenu={e => openMenu(e, song)}
                     />
                   );
                 })}
@@ -344,6 +352,7 @@ export function PlaylistPage() {
           ) : null}
         </div>
       </div>
+      {menuPortal}
     </>
   );
 }
