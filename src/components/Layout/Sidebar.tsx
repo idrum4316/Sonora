@@ -4,6 +4,7 @@ import { useStore } from '../../store/useStore';
 import { getPlaylists } from '../../api/subsonic';
 import type { Playlist } from '../../api/subsonic';
 import { CoverArt, artClass } from '../CoverArt';
+import { ThemeToggle } from '../ThemeToggle';
 
 const IconHome = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -103,6 +104,7 @@ export function Sidebar() {
       <div className="sidebar-footer">
         <div className="sidebar-avatar" aria-label={`User: ${username}`}>{initials}</div>
         <span className="sidebar-user-name">{username}</span>
+        <ThemeToggle className="sidebar-theme-toggle" />
         <button
           className="sidebar-settings-btn"
           aria-label="Settings"

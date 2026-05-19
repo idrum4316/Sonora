@@ -5,6 +5,7 @@ import { getStreamUrl, star, unstar } from '../api/subsonic';
 import { audio } from './audioElement';
 
 export type RepeatMode = 'none' | 'one' | 'all';
+export type ThemeMode = 'dark' | 'light';
 
 interface StoreState {
   // ── Connection ────────────────────────────────────────────────
@@ -13,6 +14,7 @@ interface StoreState {
 
   // ── Settings ─────────────────────────────────────────────────
   scrobbleThreshold: number; // 0–100, percent of track to play before scrobbling
+  theme: ThemeMode;
 
   // ── UI ────────────────────────────────────────────────────────
   showNowPlaying: boolean;
@@ -50,6 +52,8 @@ interface StoreState {
   toggleMute: () => void;
   toggleShuffle: () => void;
   setRepeat: (mode: RepeatMode) => void;
+  setTheme: (theme: ThemeMode) => void;
+  toggleTheme: () => void;
   setCurrentTime: (t: number) => void;
   setDuration: (d: number) => void;
   setIsPlaying: (v: boolean) => void;
@@ -72,6 +76,7 @@ export const useStore = create<StoreState>()(
       showNowPlaying: false,
       playlistVersion: 0,
       scrobbleThreshold: 75,
+      theme: 'dark',
       currentTrack: null,
       queue: [],
       queueIndex: 0,
@@ -175,6 +180,9 @@ export const useStore = create<StoreState>()(
 
       setRepeat: (mode) => set({ repeat: mode }),
 
+      setTheme: (theme) => set({ theme }),
+      toggleTheme: () => set(s => ({ theme: s.theme === 'dark' ? 'light' : 'dark' })),
+
       setCurrentTime: (t) => set({ currentTime: t }),
       setDuration: (d) => set({ duration: d }),
       setIsPlaying: (v) => set({ isPlaying: v }),
@@ -259,7 +267,15 @@ export const useStore = create<StoreState>()(
     }),
     {
       name: 'sonora-store',
-      partialize: (s) => ({ config: s.config, isConnected: s.isConnected, volume: s.volume, shuffle: s.shuffle, repeat: s.repeat, scrobbleThreshold: s.scrobbleThreshold }),
+      partialize: (s) => ({
+        config: s.config,
+        isConnected: s.isConnected,
+        volume: s.volume,
+        shuffle: s.shuffle,
+        repeat: s.repeat,
+        scrobbleThreshold: s.scrobbleThreshold,
+        theme: s.theme,
+      }),
     }
   )
 );
