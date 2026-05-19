@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import {
@@ -175,73 +175,57 @@ export function HomePage() {
 function HeroSection({ album, loading, onPlay }: { album: Album | null; loading: boolean; onPlay: (a: Album) => void }) {
   const config = useStore(s => s.config)!;
   const navigate = useNavigate();
+  const coverUrl = album?.coverArt ? getCoverArtUrl(config, album.coverArt, 900) : '';
+  const heroStyle = coverUrl
+    ? ({ '--home-hero-art': `url(${coverUrl})` } as CSSProperties)
+    : undefined;
+  const albumMeta = album
+    ? [album.year, album.genre, album.songCount ? `${album.songCount} tracks` : ''].filter(Boolean).join(' · ')
+    : '';
 
   return (
-    <div
-      className="hero"
+    <section
+      className={`home-hero${coverUrl ? ' has-art' : ''}`}
       role="banner"
-      style={{
-        position: 'relative',
-        height: 420,
-        overflow: 'hidden',
-        display: 'flex',
-        alignItems: 'flex-end',
-        padding: '0 32px 36px',
-      }}
+      style={heroStyle}
     >
-      {/* Backgrounds */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: album?.coverArt
-          ? 'linear-gradient(135deg, #1a0533 0%, #0e1a3a 50%, #001a1a 100%)'
-          : 'linear-gradient(135deg, #1a0533 0%, #0e1a3a 50%, #001a1a 100%)',
-      }} />
-      {album?.coverArt && (
-        <div style={{
-          position: 'absolute', inset: -40,
-          backgroundImage: `url(${config && album.coverArt ? getCoverArtUrl(config, album.coverArt, 600) : ''})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          filter: 'blur(60px) saturate(1.5)',
-          opacity: 0.35,
-          transform: 'scale(1.1)',
-        }} />
-      )}
-      <div style={{ position: 'absolute', top: -80, right: 120, width: 520, height: 520, borderRadius: '50%', background: 'radial-gradient(circle, rgba(123,108,246,0.35) 0%, transparent 70%)', pointerEvents: 'none' }} aria-hidden="true" />
-      <div style={{ position: 'absolute', bottom: -100, right: -60, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(224,122,95,0.20) 0%, transparent 70%)', pointerEvents: 'none' }} aria-hidden="true" />
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 200, background: 'linear-gradient(to top, var(--bg) 0%, transparent 100%)', pointerEvents: 'none' }} aria-hidden="true" />
+      <div className="home-hero-aurora" aria-hidden="true" />
+      <div className="home-hero-grain" aria-hidden="true" />
 
-      {/* Content */}
-      <div style={{ position: 'relative', zIndex: 2, display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 28, alignItems: 'flex-end', width: '100%', animation: 'fadeUp 500ms ease both' }}>
+      <div className={`home-featured-card${loading ? ' is-loading' : ''}`} style={{ animation: 'fadeUp 500ms ease both' }}>
         {loading ? (
           <>
-            <div className="skeleton" style={{ width: 200, height: 200, borderRadius: 'var(--radius-lg)', flexShrink: 0 }} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div className="skeleton" style={{ height: 11, width: 100, borderRadius: 4 }} />
-              <div className="skeleton" style={{ height: 44, width: 280, borderRadius: 8 }} />
-              <div className="skeleton" style={{ height: 18, width: 160, borderRadius: 4 }} />
-              <div className="skeleton" style={{ height: 13, width: 120, borderRadius: 4 }} />
+            <div className="home-featured-art-shell">
+              <div className="home-featured-art-skeleton skeleton" />
+            </div>
+            <div className="home-featured-copy">
+              <div className="home-featured-eyebrow skeleton" />
+              <div className="home-featured-title-skeleton skeleton" />
+              <div className="home-featured-line-skeleton skeleton" />
+              <div className="home-featured-meta-skeleton skeleton" />
             </div>
           </>
         ) : album ? (
           <>
-            <div
-              style={{ width: 200, height: 200, borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: '0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.1)', flexShrink: 0, cursor: 'pointer' }}
-              className={artClass(album.id)}
-              onClick={() => navigate(`/album/${album.id}`)}
-              role="link"
-              tabIndex={0}
-              aria-label={`View album ${album.name}`}
-              onKeyDown={e => e.key === 'Enter' && navigate(`/album/${album.id}`)}
-            >
-              <CoverArt coverArt={album.coverArt} id={album.id} size={400} alt={`${album.name} cover art`} />
+            <div className="home-featured-art-shell">
+              <button
+                type="button"
+                className={`home-featured-art ${artClass(album.id)}`}
+                onClick={() => navigate(`/album/${album.id}`)}
+                aria-label={`View album ${album.name}`}
+              >
+                <CoverArt coverArt={album.coverArt} id={album.id} size={520} alt={`${album.name} cover art`} />
+              </button>
+              <span className="home-featured-art-reflection" aria-hidden="true" />
             </div>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 8 }}>
+
+            <div className="home-featured-copy">
+              <div className="home-featured-eyebrow">
+                <span className="home-featured-pulse" aria-hidden="true" />
                 Featured Album
               </div>
               <h1
-                style={{ fontFamily: 'var(--font-display)', fontSize: 42, fontWeight: 700, letterSpacing: '-1.5px', lineHeight: 1.05, color: '#fff', marginBottom: 6, cursor: 'pointer' }}
+                className="home-featured-title"
                 onClick={() => navigate(`/album/${album.id}`)}
                 role="link"
                 tabIndex={0}
@@ -249,27 +233,34 @@ function HeroSection({ album, loading, onPlay }: { album: Album | null; loading:
               >
                 {album.name}
               </h1>
-              <div style={{ fontSize: 16, color: 'rgba(255,255,255,0.65)', marginBottom: 4 }}>{album.artist}</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.38)', marginBottom: 20 }}>
-                {[album.year, album.genre, album.songCount ? `${album.songCount} tracks` : ''].filter(Boolean).join(' · ')}
-              </div>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <p className="home-featured-artist">{album.artist}</p>
+              {albumMeta && <p className="home-featured-meta">{albumMeta}</p>}
+              <div className="home-featured-actions">
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-accent home-featured-play"
                   aria-label={`Play ${album.name}`}
                   onClick={() => onPlay(album)}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5,3 19,12 5,21"/></svg>
-                  Play
+                  Play now
+                </button>
+                <button
+                  type="button"
+                  className="home-featured-link"
+                  onClick={() => navigate(`/album/${album.id}`)}
+                >
+                  Explore album
                 </button>
               </div>
             </div>
+
+            <div className="home-featured-vinyl" aria-hidden="true" />
           </>
         ) : (
-          <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>No albums found in your library.</div>
+          <div className="home-featured-empty">No albums found in your library.</div>
         )}
       </div>
-    </div>
+    </section>
   );
 }
 
