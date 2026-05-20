@@ -27,6 +27,7 @@ function ProtectedLayout() {
 export function App() {
   const isConnected = useStore(s => s.isConnected);
   const theme = useStore(s => s.theme);
+  const accentColor = useStore(s => s.accentColor);
 
   // Sync HTML5 Audio element → Zustand store (always active)
   useAudioSync();
@@ -34,6 +35,10 @@ export function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.dataset.accent = accentColor;
+  }, [accentColor]);
 
   return (
     <BrowserRouter>

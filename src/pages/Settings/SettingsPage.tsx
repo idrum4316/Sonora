@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { ThemeToggle } from '../../components/ThemeToggle';
+import { AccentPicker } from '../../components/AccentPicker';
 import { ping, startScan, getScanStatus } from '../../api/subsonic';
 import type { ScanStatus } from '../../api/subsonic';
 
@@ -76,6 +77,10 @@ export function SettingsPage() {
           <div className="settings-row">
             <span className="settings-label">Theme</span>
             <ThemeToggle className="settings-theme-toggle" showLabel />
+          </div>
+          <div className="settings-row settings-row-accent">
+            <span className="settings-label">Accent color</span>
+            <AccentPicker />
           </div>
         </div>
       </section>

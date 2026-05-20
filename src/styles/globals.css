@@ -73,6 +73,109 @@ html[data-theme='light'] {
   --shadow-glow:  none;
 }
 
+/* ── Accent Palette ─────────────────────────────────────────
+   The default "sunset" accent lives in :root and html[data-theme='light'].
+   These selectors override --accent / --accent-dim / --accent-hover for
+   each named accent in BOTH dark and light themes. Dark variants are
+   brighter for contrast on dark surfaces; light variants are deeper for
+   AA contrast against light backgrounds. */
+
+/* Sunset (default) — explicit alias so data-accent='sunset' always works */
+html[data-accent='sunset'] {
+  --accent:       #E07A5F;
+  --accent-dim:   rgba(224,122,95,0.20);
+  --accent-hover: #E8906A;
+}
+html[data-theme='light'][data-accent='sunset'] {
+  --accent:       #C75D45;
+  --accent-dim:   rgba(199,93,69,0.16);
+  --accent-hover: #B84F38;
+}
+
+/* Amber */
+html[data-accent='amber'] {
+  --accent:       #F0A93B;
+  --accent-dim:   rgba(240,169,59,0.22);
+  --accent-hover: #F4B855;
+}
+html[data-theme='light'][data-accent='amber'] {
+  --accent:       #B07418;
+  --accent-dim:   rgba(176,116,24,0.16);
+  --accent-hover: #99650F;
+}
+
+/* Rose */
+html[data-accent='rose'] {
+  --accent:       #EC6A88;
+  --accent-dim:   rgba(236,106,136,0.22);
+  --accent-hover: #F1839B;
+}
+html[data-theme='light'][data-accent='rose'] {
+  --accent:       #C73E5E;
+  --accent-dim:   rgba(199,62,94,0.16);
+  --accent-hover: #B23052;
+}
+
+/* Violet */
+html[data-accent='violet'] {
+  --accent:       #9F8BFF;
+  --accent-dim:   rgba(159,139,255,0.22);
+  --accent-hover: #B1A0FF;
+}
+html[data-theme='light'][data-accent='violet'] {
+  --accent:       #6556DB;
+  --accent-dim:   rgba(101,86,219,0.16);
+  --accent-hover: #574AC4;
+}
+
+/* Indigo */
+html[data-accent='indigo'] {
+  --accent:       #7B8CFF;
+  --accent-dim:   rgba(123,140,255,0.22);
+  --accent-hover: #93A1FF;
+}
+html[data-theme='light'][data-accent='indigo'] {
+  --accent:       #4256D6;
+  --accent-dim:   rgba(66,86,214,0.16);
+  --accent-hover: #3849BC;
+}
+
+/* Sky */
+html[data-accent='sky'] {
+  --accent:       #56B9F2;
+  --accent-dim:   rgba(86,185,242,0.22);
+  --accent-hover: #74C7F5;
+}
+html[data-theme='light'][data-accent='sky'] {
+  --accent:       #1F7FB8;
+  --accent-dim:   rgba(31,127,184,0.16);
+  --accent-hover: #166DA1;
+}
+
+/* Teal */
+html[data-accent='teal'] {
+  --accent:       #4FC9C0;
+  --accent-dim:   rgba(79,201,192,0.22);
+  --accent-hover: #6BD3CB;
+}
+html[data-theme='light'][data-accent='teal'] {
+  --accent:       #1A8F86;
+  --accent-dim:   rgba(26,143,134,0.16);
+  --accent-hover: #137A72;
+}
+
+/* Emerald */
+html[data-accent='emerald'] {
+  --accent:       #5CCB8A;
+  --accent-dim:   rgba(92,203,138,0.22);
+  --accent-hover: #79D5A1;
+}
+html[data-theme='light'][data-accent='emerald'] {
+  --accent:       #1F8F5A;
+  --accent-dim:   rgba(31,143,90,0.16);
+  --accent-hover: #16794A;
+}
+
 /* ── Reset ──────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { height: 100%; font-size: 16px; }
@@ -3915,4 +4018,68 @@ html[data-theme='light'] .np-play {
   color: var(--text-primary);
   min-width: 44px;
   text-align: right;
+}
+
+/* ── Accent Color Picker ───────────────────────────────────── */
+.settings-row-accent {
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.accent-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+  flex: 1;
+  min-width: 220px;
+}
+
+.accent-swatch {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  padding: 0;
+  background: var(--swatch);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+.accent-swatch:hover {
+  transform: scale(1.08);
+}
+
+.accent-swatch:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--swatch);
+}
+
+.accent-swatch.is-selected {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--swatch);
+  transform: scale(1.05);
+}
+
+.accent-swatch-check {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  pointer-events: none;
+}
+
+.accent-swatch.is-selected .accent-swatch-check {
+  opacity: 1;
+}
+
+/* In light theme the check on lighter swatches needs more contrast */
+html[data-theme='light'] .accent-swatch-check {
+  color: #fff;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25));
 }
