@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useStore } from './store/useStore';
 import { useAudioSync } from './store/useAudioSync';
@@ -25,9 +26,19 @@ function ProtectedLayout() {
 
 export function App() {
   const isConnected = useStore(s => s.isConnected);
+  const theme = useStore(s => s.theme);
+  const accentColor = useStore(s => s.accentColor);
 
   // Sync HTML5 Audio element → Zustand store (always active)
   useAudioSync();
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.dataset.accent = accentColor;
+  }, [accentColor]);
 
   return (
     <BrowserRouter>

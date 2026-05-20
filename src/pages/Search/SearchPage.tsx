@@ -125,11 +125,6 @@ export function SearchPage() {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [query, config]);
 
-  const clearSearch = useCallback(() => {
-    setQuery('');
-    inputRef.current?.focus();
-  }, []);
-
   const handleRecentClick = useCallback((term: string) => {
     setQuery(term);
     inputRef.current?.focus();
@@ -162,34 +157,11 @@ export function SearchPage() {
 
   return (
     <>
-      {/* Search hero */}
-      <div className="search-hero">
-        <h1 className="search-hero-title">Search</h1>
-        <div className="search-input-wrap">
-          <div className="search-input-icon" aria-hidden="true">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </div>
-          <input
-            ref={inputRef}
-            className="search-input"
-            type="search"
-            placeholder="Artists, albums, tracks…"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            aria-label="Search your library"
-            autoComplete="off"
-            spellCheck={false}
-          />
-          {query && (
-            <button className="search-input-clear" aria-label="Clear search" onClick={clearSearch}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          )}
-        </div>
+      {/* Page header */}
+      <div className="search-page-header">
+        <h1 className="search-page-title">
+          {query.trim() ? `Results for "${query.trim()}"` : 'Search'}
+        </h1>
       </div>
 
       {/* Loading skeleton */}
@@ -203,14 +175,14 @@ export function SearchPage() {
       {!loading && hasResults && (
         <div className="search-results">
 
-          {/* Top Result + Songs */}
+          {/* Top Result + Songs — side by side, each with its own label */}
           {(topArtist || songs.length > 0) && (
-            <div className="results-section">
-              <div className="results-section-label" aria-hidden="true">Top Result</div>
-              <div className="top-result">
+            <div className="top-result">
 
-                {/* Top result card */}
-                {topArtist && (
+              {/* Left column: Top Result artist card */}
+              {topArtist && (
+                <div className="top-result-col">
+                  <div className="results-section-label" aria-hidden="true">Top Result</div>
                   <a
                     href={`/artist/${topArtist.id}`}
                     className="top-result-card"
@@ -226,47 +198,39 @@ export function SearchPage() {
                       {topArtist.albumCount} {topArtist.albumCount === 1 ? 'album' : 'albums'} in your library
                     </div>
                     <div className="top-result-play" aria-hidden="true">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21" /></svg>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21" /></svg>
                     </div>
                   </a>
-                )}
+                </div>
+              )}
 
-                {/* Songs */}
-                {songs.length > 0 && (
+              {/* Right column: Artists */}
+              {artists.length > 0 && (
+                <div className="top-result-col">
+                  <div className="results-section-label" aria-hidden="true">Artists</div>
                   <div>
-                    <div className="results-section-label" style={{ marginBottom: 10 }}>Songs</div>
-                    <div className="top-result-tracks">
-                      {songs.slice(0, 4).map((song, i) => {
-                        const isCurrent = currentTrack?.id === song.id;
-                        return (
-                          <div
-                            key={song.id}
-                            className={`tr-row${isCurrent ? ' playing' : ''}`}
-                            role="row"
-                            tabIndex={0}
-                            aria-label={`${song.title} by ${song.artist}, ${fmt(song.duration)}`}
-                            onClick={() => handleSongClick(song, i)}
-                            onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && handleSongClick(song, i)}
-                            onContextMenu={e => openMenu(e, song)}
-                          >
-                            <div className={`tr-art ${artClass(song.albumId)}`}>
-                              <CoverArt coverArt={song.coverArt} id={song.albumId} size={80} alt="" />
-                            </div>
-                            <div>
-                              <div className="tr-title">
-                                <Highlight text={song.title} query={query} />
-                              </div>
-                              <div className="tr-sub">{song.artist} · {song.album}</div>
-                            </div>
-                            <TrackMoreButton song={song} />
-                            <div className="tr-dur">{fmt(song.duration)}</div>
+                    {artists.map(artist => (
+                      <a
+                        key={artist.id}
+                        href={`/artist/${artist.id}`}
+                        className="result-row"
+                        aria-label={artist.name}
+                        onClick={e => { e.preventDefault(); navigate(`/artist/${artist.id}`); }}
+                      >
+                        <ArtistAvatar artist={artist} />
+                        <div className="result-info">
+                          <div className="result-name">
+                            <Highlight text={artist.name} query={query} />
                           </div>
-                        );
-                      })}
-                    </div>
+                          <div className="result-sub">
+                            Artist · {artist.albumCount} {artist.albumCount === 1 ? 'album' : 'albums'}
+                          </div>
+                        </div>
+                      </a>
+                    ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -287,64 +251,35 @@ export function SearchPage() {
             </div>
           )}
 
-          {/* Artists */}
-          {artists.length > 0 && (
+          {/* Songs — at the bottom so a large list doesn't push Albums/Artists down */}
+          {songs.length > 0 && (
             <div className="results-section">
-              <div className="results-section-label" aria-hidden="true">Artists</div>
-              <div>
-                {artists.map(artist => (
-                  <a
-                    key={artist.id}
-                    href={`/artist/${artist.id}`}
-                    className="result-row"
-                    aria-label={artist.name}
-                    onClick={e => { e.preventDefault(); navigate(`/artist/${artist.id}`); }}
-                  >
-                    <ArtistAvatar artist={artist} />
-                    <div className="result-info">
-                      <div className="result-name">
-                        <Highlight text={artist.name} query={query} />
-                      </div>
-                      <div className="result-sub">
-                        Artist · {artist.albumCount} {artist.albumCount === 1 ? 'album' : 'albums'}
-                      </div>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* More songs (if > 4) */}
-          {songs.length > 4 && (
-            <div className="results-section">
-              <div className="results-section-label" aria-hidden="true">More Songs</div>
-              <div className="search-songs-list">
-                {songs.slice(4).map((song, i) => {
-                  const idx = i + 4;
+              <div className="results-section-label" aria-hidden="true">Songs</div>
+              <div className="top-result-tracks">
+                {songs.map((song, i) => {
                   const isCurrent = currentTrack?.id === song.id;
                   return (
                     <div
                       key={song.id}
-                      className={`result-row${isCurrent ? ' playing' : ''}`}
+                      className={`tr-row${isCurrent ? ' playing' : ''}`}
                       role="row"
                       tabIndex={0}
                       aria-label={`${song.title} by ${song.artist}, ${fmt(song.duration)}`}
-                      onClick={() => handleSongClick(song, idx)}
-                      onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && handleSongClick(song, idx)}
+                      onClick={() => handleSongClick(song, i)}
+                      onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && handleSongClick(song, i)}
                       onContextMenu={e => openMenu(e, song)}
                     >
-                      <div className={`result-art ${artClass(song.albumId)}`}>
-                        <CoverArt coverArt={song.coverArt} id={song.albumId} size={80} alt="" />
+                      <div className={`tr-art ${artClass(song.albumId)}`}>
+                        <CoverArt coverArt={song.coverArt} id={song.albumId} size={64} alt="" />
                       </div>
-                      <div className="result-info">
-                        <div className="result-name">
+                      <div>
+                        <div className="tr-title">
                           <Highlight text={song.title} query={query} />
                         </div>
-                        <div className="result-sub">{song.artist} · {song.album}</div>
+                        <div className="tr-sub">{song.artist} · {song.album}</div>
                       </div>
                       <TrackMoreButton song={song} />
-                      <div className="result-dur">{fmt(song.duration)}</div>
+                      <div className="tr-dur">{fmt(song.duration)}</div>
                     </div>
                   );
                 })}
