@@ -94,7 +94,12 @@ sonora/
     │   ├── useAudioSync.ts        # Sync audio element → store
     │   └── useStore.ts            # Main store with slices (audio, queue, library, settings, favorites)
     ├── styles/
-    │   └── globals.css            # Global CSS reset & base styles
+    │   ├── index.css              # Aggregator — imports tokens, layout, components, pages in order
+    │   ├── tokens.css             # Design tokens (CSS vars), theme & accent overrides
+    │   ├── base.css               # Reset, typography, scrollbars
+    │   ├── layout/                # app-shell, sidebar, main, player-bar
+    │   ├── components/            # cards, buttons, dialogs, track-list, etc.
+    │   └── pages/                 # album, artist, library, now-playing, queue, settings, …
     └── utils/
         ├── genreGradients.ts      # Genre color mappings
         ├── useImageColors.ts      # Extract colors from images
@@ -321,7 +326,7 @@ docker compose up -d
 4. Export selectors as needed
 
 ### Styling Components
-- Add styles to `src/styles/globals.css` for global changes
+- Add tokens/global rules to `src/styles/tokens.css` or `src/styles/base.css`; component/page styles live under `src/styles/components/` and `src/styles/pages/`. Register new files in `src/styles/index.css`.
 - Use inline styles or CSS classes for component-specific styles
 - Follow existing color scheme and typography
 
@@ -357,7 +362,7 @@ docker compose up -d
 | Update state logic | `src/store/useStore.ts` |
 | Change audio behavior | `src/store/useAudioSync.ts` |
 | Modify layout | `src/components/Layout/Layout.tsx` |
-| Update global styles | `src/styles/globals.css` |
+| Update global tokens | `src/styles/tokens.css` (then `src/styles/index.css` if adding files) |
 | Add custom hook | `src/utils/` |
 | Add shared component | `src/components/` |
 | Add new page | `src/pages/` |

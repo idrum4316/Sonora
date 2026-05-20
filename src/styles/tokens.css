@@ -1,0 +1,177 @@
+/* ============================================================
+   Sonora — Design System (ported from player.css)
+   ============================================================ */
+
+/* ── Design Tokens ─────────────────────────────────────────── */
+:root {
+  color-scheme: dark;
+
+  --bg:           #080A0F;
+  --bg-raised:    #0E1017;
+  --player-bg:    rgba(8,10,15,0.85);
+  --surface-1:    rgba(255,255,255,0.035);
+  --surface-2:    rgba(255,255,255,0.065);
+  --surface-3:    rgba(255,255,255,0.10);
+  --surface-hover:rgba(255,255,255,0.08);
+  --border:       rgba(255,255,255,0.07);
+  --border-strong:rgba(255,255,255,0.13);
+
+  --text-primary:   #ECEDF5;
+  --text-secondary: rgba(236,237,245,0.50);
+  --text-tertiary:  rgba(236,237,245,0.28);
+
+  --accent:         #E07A5F;
+  --accent-dim:     rgba(224,122,95,0.20);
+  --accent-hover:   #E8906A;
+  --violet:         #7B6CF6;
+  --violet-dim:     rgba(123,108,246,0.20);
+
+  --art-a: #7B6CF6;
+  --art-b: #E07A5F;
+
+  --sidebar-w:    224px;
+  --player-h:     82px;
+  --radius-xs:    6px;
+  --radius-sm:    10px;
+  --radius-md:    16px;
+  --radius-lg:    22px;
+  --radius-xl:    32px;
+  --radius-full:  999px;
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-ui:      'DM Sans', system-ui, sans-serif;
+
+  --shadow-card:  0 0 0 1px var(--border);
+  --shadow-glow:  none;
+  --transition:   200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html[data-theme='light'] {
+  color-scheme: light;
+
+  --bg:           #F8F5EF;
+  --bg-raised:    #FFFFFF;
+  --player-bg:    rgba(255,255,255,0.88);
+  --surface-1:    rgba(37,39,52,0.045);
+  --surface-2:    rgba(37,39,52,0.075);
+  --surface-3:    rgba(37,39,52,0.12);
+  --surface-hover:rgba(37,39,52,0.08);
+  --border:       rgba(37,39,52,0.10);
+  --border-strong:rgba(37,39,52,0.18);
+
+  --text-primary:   #252734;
+  --text-secondary: rgba(37,39,52,0.62);
+  --text-tertiary:  rgba(37,39,52,0.38);
+
+  --accent:         #C75D45;
+  --accent-dim:     rgba(199,93,69,0.16);
+  --accent-hover:   #B84F38;
+  --violet:         #6556DB;
+  --violet-dim:     rgba(101,86,219,0.16);
+
+  --shadow-card:  0 0 0 1px var(--border);
+  --shadow-glow:  none;
+}
+
+/* ── Accent Palette ─────────────────────────────────────────
+   The default "sunset" accent lives in :root and html[data-theme='light'].
+   These selectors override --accent / --accent-dim / --accent-hover for
+   each named accent in BOTH dark and light themes. Dark variants are
+   brighter for contrast on dark surfaces; light variants are deeper for
+   AA contrast against light backgrounds. */
+
+/* Sunset (default) — explicit alias so data-accent='sunset' always works */
+html[data-accent='sunset'] {
+  --accent:       #E07A5F;
+  --accent-dim:   rgba(224,122,95,0.20);
+  --accent-hover: #E8906A;
+}
+html[data-theme='light'][data-accent='sunset'] {
+  --accent:       #C75D45;
+  --accent-dim:   rgba(199,93,69,0.16);
+  --accent-hover: #B84F38;
+}
+
+/* Amber */
+html[data-accent='amber'] {
+  --accent:       #F0A93B;
+  --accent-dim:   rgba(240,169,59,0.22);
+  --accent-hover: #F4B855;
+}
+html[data-theme='light'][data-accent='amber'] {
+  --accent:       #B07418;
+  --accent-dim:   rgba(176,116,24,0.16);
+  --accent-hover: #99650F;
+}
+
+/* Rose */
+html[data-accent='rose'] {
+  --accent:       #EC6A88;
+  --accent-dim:   rgba(236,106,136,0.22);
+  --accent-hover: #F1839B;
+}
+html[data-theme='light'][data-accent='rose'] {
+  --accent:       #C73E5E;
+  --accent-dim:   rgba(199,62,94,0.16);
+  --accent-hover: #B23052;
+}
+
+/* Violet */
+html[data-accent='violet'] {
+  --accent:       #9F8BFF;
+  --accent-dim:   rgba(159,139,255,0.22);
+  --accent-hover: #B1A0FF;
+}
+html[data-theme='light'][data-accent='violet'] {
+  --accent:       #6556DB;
+  --accent-dim:   rgba(101,86,219,0.16);
+  --accent-hover: #574AC4;
+}
+
+/* Indigo */
+html[data-accent='indigo'] {
+  --accent:       #7B8CFF;
+  --accent-dim:   rgba(123,140,255,0.22);
+  --accent-hover: #93A1FF;
+}
+html[data-theme='light'][data-accent='indigo'] {
+  --accent:       #4256D6;
+  --accent-dim:   rgba(66,86,214,0.16);
+  --accent-hover: #3849BC;
+}
+
+/* Sky */
+html[data-accent='sky'] {
+  --accent:       #56B9F2;
+  --accent-dim:   rgba(86,185,242,0.22);
+  --accent-hover: #74C7F5;
+}
+html[data-theme='light'][data-accent='sky'] {
+  --accent:       #1F7FB8;
+  --accent-dim:   rgba(31,127,184,0.16);
+  --accent-hover: #166DA1;
+}
+
+/* Teal */
+html[data-accent='teal'] {
+  --accent:       #4FC9C0;
+  --accent-dim:   rgba(79,201,192,0.22);
+  --accent-hover: #6BD3CB;
+}
+html[data-theme='light'][data-accent='teal'] {
+  --accent:       #1A8F86;
+  --accent-dim:   rgba(26,143,134,0.16);
+  --accent-hover: #137A72;
+}
+
+/* Emerald */
+html[data-accent='emerald'] {
+  --accent:       #5CCB8A;
+  --accent-dim:   rgba(92,203,138,0.22);
+  --accent-hover: #79D5A1;
+}
+html[data-theme='light'][data-accent='emerald'] {
+  --accent:       #1F8F5A;
+  --accent-dim:   rgba(31,143,90,0.16);
+  --accent-hover: #16794A;
+}

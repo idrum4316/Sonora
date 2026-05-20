@@ -1,0 +1,151 @@
+
+/* ── Album Page ──────────────────────────────────────────────── */
+.album-hero {
+  position: relative;
+  padding: 48px 32px 0;
+  overflow: hidden;
+}
+.album-hero-inner {
+  position: relative;
+  display: flex;
+  gap: 36px;
+  align-items: flex-end;
+}
+.album-cover-wrap { flex-shrink: 0; position: relative; }
+.album-cover {
+  width: 220px;
+  height: 220px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.album-info { min-width: 0; padding-bottom: 8px; }
+.album-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 12px;
+}
+.album-title {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 700;
+  letter-spacing: -2px;
+  line-height: 1.0;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+}
+.album-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.album-artist-link {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: color var(--transition);
+  cursor: pointer;
+}
+.album-artist-link:hover { color: var(--accent); }
+.album-genre-link {
+  cursor: pointer;
+  transition: color var(--transition);
+}
+.album-genre-link:hover { color: var(--accent); }
+.album-meta-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+}
+.album-meta-text { font-size: 14px; color: var(--text-secondary); }
+.album-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.album-body {
+  display: grid;
+  grid-template-columns: 1fr 268px;
+  gap: 32px;
+  padding: 32px 32px 48px;
+}
+.album-tracks-col { min-width: 0; }
+.album-sidebar { position: sticky; top: 72px; align-self: start; }
+
+.album-stats {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.album-stat { text-align: center; }
+.album-stat-val {
+  font-size: 17px;
+  font-weight: 600;
+  font-family: var(--font-display);
+}
+.album-stat-label {
+  font-size: 10px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.credits-panel {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.credits-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 14px;
+}
+.credit-row { margin-bottom: 12px; }
+.credit-role { font-size: 11px; color: var(--text-tertiary); margin-bottom: 2px; }
+.credit-name { font-size: 13.5px; font-weight: 500; color: var(--text-primary); }
+
+.related-album-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: opacity var(--transition);
+}
+.related-album-item:hover { opacity: 0.8; }
+.related-album-art {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-xs);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.related-album-info { min-width: 0; }
+.related-album-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--transition);
+}
+.related-album-item:hover .related-album-title { color: var(--text-primary); }
+.related-album-year { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }

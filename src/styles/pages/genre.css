@@ -1,0 +1,79 @@
+
+/* ── Genre Page ──────────────────────────────────────────────── */
+.genre-hero {
+  position: relative;
+  padding: 80px 32px 40px;
+  overflow: hidden;
+}
+.genre-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  pointer-events: none;
+}
+.genre-hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 680px;
+}
+.genre-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 12px;
+}
+.genre-hero-title {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 700;
+  letter-spacing: -2px;
+  line-height: 1;
+  color: #fff;
+  margin-bottom: 10px;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.3);
+}
+.genre-hero-stats {
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.genre-hero-dot {
+  color: rgba(255,255,255,0.4);
+}
+.genre-hero-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.genre-body {
+  padding: 32px;
+}
+.genre-section-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: baseline;
+}
+.genre-song-list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--surface-1);
+}
+.genre-empty {
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 14px;
+}

@@ -1,0 +1,95 @@
+
+/* ── Artists Page ─────────────────────────────────────────────── */
+.artists-page { padding: 20px 32px 48px; }
+
+.artists-page-header {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.artists-page-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.artists-az-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 28px;
+}
+.artists-az-link {
+  min-width: 34px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: color var(--transition), background var(--transition), border-color var(--transition);
+  letter-spacing: 0.04em;
+  padding: 0 6px;
+}
+.artists-az-link:hover {
+  color: var(--text-primary);
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+}
+
+.artists-section { margin-bottom: 40px; }
+.artists-section-letter {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.artists-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.artists-search-wrap svg {
+  position: absolute;
+  left: 10px;
+  color: var(--text-tertiary);
+  pointer-events: none;
+}
+.artists-search-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 6px 14px 6px 32px;
+  font-size: 13px;
+  color: var(--text-primary);
+  width: 200px;
+  transition: width 300ms cubic-bezier(0.4,0,0.2,1);
+  outline: none;
+}
+.artists-search-input:focus {
+  width: 260px;
+  border-color: var(--accent) !important;
+  outline: none;
+}
+.artists-search-input::placeholder { color: var(--text-tertiary); }
+
+.artists-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 32px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-align: center;
+}

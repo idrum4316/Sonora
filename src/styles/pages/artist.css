@@ -1,0 +1,177 @@
+
+/* ── Artist Page ─────────────────────────────────────────────── */
+
+/* Hero — mirrors album-hero structure */
+.artist-hero {
+  position: relative;
+  padding: 48px 32px 0;
+  overflow: hidden;
+}
+.artist-hero-inner {
+  position: relative;
+  display: flex;
+  gap: 36px;
+  align-items: flex-end;
+}
+.artist-photo-wrap { flex-shrink: 0; }
+.artist-photo {
+  width: 200px;
+  height: 200px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  position: relative;
+}
+.artist-photo-monogram {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 72px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.20);
+  letter-spacing: -4px;
+  user-select: none;
+}
+.artist-info { min-width: 0; padding-bottom: 8px; }
+.artist-hero-name {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 700;
+  letter-spacing: -2.5px;
+  line-height: 1.0;
+  color: var(--text-primary);
+  margin-bottom: 14px;
+}
+
+/* Body */
+.artist-body {
+  padding: 32px 32px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+/* About / biography */
+.artist-about-layout {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+.artist-about-photo-wrap {
+  flex-shrink: 0;
+  width: 120px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.artist-about-photo {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  aspect-ratio: 1;
+}
+.artist-about-text-col { flex: 1; min-width: 0; }
+.artist-bio-text {
+  font-size: 14.5px;
+  line-height: 1.75;
+  color: var(--text-secondary);
+  max-width: 620px;
+}
+.artist-bio-text--clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.artist-bio-toggle {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color var(--transition);
+  display: block;
+}
+.artist-bio-toggle:hover { color: var(--accent); }
+.artist-lastfm-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  transition: color var(--transition);
+}
+.artist-lastfm-link:hover { color: var(--text-primary); }
+
+/* Similar artists */
+.similar-artists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 20px 16px;
+}
+.similar-artist-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  color: inherit;
+}
+.similar-artist-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.similar-artist-photo {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  transition: border-color var(--transition);
+  position: relative;
+}
+.similar-artist-item:hover .similar-artist-photo {
+  border-color: var(--border-strong);
+}
+.similar-artist-monogram {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.22);
+  letter-spacing: -1px;
+  user-select: none;
+}
+.similar-artist-name {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: color var(--transition);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+.similar-artist-item:hover .similar-artist-name { color: var(--text-primary); }
+
+/* Misc */
+.section-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
