@@ -1,8 +1,8 @@
-import { useEffect, useState, useCallback, type CSSProperties } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import {
-  getAlbumList, getPlaylists, getPlaylist, getGenres, getArtists, getAlbum, getCoverArtUrl,
+  getAlbumList, getPlaylists, getPlaylist, getGenres, getArtists, getAlbum,
 } from '../../api/subsonic';
 import type { Album, Playlist, Genre, Artist } from '../../api/subsonic';
 import { AlbumCard } from '../../components/AlbumCard';
@@ -167,31 +167,21 @@ export function HomePage() {
               ))}
         </div>
       </PageSection>
+
+      <div style={{ height: 48 }} aria-hidden="true" />
     </>
   );
 }
 
 // ── Hero Section ──────────────────────────────────────────────────────────────
 function HeroSection({ album, loading, onPlay }: { album: Album | null; loading: boolean; onPlay: (a: Album) => void }) {
-  const config = useStore(s => s.config)!;
   const navigate = useNavigate();
-  const coverUrl = album?.coverArt ? getCoverArtUrl(config, album.coverArt, 900) : '';
-  const heroStyle = coverUrl
-    ? ({ '--home-hero-art': `url(${coverUrl})` } as CSSProperties)
-    : undefined;
   const albumMeta = album
     ? [album.year, album.genre, album.songCount ? `${album.songCount} tracks` : ''].filter(Boolean).join(' · ')
     : '';
 
   return (
-    <section
-      className={`home-hero${coverUrl ? ' has-art' : ''}`}
-      role="banner"
-      style={heroStyle}
-    >
-      <div className="home-hero-aurora" aria-hidden="true" />
-      <div className="home-hero-grain" aria-hidden="true" />
-
+    <section className="home-hero" role="banner">
       <div className={`home-featured-card${loading ? ' is-loading' : ''}`} style={{ animation: 'fadeUp 500ms ease both' }}>
         {loading ? (
           <>
@@ -216,7 +206,6 @@ function HeroSection({ album, loading, onPlay }: { album: Album | null; loading:
               >
                 <CoverArt coverArt={album.coverArt} id={album.id} size={520} alt={`${album.name} cover art`} />
               </button>
-              <span className="home-featured-art-reflection" aria-hidden="true" />
             </div>
 
             <div className="home-featured-copy">
@@ -253,8 +242,6 @@ function HeroSection({ album, loading, onPlay }: { album: Album | null; loading:
                 </button>
               </div>
             </div>
-
-            <div className="home-featured-vinyl" aria-hidden="true" />
           </>
         ) : (
           <div className="home-featured-empty">No albums found in your library.</div>
@@ -274,7 +261,7 @@ function QuickItem({ playlist, onPlay }: { playlist: Playlist; index?: number; o
       aria-label={`Play ${playlist.name}`}
       onClick={onPlay}
       onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onPlay()}
-      style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '10px 14px', cursor: 'pointer', transition: 'background var(--transition), transform var(--transition)', overflow: 'hidden' }}
+      style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '10px 14px', cursor: 'pointer', transition: 'background var(--transition)', overflow: 'hidden' }}
     >
       <div className={`sidebar-playlist-art ${artClass(playlist.id)}`} style={{ width: 44, height: 44, borderRadius: 'var(--radius-sm)', flexShrink: 0, overflow: 'hidden' }}>
         {playlist.coverArt && <CoverArt coverArt={playlist.coverArt} id={playlist.id} size={88} alt="" />}
@@ -314,15 +301,13 @@ function MoodCard({ genre, index }: { genre: Genre; index: number }) {
         cursor: 'pointer',
         position: 'relative',
         background: genreGradient(genre.value, index),
-        transition: 'transform 200ms',
       }}
       onClick={() => navigate(`/genre/${encodeURIComponent(genre.value)}`)}
       onKeyDown={e => e.key === 'Enter' && navigate(`/genre/${encodeURIComponent(genre.value)}`)}
     >
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0,
-        padding: '28px 14px 12px',
-        background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)',
+        padding: '14px',
         fontSize: 14, fontWeight: 600, color: '#fff', letterSpacing: '0.01em',
       }}>
         {genre.value}
