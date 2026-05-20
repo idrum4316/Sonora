@@ -9,13 +9,8 @@ import {
   IconShuffle, IconRepeat, IconHeart,
   IconVolumeUp, IconVolumeMute, IconVolumeLow, IconChevronDown,
 } from '../../components/ui';
-import { useImageColors } from '../../utils/useImageColors';
 import { useSliderDrag } from '../../utils/useSliderDrag';
-import { getCoverArtUrl } from '../../api/subsonic';
 import type { RepeatMode } from '../../store/useStore';
-
-// Fallback colors when image extraction isn't available
-const FALLBACK_COLORS: [string, string] = ['#7B6CF6', '#E07A5F'];
 
 function useDragReorder(moveInQueue: (from: number, to: number) => void) {
   const dragIdx = useRef<number | null>(null);
@@ -67,7 +62,7 @@ export function NowPlayingPage() {
   const toggleNowPlaying = useStore(s => s.toggleNowPlaying);
   const {
     currentTrack, queue, queueIndex, isPlaying, currentTime, duration,
-    volume, isMuted, shuffle, repeat, config,
+    volume, isMuted, shuffle, repeat,
     togglePlay, next, prev, seekTo, setVolume, toggleMute,
     toggleShuffle, setRepeat, playTrack, starCurrentTrack, moveInQueue,
   } = useStore();
@@ -99,27 +94,15 @@ export function NowPlayingPage() {
   const isStarred = !!track.starred;
   const progressPct = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  const coverArtUrl = track.coverArt && config
-    ? getCoverArtUrl(config, track.coverArt, 128)
-    : undefined;
-  const [colorA, colorB] = useImageColors(coverArtUrl, FALLBACK_COLORS);
-
   const upNext = queue.slice(queueIndex + 1);
   const effectiveVolume = isMuted ? 0 : volume;
 
   const VolumeIcon = effectiveVolume === 0 ? IconVolumeMute : effectiveVolume < 0.5 ? IconVolumeLow : IconVolumeUp;
 
   return (
-    <div
-      className="np-page"
-      style={{ '--np-color-a': colorA, '--np-color-b': colorB } as React.CSSProperties}
-    >
-      {/* Ambient background — soft color orbs derived from the artwork */}
-      <div className="np-bg" aria-hidden="true">
-        <div className="np-bg-orb np-bg-orb--a" />
-        <div className="np-bg-orb np-bg-orb--b" />
-        <div className="np-bg-veil" />
-      </div>
+    <div className="np-page">
+      {/* Flat background */}
+      <div className="np-bg" aria-hidden="true" />
 
       <div className="np-shell" role="main" aria-label="Full player view">
 

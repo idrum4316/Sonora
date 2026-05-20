@@ -2786,47 +2786,16 @@ mark {
   overflow: hidden;
   background: var(--bg);
   color: var(--text-primary);
-  --np-color-a: var(--art-a);
-  --np-color-b: var(--art-b);
 }
 
-/* ── Ambient background: two soft orbs in the album's colors ── */
+/* ── Background (flat, theme-aware) ── */
 .np-bg {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  overflow: hidden;
+  background: var(--bg);
 }
-.np-bg-orb {
-  position: absolute;
-  width: 820px;
-  height: 820px;
-  border-radius: 50%;
-  filter: blur(120px) saturate(1.35);
-  opacity: 0.50;
-  will-change: transform;
-}
-.np-bg-orb--a {
-  top: -260px;
-  left: -220px;
-  background: var(--np-color-a);
-}
-.np-bg-orb--b {
-  bottom: -280px;
-  right: -240px;
-  background: var(--np-color-b);
-}
-.np-bg-veil {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% 100%, var(--bg) 0%, transparent 70%),
-    linear-gradient(to bottom, transparent 0%, var(--bg) 100%);
-  opacity: 0.55;
-}
-html[data-theme='light'] .np-bg-orb { opacity: 0.30; }
-html[data-theme='light'] .np-bg-veil { opacity: 0.70; }
 
 /* ── Main shell ── */
 .np-shell {
