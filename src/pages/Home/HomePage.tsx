@@ -135,7 +135,7 @@ export function HomePage() {
           >
             {loading
               ? Array.from({ length: 8 }, (_, i) => (
-                  <div key={i} className="skeleton" style={{ aspectRatio: '2/1', borderRadius: 'var(--radius-md)' }} />
+                  <div key={i} className="skeleton" style={{ height: 72, borderRadius: 'var(--radius-md)' }} />
                 ))
               : genres.slice(0, 8).map((g, i) => (
                   <MoodCard key={g.value} genre={g} index={i} />
@@ -288,29 +288,23 @@ function QuickItemSkeleton() {
 // ── Mood Card ─────────────────────────────────────────────────────────────────
 function MoodCard({ genre, index }: { genre: Genre; index: number }) {
   const navigate = useNavigate();
+  const accent = genreGradient(genre.value, index);
   return (
     <div
       className="mood-card"
       role="listitem"
       tabIndex={0}
       aria-label={`Browse ${genre.value} music`}
-      style={{
-        aspectRatio: '2/1',
-        borderRadius: 'var(--radius-md)',
-        overflow: 'hidden',
-        cursor: 'pointer',
-        position: 'relative',
-        background: genreGradient(genre.value, index),
-      }}
+      style={{ borderTop: `2px solid ${accent}` }}
       onClick={() => navigate(`/genre/${encodeURIComponent(genre.value)}`)}
       onKeyDown={e => e.key === 'Enter' && navigate(`/genre/${encodeURIComponent(genre.value)}`)}
     >
-      <div style={{
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        padding: '14px',
-        fontSize: 14, fontWeight: 600, color: '#fff', letterSpacing: '0.01em',
-      }}>
-        {genre.value}
+      <div className="mood-card-dot" style={{ background: accent }} />
+      <div>
+        <div className="mood-card-name">{genre.value}</div>
+        <div className="mood-card-count">
+          {genre.songCount.toLocaleString()} {genre.songCount === 1 ? 'track' : 'tracks'}
+        </div>
       </div>
     </div>
   );
