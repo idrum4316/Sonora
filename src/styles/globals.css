@@ -382,7 +382,7 @@ svg { flex-shrink: 0; }
   width: 44px; height: 44px;
   border-radius: var(--radius-full);
   background: rgba(255,255,255,0.95);
-  color: var(--bg);
+  color: #181818;
   display: grid; place-items: center;
   opacity: 0;
   transform: scale(0.9);
@@ -456,7 +456,8 @@ svg { flex-shrink: 0; }
 .btn-icon { width: 36px; height: 36px; padding: 0; border-radius: var(--radius-full); justify-content: center; }
 
 html[data-theme='light'] .btn-primary:hover,
-html[data-theme='light'] .ctrl-btn-play:hover {
+html[data-theme='light'] .ctrl-btn-play:hover,
+html[data-theme='light'] .qp-s-play:hover {
   background: #1F2330;
   color: #fff;
 }
@@ -2926,7 +2927,7 @@ mark {
   height: 72px;
   border-radius: var(--radius-full);
   background: #fff;
-  color: var(--bg);
+  color: #181818;
   display: grid;
   place-items: center;
   margin: 0 8px;
