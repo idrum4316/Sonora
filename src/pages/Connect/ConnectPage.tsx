@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useStore } from '../../store/useStore';
+import { ThemeToggle } from '../../components/ThemeToggle';
 import { ping } from '../../api/subsonic';
 import type { SubsonicConfig } from '../../api/subsonic';
 
@@ -53,6 +54,8 @@ export function ConnectPage() {
 
   return (
     <div style={styles.page}>
+      <ThemeToggle className="connect-theme-toggle" showLabel />
+
       {/* Background orbs */}
       <div style={styles.orb1} aria-hidden="true" />
       <div style={styles.orb2} aria-hidden="true" />
@@ -195,13 +198,13 @@ const styles: Record<string, React.CSSProperties> = {
     zIndex: 1,
     width: '100%',
     maxWidth: '400px',
-    background: 'rgba(14,16,23,0.85)',
+    background: 'var(--bg-raised)',
     border: '1px solid var(--border-strong)',
     borderRadius: '24px',
     padding: '40px 36px',
-    backdropFilter: 'blur(24px)',
-    boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
+    boxShadow: '0 24px 70px rgba(0,0,0,0.22)',
     animation: 'fadeUp 500ms cubic-bezier(0.4,0,0.2,1) both',
+    transition: 'background var(--transition), border-color var(--transition), box-shadow var(--transition)',
   },
   logoWrap: {
     display: 'flex',

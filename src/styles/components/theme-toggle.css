@@ -66,3 +66,25 @@ html[data-theme='light'] .sidebar-theme-toggle .theme-toggle-thumb {
 .settings-theme-toggle {
   flex-shrink: 0;
 }
+.connect-theme-toggle {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 2;
+  padding: 8px 10px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+}
+.connect-theme-toggle:hover {
+  background: var(--surface-1);
+}
+@media (max-width: 520px) {
+  .connect-theme-toggle {
+    top: 16px;
+    right: 16px;
+  }
+  .connect-theme-toggle .theme-toggle-label {
+    display: none;
+  }
+}
