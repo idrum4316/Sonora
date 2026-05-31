@@ -86,9 +86,6 @@ export function ConnectPage() {
 
       <main className="connect-shell">
         <section className="connect-intro" aria-labelledby="connect-title">
-          <div className="connect-logo-mark">
-            <IconLogo />
-          </div>
           <p className="connect-eyebrow">Self-hosted music streaming</p>
           <h1 id="connect-title" className="connect-title">Connect to your library.</h1>
           <p className="connect-copy">

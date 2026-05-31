@@ -75,23 +75,6 @@
   max-width: 600px;
 }
 
-.connect-logo-mark {
-  width: 72px;
-  height: 72px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 28px;
-  color: var(--accent);
-  background: var(--surface-1);
-  border: 1px solid var(--border);
-  border-radius: 22px;
-}
-
-.connect-logo-mark svg {
-  width: 46px;
-  height: 46px;
-}
-
 .connect-eyebrow,
 .connect-step {
   color: var(--accent);
@@ -334,18 +317,6 @@ html[data-theme='dark'] .connect-status-success {
 
   .connect-shell {
     padding: 32px 0 40px;
-  }
-
-  .connect-logo-mark {
-    width: 58px;
-    height: 58px;
-    margin-bottom: 22px;
-    border-radius: 18px;
-  }
-
-  .connect-logo-mark svg {
-    width: 38px;
-    height: 38px;
   }
 
   .connect-title {
