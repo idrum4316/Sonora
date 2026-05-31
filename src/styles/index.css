@@ -34,6 +34,7 @@
 @import './components/artist-card.css';
 
 /* ── Pages ───────────────────────────────────────────────── */
+@import './pages/connect.css';
 @import './pages/album.css';
 @import './pages/artist.css';
 @import './pages/playlist.css';
