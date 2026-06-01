@@ -4,7 +4,8 @@ import { useStore } from '../../store/useStore';
 import { getAlbum, getArtist, star, unstar, getCoverArtUrl } from '../../api/subsonic';
 import type { Album, Song } from '../../api/subsonic';
 import { CoverArt, artClass } from '../../components/CoverArt';
-import { fmtDuration, Skeleton, IconPlay, IconHeart, IconShuffle, IconPlayNext, IconAddQueue } from '../../components/ui';
+import { ImageLightbox } from '../../components/ImageLightbox';
+import { fmtDuration, Skeleton, IconPlay, IconHeart, IconShuffle, IconPlayNext, IconAddQueue, IconExpand } from '../../components/ui';
 import { TrackRow } from '../../components/TrackRow';
 import { useTrackMenu } from '../../components/TrackMenu';
 import { AddToPlaylistDialog } from '../../components/AddToPlaylistDialog';
@@ -29,6 +30,7 @@ export function AlbumPage() {
   const [loading, setLoading] = useState(true);
   const [starredSongs, setStarredSongs] = useState<Set<string>>(new Set());
   const [albumLiked, setAlbumLiked] = useState(false);
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -152,13 +154,51 @@ export function AlbumPage() {
             {loading ? (
               <div className="skeleton album-cover" />
             ) : (
-              <div className={`album-cover ${coverClass}`}>
+              <div
+                className={`album-cover expandable-image ${coverClass}${album?.coverArt ? '' : ' expandable-image--disabled'}`}
+                role={album?.coverArt ? 'button' : undefined}
+                tabIndex={album?.coverArt ? 0 : -1}
+                aria-label={album?.coverArt ? `View larger image of ${album.name} cover art` : undefined}
+                onClick={() => {
+                  if (album?.coverArt) {
+                    setLightbox({
+                      src: getCoverArtUrl(config, album.coverArt, 1200),
+                      alt: `${album.name} cover art`,
+                    });
+                  }
+                }}
+                onKeyDown={e => {
+                  if (album?.coverArt && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    setLightbox({
+                      src: getCoverArtUrl(config, album.coverArt, 1200),
+                      alt: `${album.name} cover art`,
+                    });
+                  }
+                }}
+              >
                 <CoverArt
                   coverArt={album?.coverArt}
                   id={album?.id ?? ''}
                   size={440}
-                  alt={album ? `${album.name} cover art` : ''}
+                  alt=""
                 />
+                {album?.coverArt && (
+                  <button
+                    className="expandable-image-expand"
+                    onClick={e => {
+                      e.stopPropagation();
+                      setLightbox({
+                        src: getCoverArtUrl(config, album.coverArt!, 1200),
+                        alt: `${album.name} cover art`,
+                      });
+                    }}
+                    aria-label={`View larger image of ${album.name} cover art`}
+                    tabIndex={-1}
+                  >
+                    <IconExpand size={14} />
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -378,16 +418,41 @@ export function AlbumPage() {
                     <div
                       key={rel.id}
                       className="related-album-item"
-                      role="button"
-                      tabIndex={0}
-                      aria-label={`View album ${rel.name}`}
-                      onClick={() => navigate(`/album/${rel.id}`)}
-                      onKeyDown={e => e.key === 'Enter' && navigate(`/album/${rel.id}`)}
                     >
-                      <div className={`related-album-art ${artClass(rel.id)}`}>
+                      <div
+                        className={`related-album-art ${artClass(rel.id)}${rel.coverArt ? ' expandable-image' : ''}`}
+                        role={rel.coverArt ? 'button' : undefined}
+                        tabIndex={rel.coverArt ? 0 : -1}
+                        aria-label={rel.coverArt ? `View larger image of ${rel.name} cover art` : undefined}
+                        onClick={e => {
+                          e.stopPropagation();
+                          if (rel.coverArt) {
+                            setLightbox({
+                              src: getCoverArtUrl(config, rel.coverArt, 1200),
+                              alt: `${rel.name} cover art`,
+                            });
+                          }
+                        }}
+                        onKeyDown={e => {
+                          if (rel.coverArt && (e.key === 'Enter' || e.key === ' ')) {
+                            e.preventDefault();
+                            setLightbox({
+                              src: getCoverArtUrl(config, rel.coverArt, 1200),
+                              alt: `${rel.name} cover art`,
+                            });
+                          }
+                        }}
+                      >
                         <CoverArt coverArt={rel.coverArt} id={rel.id} size={80} alt="" />
                       </div>
-                      <div className="related-album-info">
+                      <div
+                        className="related-album-info"
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`View album ${rel.name}`}
+                        onClick={() => navigate(`/album/${rel.id}`)}
+                        onKeyDown={e => e.key === 'Enter' && navigate(`/album/${rel.id}`)}
+                      >
                         <div className="related-album-title">{rel.name}</div>
                         {rel.year && <div className="related-album-year">{rel.year}</div>}
                       </div>
@@ -406,6 +471,12 @@ export function AlbumPage() {
           onClose={() => setShowPlaylistDialog(false)}
         />
       )}
+      <ImageLightbox
+        src={lightbox?.src}
+        alt={lightbox?.alt ?? ''}
+        open={!!lightbox}
+        onClose={() => setLightbox(null)}
+      />
     </>
   );
 }

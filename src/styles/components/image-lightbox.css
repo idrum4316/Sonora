@@ -70,6 +70,12 @@
   cursor: zoom-in;
 }
 
+/* When used on something that has no cover art (so the CoverArt fallback
+   gradient is showing), keep the default cursor. */
+.expandable-image--disabled {
+  cursor: default;
+}
+
 .expandable-image-expand {
   position: absolute;
   inset: auto 10px 10px auto;

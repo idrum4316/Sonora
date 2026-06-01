@@ -125,19 +125,21 @@
   align-items: center;
   gap: 10px;
   padding: 6px 0;
-  cursor: pointer;
   border-radius: var(--radius-sm);
   transition: opacity var(--transition);
 }
-.related-album-item:hover { opacity: 0.8; }
 .related-album-art {
   width: 40px;
   height: 40px;
   border-radius: var(--radius-xs);
   flex-shrink: 0;
   overflow: hidden;
+  cursor: zoom-in;
 }
-.related-album-info { min-width: 0; }
+.related-album-info {
+  min-width: 0;
+  cursor: pointer;
+}
 .related-album-title {
   font-size: 13px;
   font-weight: 500;
