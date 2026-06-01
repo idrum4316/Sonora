@@ -13,8 +13,8 @@
 }
 .album-cover-wrap { flex-shrink: 0; position: relative; }
 .album-cover {
-  width: 220px;
-  height: 220px;
+  width: 260px;
+  height: 260px;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border);
