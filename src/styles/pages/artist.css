@@ -15,9 +15,9 @@
 }
 .artist-photo-wrap { flex-shrink: 0; }
 .artist-photo {
-  width: 200px;
-  height: 200px;
-  border-radius: var(--radius-full);
+  width: 260px;
+  height: 260px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border);
   flex-shrink: 0;
@@ -63,8 +63,8 @@
 }
 .artist-about-photo-wrap {
   flex-shrink: 0;
-  width: 120px;
-  border-radius: var(--radius-md);
+  width: 160px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border);
 }
