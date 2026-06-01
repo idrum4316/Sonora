@@ -32,6 +32,7 @@
 @import './components/track-list.css';
 @import './components/playlist-dialog.css';
 @import './components/artist-card.css';
+@import './components/image-lightbox.css';
 
 /* ── Pages ───────────────────────────────────────────────── */
 @import './pages/connect.css';

@@ -5,7 +5,8 @@ import { getArtist, getArtistInfo, getAlbum, star, unstar, getCoverArtUrl } from
 import type { ArtistDetail, ArtistInfo, Album } from '../../api/subsonic';
 import { CoverArt, artClass } from '../../components/CoverArt';
 import { ArtistCard } from '../../components/ArtistCard';
-import { Skeleton, IconPlay, IconHeart, IconShuffle } from '../../components/ui';
+import { ImageLightbox } from '../../components/ImageLightbox';
+import { Skeleton, IconPlay, IconHeart, IconShuffle, IconExpand } from '../../components/ui';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function initials(name: string): string {
@@ -41,6 +42,7 @@ export function ArtistPage() {
   const [info, setInfo] = useState<ArtistInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [followed, setFollowed] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const photoClass = id ? artClass(id) : 'art-violet';
 
@@ -115,6 +117,11 @@ export function ArtistPage() {
     (artist?.artistImageUrl) ||
     (artist?.coverArt ? getCoverArtUrl(config, artist.coverArt, 400) : undefined);
 
+  // High-res version for the lightbox — re-requests cover art at full size
+  const hiResUrl = info?.largeImageUrl ||
+    (artist?.artistImageUrl) ||
+    (artist?.coverArt ? getCoverArtUrl(config, artist.coverArt, 1200) : undefined);
+
   const biography = info?.biography ? stripHtml(info.biography) : null;
 
   const years = albums.map(a => a.year).filter(Boolean) as number[];
@@ -158,13 +165,30 @@ export function ArtistPage() {
             {loading ? (
               <div className="skeleton artist-photo" />
             ) : (
-              <div className={`artist-photo ${photoClass}`}>
+              <div
+                className={`artist-photo expandable-image ${photoClass}`}
+                role="button"
+                tabIndex={photoUrl ? 0 : -1}
+                aria-label={photoUrl ? `View larger image of ${artist?.name ?? 'artist'}` : undefined}
+                onClick={() => { if (photoUrl) setLightboxOpen(true); }}
+                onKeyDown={e => { if (photoUrl && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setLightboxOpen(true); } }}
+              >
                 {photoUrl ? (
-                  <img
-                    src={photoUrl}
-                    alt={`${artist?.name ?? ''} photo`}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }}
-                  />
+                  <>
+                    <img
+                      src={photoUrl}
+                      alt={`${artist?.name ?? ''} photo`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }}
+                    />
+                    <button
+                      className="expandable-image-expand"
+                      onClick={e => { e.stopPropagation(); setLightboxOpen(true); }}
+                      aria-label={`View larger image of ${artist?.name ?? 'artist'}`}
+                      tabIndex={-1}
+                    >
+                      <IconExpand size={14} />
+                    </button>
+                  </>
                 ) : (
                   <div className="artist-photo-monogram" aria-hidden="true">
                     {artist ? initials(artist.name) : ''}
@@ -298,12 +322,30 @@ export function ArtistPage() {
             </div>
             <div className="artist-about-layout">
               {photoUrl && (
-                <div className="artist-about-photo-wrap" aria-hidden="true">
-                  <img
-                    src={photoUrl}
-                    alt=""
-                    className="artist-about-photo"
-                  />
+                <div className="artist-about-photo-wrap">
+                  <div
+                    className="expandable-image"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`View larger image of ${artist?.name ?? 'artist'}`}
+                    onClick={() => setLightboxOpen(true)}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLightboxOpen(true); } }}
+                    style={{ position: 'relative' }}
+                  >
+                    <img
+                      src={photoUrl}
+                      alt=""
+                      className="artist-about-photo"
+                    />
+                    <button
+                      className="expandable-image-expand"
+                      onClick={e => { e.stopPropagation(); setLightboxOpen(true); }}
+                      aria-label={`View larger image of ${artist?.name ?? 'artist'}`}
+                      tabIndex={-1}
+                    >
+                      <IconExpand size={12} />
+                    </button>
+                  </div>
                 </div>
               )}
               <div className="artist-about-text-col">
@@ -346,6 +388,13 @@ export function ArtistPage() {
           </section>
         )}
       </div>
+
+      <ImageLightbox
+        src={hiResUrl}
+        alt={artist ? `${artist.name} photo` : 'Artist photo'}
+        open={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+      />
     </>
   );
 }

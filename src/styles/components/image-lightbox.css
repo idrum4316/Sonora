@@ -1,0 +1,104 @@
+/* ── Image Lightbox ───────────────────────────────────────── */
+
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  overflow: hidden;
+  animation: lightbox-fade-in 180ms ease both;
+}
+
+@keyframes lightbox-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.image-lightbox-img {
+  display: block;
+  max-width: min(calc(100vw - 96px), calc(100dvw - 96px));
+  max-height: min(calc(100vh - 96px), calc(100dvh - 96px));
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+  animation: lightbox-zoom-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  cursor: default;
+}
+
+@keyframes lightbox-zoom-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.image-lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition);
+}
+.image-lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: scale(1.05);
+}
+.image-lightbox-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Expandable image affordance ──────────────────────────── */
+
+.expandable-image {
+  position: relative;
+  cursor: zoom-in;
+}
+
+.expandable-image-expand {
+  position: absolute;
+  inset: auto 10px 10px auto;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity var(--transition), transform var(--transition), background var(--transition);
+  z-index: 1;
+}
+.expandable-image:hover .expandable-image-expand,
+.expandable-image:focus-within .expandable-image-expand {
+  opacity: 1;
+  transform: translateY(0);
+}
+.expandable-image-expand:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+.expandable-image-expand:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
