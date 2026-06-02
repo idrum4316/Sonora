@@ -151,3 +151,34 @@
 }
 .related-album-item:hover .related-album-title { color: var(--text-primary); }
 .related-album-year { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+
+/* ── Multi-disc support ──────────────────────────────────── */
+.disc-section + .disc-section { margin-top: 18px; }
+.disc-section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 14px 8px 8px;
+  margin-top: 6px;
+  border-top: 1px solid var(--border);
+}
+/* First disc sits directly under the column-header (which already has its
+   own bottom border), so suppress the duplicate top line. */
+.track-list-header + .disc-section .disc-section-header {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 18px;
+}
+.disc-section-header .disc-section-title {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: var(--text-primary);
+}
+.disc-section-header .disc-section-meta {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}

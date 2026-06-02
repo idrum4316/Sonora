@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { getAlbum, getArtist, star, unstar, getCoverArtUrl } from '../../api/subsonic';
@@ -114,6 +114,21 @@ export function AlbumPage() {
       setAlbumLiked(wasLiked);
     }
   }, [album, albumLiked, config]);
+
+  // ── Group tracks by disc (1-based, blank/missing disc → 1) ────────────────
+  const discs = useMemo(() => {
+    if (!album?.song?.length) return [] as { number: number; tracks: { song: Song; index: number }[] }[];
+    const map = new Map<number, { song: Song; index: number }[]>();
+    album.song.forEach((song, index) => {
+      const n = song.discNumber && song.discNumber > 0 ? song.discNumber : 1;
+      if (!map.has(n)) map.set(n, []);
+      map.get(n)!.push({ song, index });
+    });
+    return Array.from(map.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([number, tracks]) => ({ number, tracks }));
+  }, [album]);
+  const isMultiDisc = discs.length > 1;
 
   // ── Blurred hero background color from art class ──────────────────────────
   const coverClass = album ? artClass(album.id) : 'art-violet';
@@ -261,7 +276,8 @@ export function AlbumPage() {
                     <>
                       <div className="album-meta-dot" aria-hidden="true" />
                       <span className="album-meta-text">
-                        {album.songCount} {album.songCount === 1 ? 'track' : 'tracks'},{' '}
+                        {album.songCount} {album.songCount === 1 ? 'track' : 'tracks'}
+                        {isMultiDisc && <> · {discs.length} discs</>},{' '}
                         {fmtDuration(album.duration)}
                       </span>
                     </>
@@ -348,31 +364,53 @@ export function AlbumPage() {
                 </div>
               </div>
 
-              <ol className="track-list" aria-label={`Track listing for ${album.name}`}>
-                {album.song.map((song, i) => {
-                  const isCurrentTrack = currentTrack?.id === song.id;
-                  const isStarred = starredSongs.has(song.id);
+              {discs.map((disc, di) => (
+                <section
+                  key={disc.number}
+                  className="disc-section"
+                  aria-label={`Disc ${disc.number}`}
+                >
+                  {isMultiDisc && (
+                    <header className="disc-section-header">
+                      <span className="disc-section-title">Disc {disc.number}</span>
+                      <span className="disc-section-meta">
+                        {disc.tracks.length} {disc.tracks.length === 1 ? 'track' : 'tracks'}
+                      </span>
+                    </header>
+                  )}
 
-                  return (
-                    <TrackRow
-                      key={song.id}
-                      song={song}
-                      index={i}
-                      isCurrentTrack={isCurrentTrack}
-                      isPlaying={isPlaying}
-                      isStarred={isStarred}
-                      trackNumber={song.track ?? i + 1}
-                      albumArtist={album.artist}
-                      onClick={() => handleTrackClick(song, i)}
-                      onToggleStar={e => toggleStar(song, e)}
-                      onContextMenu={e => openMenu(e, song)}
-                    />
-                  );
-                })}
-              </ol>
+                  <ol
+                    className="track-list"
+                    start={di === 0 ? undefined : 1}
+                    aria-label={`Track listing for ${album.name}${isMultiDisc ? `, disc ${disc.number}` : ''}`}
+                  >
+                    {disc.tracks.map(({ song, index: i }) => {
+                      const isCurrentTrack = currentTrack?.id === song.id;
+                      const isStarred = starredSongs.has(song.id);
+                      const trackNum = song.track ?? i + 1;
+
+                      return (
+                        <TrackRow
+                          key={song.id}
+                          song={song}
+                          index={i}
+                          isCurrentTrack={isCurrentTrack}
+                          isPlaying={isPlaying}
+                          isStarred={isStarred}
+                          trackNumber={trackNum}
+                          albumArtist={album.artist}
+                          onClick={() => handleTrackClick(song, i)}
+                          onToggleStar={e => toggleStar(song, e)}
+                          onContextMenu={e => openMenu(e, song)}
+                        />
+                      );
+                    })}
+                  </ol>
+                </section>
+              ))}
 
               {/* Stats */}
-              <AlbumStats album={album} />
+              <AlbumStats album={album} discCount={discs.length} />
             </>
           ) : !loading ? (
             <div style={{ color: 'var(--text-secondary)', fontSize: 14, padding: '24px 0' }}>
@@ -482,7 +520,7 @@ export function AlbumPage() {
 }
 
 // ── Album Stats ───────────────────────────────────────────────────────────────
-function AlbumStats({ album }: { album: Album & { song: Song[] } }) {
+function AlbumStats({ album, discCount }: { album: Album & { song: Song[] }; discCount: number }) {
   const songs = album.song ?? [];
   const totalSec = songs.reduce((acc, s) => acc + (s.duration ?? 0), 0);
   const h = Math.floor(totalSec / 3600);
@@ -503,6 +541,12 @@ function AlbumStats({ album }: { album: Album & { song: Song[] } }) {
         <div className="album-stat-val">{songs.length}</div>
         <div className="album-stat-label">Tracks</div>
       </div>
+      {discCount > 1 && (
+        <div className="album-stat">
+          <div className="album-stat-val">{discCount}</div>
+          <div className="album-stat-label">Discs</div>
+        </div>
+      )}
       <div className="album-stat">
         <div className="album-stat-val">{totalStr}</div>
         <div className="album-stat-label">Duration</div>
