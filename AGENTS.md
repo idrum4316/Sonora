@@ -4,6 +4,8 @@
 
 **Sonora** is a modern, self-hosted web client for [Navidrome](https://www.navidrome.org/) and other [Subsonic-compatible](http://www.subsonic.org/pages/api.jsp) music streaming servers. Built with React 18, TypeScript 5, and Vite 6, it provides a beautiful, responsive listening experience across desktop and tablet devices.
 
+It has two UIs on one shared core, both running in the browser: the classic UI at `/`, and a keyboard-first terminal-styled UI at `/terminal/`.
+
 - **License**: MIT
 - **Version**: 0.1.0
 - **Author**: Chris
@@ -36,85 +38,66 @@ Sonora connects to Subsonic API-compatible music servers (primarily Navidrome) a
 
 ### Project Structure
 
+One npm package and one Vite build, with a page per UI. Dependencies only point inward: `classic -> core` and `terminal -> core`. `scripts/check-boundaries.mjs` enforces this during `npm run build`, so shared logic belongs in `src/core/`, never imported from the other UI.
+
 ```
 sonora/
-├── index.html                    # Entry HTML with font imports
+├── index.html                    # Classic UI page, served at /
+├── terminal/index.html           # Terminal UI page, served at /terminal/
 ├── package.json                  # Dependencies and scripts
 ├── tsconfig.json                 # TypeScript configuration
-├── vite.config.ts                # Vite build configuration
+├── vite.config.ts                # Build configuration, lists both pages
 ├── nginx.conf                    # Production nginx configuration
 ├── Dockerfile                    # Docker build instructions
 ├── docker-compose.yml            # Docker Compose configuration
 ├── public/                       # Static assets
+├── scripts/
+│   └── check-boundaries.mjs      # Fails the build if an import crosses a UI boundary
 └── src/
-    ├── main.tsx                  # React entry point (renders App)
-    ├── App.tsx                   # Router configuration & protected routes
-    ├── api/
-    │   └── subsonic.ts           # Subsonic API client with all endpoints
-    ├── components/
-    │   ├── Layout/               # Main app layout with sidebar & player
-    │   │   └── Layout.tsx
-    │   ├── AddToPlaylistDialog.tsx
-    │   ├── AlbumCard.tsx          # Album card for grid displays
-    │   ├── ArtistCard.tsx         # Artist card component
-    │   ├── CoverArt.tsx           # Album/artist cover art display
-    │   ├── QueueItem.tsx          # Queue track item
-    │   ├── TrackMenu.tsx          # Context menu for tracks
-    │   ├── TrackRow.tsx           # Track listing in tables
-    │   └── ui.tsx                 # Shared UI primitives & utilities
-    ├── pages/
-    │   ├── Connect/              # Server connection setup
-    │   │   └── ConnectPage.tsx
-    │   ├── Home/                  # Landing page after connection
-    │   │   └── HomePage.tsx
-    │   ├── Album/                 # Album detail view
-    │   │   └── AlbumPage.tsx
-    │   ├── Artist/                # Artist detail view
-    │   │   └── ArtistPage.tsx
-    │   ├── Genre/                 # Genre detail view
-    │   │   └── GenrePage.tsx
-    │   ├── Library/               # Library browser sections
-    │   │   ├── AlbumsPage.tsx
-    │   │   ├── ArtistsPage.tsx
-    │   │   ├── PlaylistsPage.tsx
-    │   │   ├── GenresPage.tsx
-    │   │   └── FavoritesPage.tsx
-    │   ├── NowPlaying/            # Currently playing view
-    │   │   └── (files)
-    │   ├── Playlist/              # Playlist detail view
-    │   │   └── PlaylistPage.tsx
-    │   ├── Queue/                 # Play queue management
-    │   │   └── QueuePage.tsx
-    │   ├── Search/                # Search results
-    │   │   └── SearchPage.tsx
-    │   └── Settings/              # App settings
-    │       └── SettingsPage.tsx
-    ├── store/                     # Zustand state management
-    │   ├── audioElement.ts        # Audio element singleton
-    │   ├── useAudioSync.ts        # Sync audio element → store
-    │   └── useStore.ts            # Main store with slices (audio, queue, library, settings, favorites)
-    ├── styles/
-    │   ├── index.css              # Aggregator — imports tokens, layout, components, pages in order
-    │   ├── tokens.css             # Design tokens (CSS vars), theme & accent overrides
-    │   ├── base.css               # Reset, typography, scrollbars
-    │   ├── layout/                # app-shell, sidebar, main, player-bar
-    │   ├── components/            # cards, buttons, dialogs, track-list, etc.
-    │   └── pages/                 # album, artist, library, now-playing, queue, settings, …
-    └── utils/
-        ├── genreGradients.ts      # Genre color mappings
-        ├── useImageColors.ts      # Extract colors from images
-        └── useSliderDrag.ts       # Slider drag hook
+    ├── core/                     # Shared by both UIs. No UI code.
+    │   ├── subsonic.ts           # Subsonic API client with all endpoints
+    │   ├── store.ts              # Main Zustand store
+    │   ├── audio.ts              # Audio element singleton
+    │   ├── audioSync.ts          # startAudioSync: audio events, scrobbling, auto-advance
+    │   ├── appearance.ts         # startAppearanceSync: applies theme and accent to <html>
+    │   ├── connect.ts            # Normalizes the server URL and verifies the connection
+    │   ├── format.ts             # fmt, fmtDuration
+    │   ├── library.ts            # groupByDisc
+    │   ├── recentSearches.ts     # Recent search history
+    │   └── tokens.css            # Design tokens (CSS vars), theme & accent overrides
+    ├── classic/                  # Classic UI
+    │   ├── main.tsx              # Entry point: imports styles, starts sync, renders App
+    │   ├── App.tsx               # Router configuration & protected routes
+    │   ├── components/           # Layout, cards, track rows, menus, dialogs, ui.tsx
+    │   ├── pages/                # One folder per route (Album, Artist, Home, Library, …)
+    │   ├── styles/               # index.css aggregates base, layout, components, pages
+    │   └── utils/                # genreGradients, useImageColors, useSliderDrag
+    └── terminal/                 # Terminal UI
+        ├── main.tsx              # Entry point: imports styles, starts sync, renders App
+        ├── App.tsx               # Shows the connect screen or the shell
+        ├── nav.ts                # Local store: views, panes, cursors, focus, loading, status
+        ├── items.ts              # The Item union behind every list, and how each kind loads
+        ├── commands.ts           # What keys do: play, queue, star, reorder
+        ├── useKeymap.ts          # Key bindings
+        ├── audioTap.ts           # Frequency levels of the playing track, for the spectrum
+        ├── motion.ts             # reducedMotion, and the crossfade for theme and accent changes
+        ├── terminal.css          # All terminal styles
+        ├── views/Shell.tsx       # The screen: header, panes, player, status line
+        └── widgets/              # Pane, VirtualList, ItemRow, PlayerLine, Spectrum, Icons, DialogOverlay, …
 ```
 
 ### Key Files Reference
 
 | File | Purpose |
 |------|---------|
-| `src/api/subsonic.ts` | All Subsonic API calls (ping, getMusicDirectory, getAlbum, search3, etc.) |
-| `src/store/useStore.ts` | Central Zustand store with all state slices |
-| `src/store/useAudioSync.ts` | Hook to sync HTML5 audio element with store |
-| `src/App.tsx` | React Router configuration with protected routes |
-| `src/components/Layout/Layout.tsx` | Main layout with sidebar navigation and player bar |
+| `src/core/subsonic.ts` | All Subsonic API calls (ping, getAlbum, search3, etc.) |
+| `src/core/store.ts` | Central Zustand store for connection, settings, playback, and queue |
+| `src/core/audioSync.ts` | Syncs the HTML5 audio element with the store; each UI starts it once |
+| `src/classic/App.tsx` | React Router configuration with protected routes |
+| `src/classic/components/Layout/Layout.tsx` | Classic layout with sidebar navigation and player bar |
+| `src/terminal/nav.ts` | Terminal navigation, list loading, and caching |
+| `src/terminal/items.ts` | Terminal list contents, driven by `Item.kind` |
+| `src/terminal/audioTap.ts` | Where the terminal spectrum's levels come from, and its CORS fallback |
 
 ---
 
@@ -173,28 +156,19 @@ sonora/
 
 ## 📦 State Management (Zustand)
 
-The main store (`src/store/useStore.ts`) contains these slices:
+The main store (`src/core/store.ts`) is one flat store with no library data. Pages and views fetch albums, artists, and playlists themselves.
 
-### Audio Slice
-- `isPlaying`, `currentTrack`, `currentIndex`
-- `volume`, `isMuted`, `repeatMode`, `isShuffled`
-- `position` (current playback position)
-- Actions: play, pause, skip, seek, setVolume, toggleMute, etc.
+- **Connection**: `config`, `isConnected`, `setConfig`, `clearConfig`
+- **Settings**: `scrobbleThreshold`, `theme`, `accentColor`, and their setters
+- **Classic UI state**: `showNowPlaying`, `playlistVersion`
+- **Playback**: `currentTrack`, `isPlaying`, `currentTime`, `duration`, `volume`, `isMuted`, `shuffle`, `repeat`
+- **Playback actions**: `playTrack`, `playAlbum`, `playPlaylist`, `playOrToggle`, `togglePlay`, `next`, `prev`, `seekTo`, `setVolume`, `toggleMute`, `toggleShuffle`, `cycleRepeat`
+- **Queue**: `queue`, `queueIndex`, `playHistory`, `addToQueue`, `addMultipleToQueue`, `playNext`, `playMultipleNext`, `removeFromQueue`, `moveInQueue`, `clearQueue`
+- **Stars**: `setSongStarred(id, starred)`, `starCurrentTrack`
 
-### Queue Slice
-- `queue` (array of tracks)
-- `history` (previously played tracks)
-- Actions: addToQueue, playNext, clearQueue, removeFromQueue, reorderQueue
+Only `config`, `isConnected`, `volume`, `shuffle`, `repeat`, `scrobbleThreshold`, `theme`, and `accentColor` persist to localStorage (key `sonora-store`). The queue doesn't, so a reload or switching UIs clears it.
 
-### Library Slice
-- `albums`, `artists`, `playlists`, `genres`
-- `favorites` (starred albums/artists)
-- Loading states for each category
-
-### Settings Slice
-- `serverUrl`, `username`, `password` (connection details)
-- `isConnected` (connection status)
-- `scrobbleThreshold` (percentage of track before scrobble)
+The terminal UI keeps its own navigation state in `src/terminal/nav.ts`.
 
 ---
 
@@ -207,8 +181,8 @@ The main store (`src/store/useStore.ts`) contains these slices:
 ### Commands
 ```bash
 npm install      # Install dependencies
-npm run dev      # Start dev server at http://localhost:5173
-npm run build    # Build for production (outputs to dist/)
+npm run dev      # Start dev server at http://localhost:5173 (terminal UI at /terminal/)
+npm run build    # Check import boundaries and types, then build to dist/
 npm run preview  # Preview production build
 ```
 
@@ -237,22 +211,35 @@ docker compose up -d
 ## 🎨 UI/UX Patterns
 
 ### Navigation
-- Sidebar with sections: Home, Library (Albums/Artists/Playlists/Genres/Favorites), Queue, Settings
-- Breadcrumb navigation in library views
-- Bottom player bar (persistent)
+- Classic: sidebar with sections Home, Library (Albums/Artists/Playlists/Genres/Favorites), Queue, Settings; breadcrumbs in library views; persistent bottom player bar
+- Terminal: library, list, and detail panes; `esc` goes back; press `?` for keys
 
 ### Styling
 - Custom CSS (no framework)
-- Google Fonts: Fraunces (headings), DM Sans (body)
+- Google Fonts: Fraunces (headings) and DM Sans (body) in classic; JetBrains Mono in terminal
 - CSS variables for colors
 - Responsive grid layouts
 
-### Component Patterns
+### Component Patterns (classic)
 - `TrackRow` - Standard track listing with menu
 - `AlbumCard` / `ArtistCard` - Grid card components
 - `CoverArt` - Handles cover art loading and placeholders
 - `QueueItem` - Queue track display
 - `TrackMenu` - Context menu for track actions
+
+### Terminal UI Patterns
+- Every list shows `Item`s. A new kind of row needs a case in `ItemRow` and in `items.ts`.
+- All keys go through one global handler in `useKeymap.ts`, which ignores inputs and modified keys
+- Keyboard first, but everything must work with a mouse too. Hints in `StatusLine.tsx` show what's possible right now, and clicking one presses its key
+- Modal boxes go through `openDialog` in `nav.ts` (`pick`, `prompt`, or `confirm`), which `useKeymap.ts` and `DialogOverlay.tsx` handle
+- Rows are one `ROW_HEIGHT` tall, and each field clips to its column, so wide titles can't break the grid
+- Facts about a whole list go in its pane's `summary`, not in rows, because actions go by row position. `detailSummary` in `items.ts` builds the detail pane's, and `Screen.summary` the list pane's
+- Colors come from `src/core/tokens.css`, through the `--t-*` mixes at the top of `terminal.css`. Use those rather than the raw tokens, so text stays legible and surfaces match in both themes and every accent
+- One accent only. Depth comes from type size and weight, lit cells, and soft light, never from more hues
+- Symbols the font lacks are drawn in `widgets/Icons.tsx`, not typed. JetBrains Mono's web font has no stars or transport glyphs, and fallback fonts draw them at widths that break the grid
+- The selection is one `.t-cursor` element that glides under the rows, so rows don't paint their own selected background
+- `Spectrum` draws real levels from `audioTap.ts` in browsers that can capture audio (Chromium), and a decorative pattern elsewhere. It stops its animation loop when there's nothing to show. Keep it that way, because music plays for hours
+- Motion is brief and always has a job. Everything respects `prefers-reduced-motion`, through the rule at the end of `terminal.css` and `reducedMotion` in `motion.ts`
 
 ---
 
@@ -266,13 +253,13 @@ docker compose up -d
 ### React
 - Functional components with hooks
 - TypeScript interfaces for props
-- Custom hooks in `utils/hooks/`
+- Custom hooks in `src/classic/utils/`, or beside their use in `src/terminal/`
 
 ### File Organization
-- Pages in `src/pages/` with subdirectories per route
-- Shared components in `src/components/`
-- Store in `src/store/` with slice-based organization
-- API client in `src/api/`
+- Logic that both UIs could use goes in `src/core/`, with no React components or CSS except tokens
+- Classic pages in `src/classic/pages/` with subdirectories per route
+- Classic components in `src/classic/components/`
+- Terminal code in `src/terminal/`
 
 ### Naming
 - PascalCase for components and types
@@ -285,9 +272,13 @@ docker compose up -d
 
 | Utility | Location | Purpose |
 |---------|----------|---------|
-| `useImageColors` | `src/utils/useImageColors.ts` | Extract dominant colors from images |
-| `useSliderDrag` | `src/utils/useSliderDrag.ts` | Handle slider drag interactions |
-| `genreGradients` | `src/utils/genreGradients.ts` | Predefined color gradients per genre |
+| `fmt`, `fmtDuration` | `src/core/format.ts` | Format durations; `fmt` expects whole seconds |
+| `groupByDisc` | `src/core/library.ts` | Group an album's songs by disc |
+| `releaseType` | `src/core/library.ts` | Call a release a Single, EP, or Album by its track count |
+| `plural` | `src/core/format.ts` | "1 track", "2 tracks" |
+| `useSliderDrag` | `src/classic/utils/useSliderDrag.ts` | Handle slider drag interactions |
+| `genreGradients` | `src/classic/utils/genreGradients.ts` | Predefined color gradients per genre |
+| `useImageColors` | `src/classic/utils/useImageColors.ts` | Extract dominant colors from images (currently unused) |
 
 ---
 
@@ -309,26 +300,36 @@ docker compose up -d
 
 ## 🎯 Common Tasks for Agents
 
-### Adding a New Page
-1. Create component in `src/pages/NewPage/NewPage.tsx`
-2. Add route in `src/App.tsx`
-3. Add navigation link in sidebar (if needed)
+### Adding a New Classic Page
+1. Create component in `src/classic/pages/NewPage/NewPage.tsx`
+2. Add route in `src/classic/App.tsx`
+3. Add navigation link in the sidebar (if needed)
+
+### Adding a Terminal View
+1. Add it to `ViewId` and `VIEWS` in `src/terminal/nav.ts`
+2. Add a case to `viewScreen` that says how to load its items
+3. Add its hints to `useHints` in `src/terminal/widgets/StatusLine.tsx`
+
+### Adding a Terminal Key
+1. Add the binding in `src/terminal/useKeymap.ts`, with the logic in `commands.ts` if it's more than a line
+2. List it in `src/terminal/widgets/HelpOverlay.tsx`
+3. Add a hint to `useHints` in `src/terminal/widgets/StatusLine.tsx`, so the mouse can reach it
 
 ### Adding API Endpoint
-1. Add function to `src/api/subsonic.ts`
-2. Add corresponding store actions in `src/store/useStore.ts`
-3. Use in components via `useStore`
+1. Add function to `src/core/subsonic.ts`
+2. Add store actions in `src/core/store.ts` if the behaviour belongs to both UIs
+3. Use it from pages or views
 
 ### Adding New State
-1. Extend interface in `src/store/useStore.ts`
-2. Add initial state
-3. Add reducers/actions
-4. Export selectors as needed
+1. Shared state: extend the interface and initial state in `src/core/store.ts`, and add it to `partialize` if it should persist
+2. Terminal-only state: add it to `src/terminal/nav.ts`
+3. Classic-only state: prefer local component state
 
 ### Styling Components
-- Add tokens/global rules to `src/styles/tokens.css` or `src/styles/base.css`; component/page styles live under `src/styles/components/` and `src/styles/pages/`. Register new files in `src/styles/index.css`.
-- Use inline styles or CSS classes for component-specific styles
-- Follow existing color scheme and typography
+- Shared tokens go in `src/core/tokens.css`
+- Classic: global rules in `src/classic/styles/base.css`; component and page styles under `src/classic/styles/components/` and `pages/`. Register new files in `src/classic/styles/index.css`.
+- Terminal: `src/terminal/terminal.css`
+- Follow the existing color scheme and typography
 
 ---
 
@@ -339,7 +340,9 @@ docker compose up -d
 3. **Server URL**: If `https://` is omitted, it's added automatically.
 4. **Responsive Design**: Targets desktop and tablet screens (not mobile-optimized).
 5. **Virtual Scrolling**: Used for large lists (albums, tracks) via `@tanstack/react-virtual`.
-6. **Audio Element**: Managed as singleton in `src/store/audioElement.ts`.
+6. **Audio Element**: Managed as singleton in `src/core/audio.ts`. Each UI calls `startAudioSync()` once in its `main.tsx`.
+7. **Two Pages**: Each UI's CSS and fonts load only on its own page. Switching UIs is a full page load, which stops playback and clears the queue.
+8. **Stream CORS**: The terminal UI requests streams with CORS so `audioTap.ts` can read them. If a server refuses, it plays the track again without CORS and the spectrum falls back to its pattern. The classic UI doesn't do any of this. Never route the audio element through `createMediaElementSource`, which silences tracks that don't allow CORS.
 
 ---
 
@@ -357,15 +360,15 @@ docker compose up -d
 
 | To Change | Edit File |
 |-----------|-----------|
-| Add new route | `src/App.tsx` |
-| Modify API calls | `src/api/subsonic.ts` |
-| Update state logic | `src/store/useStore.ts` |
-| Change audio behavior | `src/store/useAudioSync.ts` |
-| Modify layout | `src/components/Layout/Layout.tsx` |
-| Update global tokens | `src/styles/tokens.css` (then `src/styles/index.css` if adding files) |
-| Add custom hook | `src/utils/` |
-| Add shared component | `src/components/` |
-| Add new page | `src/pages/` |
+| Add a classic route | `src/classic/App.tsx` |
+| Add a terminal view or key | `src/terminal/nav.ts`, `src/terminal/useKeymap.ts` |
+| Modify API calls | `src/core/subsonic.ts` |
+| Update state logic | `src/core/store.ts` |
+| Change audio behavior | `src/core/audioSync.ts` |
+| Modify classic layout | `src/classic/components/Layout/Layout.tsx` |
+| Modify terminal layout | `src/terminal/views/Shell.tsx`, `src/terminal/terminal.css` |
+| Update global tokens | `src/core/tokens.css` |
+| Add a new UI page | `vite.config.ts` and `scripts/check-boundaries.mjs` |
 
 ---
 
