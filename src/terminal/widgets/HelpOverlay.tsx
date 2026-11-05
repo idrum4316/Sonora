@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNav } from '../nav';
 import { Pane } from './Pane';
 
-/** A group's rows. Each key is a set of keycaps, written with spaces between them. */
+/** A group's rows. Each entry is a set of keys, written with spaces between them. */
 const GROUPS: { title: string; keys: [string, string][] }[] = [
   {
     title: 'move',
@@ -73,9 +73,9 @@ const GROUPS: { title: string; keys: [string, string][] }[] = [
 
 const close = () => useNav.setState({ helpOpen: false });
 
-/** Mouse gestures read as words. Everything else is a key you can press, so it's drawn as one. */
+/** Mouse gestures read as one phrase. Everything else is a set of separate keys. */
 function KeyCaps({ keys, words }: { keys: string; words: boolean }) {
-  if (words) return <span className="t-help-word">{keys}</span>;
+  if (words) return <span>{keys}</span>;
   return <>{keys.split(' ').map(key => <kbd key={key}>{key}</kbd>)}</>;
 }
 

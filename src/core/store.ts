@@ -15,7 +15,8 @@ export type AccentColor =
   | 'indigo'
   | 'sky'
   | 'teal'
-  | 'emerald';
+  | 'emerald'
+  | 'album';
 
 export const ACCENT_COLORS: { id: AccentColor; label: string; swatch: string }[] = [
   { id: 'sunset',  label: 'Sunset',  swatch: '#E07A5F' },
@@ -26,6 +27,8 @@ export const ACCENT_COLORS: { id: AccentColor; label: string; swatch: string }[]
   { id: 'sky',     label: 'Sky',     swatch: '#56B9F2' },
   { id: 'teal',    label: 'Teal',    swatch: '#4FC9C0' },
   { id: 'emerald', label: 'Emerald', swatch: '#5CCB8A' },
+  // Taken from the playing track's cover art by core/artPalette.ts. The swatch is a stand-in until there's art.
+  { id: 'album',   label: 'Album',   swatch: '#ECEDF5' },
 ];
 
 interface StoreState {

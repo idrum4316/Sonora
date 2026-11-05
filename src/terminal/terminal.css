@@ -1,54 +1,40 @@
 /*
- * Sonora terminal UI: a hi-fi instrument panel rendered in type.
+ * Sonora terminal UI: a TUI that happens to run in a browser.
  *
- * One accent on ink or paper. Every color comes from core/tokens.css, so themes and accents match the
- * classic UI. Neutrals lean slightly toward the accent, which is what makes the surfaces feel like one
- * material. Text colors are opaque mixes rather than alphas, so they stay legible over anything.
+ * Everything sits on one character grid, like a real terminal: one font size, cells 1ch wide and one
+ * row tall, spacing in whole cells. The only emphasis is bold, one accent, and inverse video. There are
+ * no curves, shadows, gradients, or tweens, because a terminal can't draw them.
+ *
+ * Every color comes from core/tokens.css, so themes and accents match the classic UI. Text colors are
+ * opaque mixes rather than alphas, so they stay legible over anything.
  */
-
-@property --t-fade-top { syntax: '<length>'; inherits: false; initial-value: 0px; }
-@property --t-fade-bottom { syntax: '<length>'; inherits: false; initial-value: 0px; }
 
 :root {
   --t-font: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace;
-  --t-row: 22px;
-  --t-radius: 10px;
-  --t-radius-sm: 5px;
-  --t-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* The font's cells are 0.6em wide, so this makes 1ch CELL_WIDTH in nav.ts. It's a hair over 8px / 0.6,
+     which browsers round down to just short of a whole pixel. */
+  --t-size: 13.35px;
+  --t-row: 18px;
 
   --t-page: color-mix(in oklab, var(--bg) 98%, var(--accent));
-  --t-pane: color-mix(in oklab, var(--bg-raised) 98%, var(--accent));
-  --t-pane-raised: color-mix(in oklab, color-mix(in oklab, var(--bg-raised) 94%, var(--text-primary)) 97%, var(--accent));
-  --t-line: color-mix(in oklab, var(--text-primary) 13%, var(--t-pane));
-  --t-rule: color-mix(in oklab, var(--text-primary) 7%, var(--t-pane));
+  --t-line: color-mix(in oklab, var(--text-primary) 30%, var(--t-page));
   --t-text: var(--text-primary);
-  --t-dim: color-mix(in oklab, var(--text-primary) 66%, var(--t-pane));
-  --t-faint: color-mix(in oklab, var(--text-primary) 46%, var(--t-pane));
-  --t-hover: color-mix(in oklab, var(--text-primary) 5%, transparent);
-  --t-select-idle: color-mix(in oklab, var(--text-primary) 8%, transparent);
-  --t-select-from: color-mix(in oklab, var(--accent) 40%, transparent);
-  --t-select-to: color-mix(in oklab, var(--accent) 12%, transparent);
-  --t-glow: color-mix(in oklab, var(--accent) 55%, transparent);
-  --t-shadow: rgb(0 0 0 / 0.5);
-  --t-key-shade: rgb(0 0 0 / 0.45);
+  --t-dim: color-mix(in oklab, var(--text-primary) 68%, var(--t-page));
+  --t-faint: color-mix(in oklab, var(--text-primary) 48%, var(--t-page));
+  --t-hover: color-mix(in oklab, var(--text-primary) 8%, var(--t-page));
+  --t-select-idle: color-mix(in oklab, var(--text-primary) 18%, var(--t-page));
+  --t-on-accent: var(--bg);
+  --t-scrim: color-mix(in oklab, var(--t-page) 55%, transparent);
   --t-error: #ff7b72;
-  --t-grain-opacity: 0.022;
 }
 html[data-theme='light'] {
   --t-page: var(--bg);
-  --t-pane: color-mix(in oklab, var(--bg-raised) 55%, var(--bg));
-  --t-pane-raised: var(--bg-raised);
-  --t-line: color-mix(in oklab, var(--text-primary) 17%, var(--t-pane));
-  --t-rule: color-mix(in oklab, var(--text-primary) 9%, var(--t-pane));
-  --t-dim: color-mix(in oklab, var(--text-primary) 74%, var(--t-pane));
-  --t-faint: color-mix(in oklab, var(--text-primary) 58%, var(--t-pane));
-  --t-select-from: color-mix(in oklab, var(--accent) 26%, transparent);
-  --t-select-to: color-mix(in oklab, var(--accent) 7%, transparent);
-  --t-glow: color-mix(in oklab, var(--accent) 34%, transparent);
-  --t-shadow: rgb(60 45 30 / 0.22);
-  --t-key-shade: rgb(60 45 30 / 0.2);
+  --t-line: color-mix(in oklab, var(--text-primary) 38%, var(--t-page));
+  --t-dim: color-mix(in oklab, var(--text-primary) 76%, var(--t-page));
+  --t-faint: color-mix(in oklab, var(--text-primary) 60%, var(--t-page));
+  --t-hover: color-mix(in oklab, var(--text-primary) 7%, var(--t-page));
+  --t-select-idle: color-mix(in oklab, var(--text-primary) 15%, var(--t-page));
   --t-error: #b3261e;
-  --t-grain-opacity: 0.02;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -58,14 +44,14 @@ html, body, #root { height: 100%; margin: 0; }
 body {
   background: var(--t-page);
   color: var(--t-text);
-  font: 400 13px/var(--t-row) var(--t-font);
+  font: 400 var(--t-size)/var(--t-row) var(--t-font);
+  font-kerning: none;
   font-variant-ligatures: none;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 
-::selection { background: var(--accent); color: var(--bg); }
+::selection { background: var(--accent); color: var(--t-on-accent); }
 
 button {
   background: none;
@@ -89,28 +75,29 @@ input {
 }
 input::placeholder { color: var(--t-faint); }
 
+/* A key in inverse video, like the key names in nano's and htop's bottom bars. */
 kbd {
-  align-items: center;
-  background: var(--t-pane-raised);
-  border-radius: 4px;
-  box-shadow: 0 0 0 1px var(--t-line), 0 1.5px 0 1px var(--t-key-shade);
-  color: var(--t-text);
-  display: inline-flex;
-  font: 500 11px/1 var(--t-font);
-  height: 15px;
-  justify-content: center;
-  margin: 0 3px;
-  min-width: 15px;
-  padding: 0 4px;
-  position: relative;
-  top: -1px;
-  transition: background 90ms, color 90ms, box-shadow 90ms, transform 90ms;
+  background: var(--t-dim);
+  color: var(--t-page);
+  font: inherit;
+  padding: 0 1ch;
 }
+
+i { font-style: normal; }
 
 h1, h2, h3, p, dl, dd { margin: 0; font: inherit; }
 
-.t-icon { display: block; fill: currentColor; height: 1em; width: 1em; }
 .t-sep { color: var(--t-faint); }
+
+/* A separator a whole row tall, so the rows below it stay on the grid. Inside a pane it runs from
+   border to border, like ├───┤. */
+.t-rule {
+  background: linear-gradient(var(--t-line), var(--t-line)) 0 calc(var(--t-row) / 2 - 1px) / 100% 1px no-repeat;
+  border: 0;
+  flex: none;
+  height: var(--t-row);
+  margin: 0;
+}
 
 /* ── Shell ─────────────────────────────────────────────────── */
 .t-app {
@@ -118,118 +105,53 @@ h1, h2, h3, p, dl, dd { margin: 0; font: inherit; }
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto auto;
   height: 100dvh;
-  padding: 0 12px;
-}
-
-/* Lit from below and slightly behind, by the music when there is any. It sits over the opaque panes
-   because it's light on the whole panel, and JS only ever changes its opacity, so it costs no repaints.
-   The grain keeps such a faint gradient from showing bands on a dark screen. */
-.t-ambient {
-  background:
-    radial-gradient(75% 46% at 50% 106%, color-mix(in oklab, var(--accent) 22%, transparent), transparent 72%),
-    radial-gradient(42% 34% at 0% 0%, color-mix(in oklab, var(--accent) 7%, transparent), transparent 72%);
-  inset: 0;
-  opacity: 0.42;
-  pointer-events: none;
-  position: fixed;
-  transition: opacity 90ms linear;
-  z-index: 5;
-}
-.t-ambient::after {
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
-  content: '';
-  inset: 0;
-  opacity: var(--t-grain-opacity);
-  position: absolute;
-}
-html[data-theme='light'] .t-ambient {
-  background:
-    radial-gradient(75% 40% at 50% 106%, color-mix(in oklab, var(--accent) 9%, transparent), transparent 72%);
+  padding: 0 0.5ch;
 }
 
 .t-header {
   align-items: center;
   display: flex;
-  gap: 18px;
-  height: 36px;
+  gap: 2ch;
+  height: var(--t-row);
+  padding: 0 1ch;
   white-space: nowrap;
 }
-.t-brand {
-  align-items: center;
-  color: var(--t-text);
-  display: inline-flex;
-  flex: none;
-  font-weight: 700;
-  gap: 8px;
-  letter-spacing: -0.01em;
-}
-.t-brand-mark { color: var(--accent); height: 15px; width: 15px; }
-.t-crumbs { align-items: center; color: var(--t-dim); display: flex; gap: 6px; min-width: 0; overflow: hidden; }
-.t-crumb { align-items: center; display: inline-flex; flex-shrink: 1; gap: 6px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.t-crumb:last-child { color: var(--t-text); }
-.t-crumb .t-icon { color: var(--t-faint); flex: none; height: 10px; width: 10px; }
-.t-identity { align-items: center; color: var(--t-faint); display: flex; flex-shrink: 1; gap: 14px; margin-left: auto; min-width: 0; overflow: hidden; }
+.t-brand { color: var(--accent); flex: none; font-weight: 700; }
+.t-crumbs { color: var(--t-dim); margin-left: -2ch; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.t-identity { color: var(--t-faint); display: flex; flex-shrink: 1; gap: 2ch; margin-left: auto; min-width: 0; overflow: hidden; }
 .t-identity-name { color: var(--t-dim); min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.t-scanning { align-items: center; color: var(--accent); display: inline-flex; flex: none; gap: 7px; }
-.t-tabs { display: none; flex: none; gap: 2px; }
-.t-tab {
-  border-radius: var(--t-radius-sm);
-  color: var(--t-dim);
-  line-height: 22px;
-  padding: 0 7px;
-  transition: background 120ms, color 120ms;
-}
+.t-scanning { color: var(--accent); flex: none; }
+.t-tabs { display: none; flex: none; }
+.t-tab { color: var(--t-dim); padding: 0 1ch; }
 .t-tab:hover { background: var(--t-hover); color: var(--t-text); }
-.t-tab.is-on { background: var(--t-select-from); color: var(--t-text); font-weight: 500; }
+.t-tab.is-on { background: var(--accent); color: var(--t-on-accent); font-weight: 700; }
 
 .t-body {
   display: grid;
-  gap: 0 10px;
+  gap: 0 1ch;
   grid-template-columns: 22ch minmax(0, 1fr) minmax(0, 1fr);
   min-height: 0;
 }
 
 /* ── Pane ──────────────────────────────────────────────────── */
+/* The border runs through the middle of a row of cells, as box-drawing characters do, and is drawn
+   with CSS because the web font doesn't have them. */
 .t-pane {
-  background: var(--t-pane);
+  background: var(--t-page);
   border: 1px solid var(--t-line);
-  border-radius: var(--t-radius);
-  box-shadow: 0 1px 0 color-mix(in oklab, var(--text-primary) 3%, transparent) inset;
   display: flex;
   flex-direction: column;
   margin-top: calc(var(--t-row) / 2);
   min-height: 0;
   min-width: 0;
-  padding: calc(var(--t-row) / 2) 0 calc(var(--t-row) / 2);
+  padding: calc(var(--t-row) / 2 - 1px) 0;
   position: relative;
-  transition: box-shadow 220ms;
 }
-/* The focused pane's edge is a gradient: lit from its top left, cooling toward the far corner. */
-.t-pane::before {
-  background: linear-gradient(145deg, var(--accent), color-mix(in oklab, var(--accent) 50%, var(--t-line)) 45%, color-mix(in oklab, var(--accent) 16%, var(--t-line)));
-  border-radius: inherit;
-  content: '';
-  inset: -1px;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  opacity: 0;
-  padding: 1px;
-  pointer-events: none;
-  position: absolute;
-  transition: opacity 220ms;
-}
-.t-pane.is-focused::before { opacity: 1; }
-.t-pane.is-focused {
-  box-shadow:
-    0 1px 0 color-mix(in oklab, var(--text-primary) 3%, transparent) inset,
-    0 10px 42px -22px var(--t-glow);
-}
+.t-pane.is-focused { border-color: var(--accent); }
 
-/* Half page and half pane, so it cuts the border cleanly whatever the two colors are. */
 .t-pane-title,
 .t-pane-meta {
-  line-height: var(--t-row);
+  background: var(--t-page);
   max-width: calc(100% - 4ch);
   overflow: hidden;
   padding: 0 1ch;
@@ -238,76 +160,49 @@ html[data-theme='light'] .t-ambient {
   white-space: nowrap;
   z-index: 1;
 }
-.t-pane-title {
-  background: linear-gradient(var(--t-page) 50%, var(--t-pane) 50%);
-  color: var(--t-dim);
-  font-weight: 500;
-  left: 10px;
-  top: calc(var(--t-row) / -2 - 1px);
-  transition: color 180ms;
-}
-.t-pane.is-focused .t-pane-title { color: var(--accent); font-weight: 600; }
-.t-pane-meta {
-  background: linear-gradient(var(--t-pane) 50%, var(--t-page) 50%);
-  bottom: calc(var(--t-row) / -2 - 1px);
-  color: var(--t-faint);
-  font-size: 12px;
-  right: 10px;
-}
+.t-pane-title { color: var(--t-dim); left: 1ch; top: calc(var(--t-row) / -2 - 1px); }
+.t-pane.is-focused .t-pane-title { color: var(--accent); font-weight: 700; }
+.t-pane-meta { bottom: calc(var(--t-row) / -2 - 1px); color: var(--t-faint); right: 1ch; }
 .t-pane-summary {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
-  border-bottom: 1px solid var(--t-rule);
   color: var(--t-dim);
   display: -webkit-box;
   flex: none;
-  font-size: 12px;
-  margin: 0 0 4px;
+  margin: 0 1ch;
   overflow: hidden;
   overflow-wrap: anywhere;
-  padding: 0 12px 7px;
-}
-
-/* ── Cursor ────────────────────────────────────────────────── */
-/* It glides rather than jumps, which is the one thing a real terminal can't do. */
-.t-cursor {
-  background: var(--t-select-idle);
-  border-radius: var(--t-radius-sm);
-  height: var(--t-row);
-  left: 5px;
-  position: absolute;
-  right: 5px;
-  top: 0;
-  transition: transform 95ms var(--t-ease), background 160ms, box-shadow 160ms;
-  will-change: transform;
-}
-.t-cursor.is-jumping { transition: background 160ms, box-shadow 160ms; }
-.t-list.is-focused > div > .t-cursor,
-.t-nav-list.is-focused > .t-cursor {
-  background: linear-gradient(90deg, var(--t-select-from), var(--t-select-to));
-  box-shadow: 0 0 22px -9px var(--t-glow);
 }
 
 /* ── Nav ───────────────────────────────────────────────────── */
-.t-nav-list { outline: 0; position: relative; }
+.t-nav-list { outline: 0; }
 .t-nav-row {
-  align-items: center;
-  border-radius: var(--t-radius-sm);
   color: var(--t-dim);
   cursor: pointer;
   display: flex;
-  gap: 8px;
+  gap: 1ch;
   height: var(--t-row);
-  margin: 0 5px;
-  padding: 0 6px;
-  position: relative;
-  transition: color 120ms;
+  padding: 0 1ch;
 }
+.t-nav-row.starts-group { margin-top: var(--t-row); }
 .t-nav-row:hover { background: var(--t-hover); color: var(--t-text); }
-.t-nav-row kbd { background: transparent; box-shadow: none; color: var(--t-faint); margin: 0; min-width: 1ch; padding: 0; top: 0; }
-.t-nav-row.is-selected { color: var(--t-text); font-weight: 500; }
-.t-nav-row.is-selected kbd { color: var(--accent); }
-.t-nav-count { align-items: center; color: var(--t-faint); display: inline-flex; font-size: 12px; font-weight: 400; margin-left: auto; }
+.t-nav-row kbd { background: none; color: var(--t-faint); padding: 0; }
+.t-nav-row.is-selected { background: var(--t-select-idle); color: var(--t-text); }
+.t-nav-row.is-selected kbd { color: inherit; }
+.t-nav-count { color: var(--t-faint); margin-left: auto; }
+.t-nav-count.is-live { color: var(--accent); }
+
+/* The selection, in inverse video where the focus is. */
+.t-nav-list.is-focused .t-nav-row.is-selected,
+.t-list.is-focused .t-row.is-selected {
+  background: var(--accent);
+  color: var(--t-on-accent);
+  font-weight: 700;
+}
+.t-nav-list.is-focused .t-nav-row.is-selected > *,
+.t-list.is-focused .t-row.is-selected > *,
+.t-list.is-focused .t-row.is-selected mark { color: inherit; }
+.t-list.is-focused .t-row.is-selected mark { text-decoration: underline; }
 
 /* ── Lists ─────────────────────────────────────────────────── */
 .t-list {
@@ -319,321 +214,153 @@ html[data-theme='light'] .t-ambient {
   overflow-y: auto;
   scrollbar-color: var(--t-line) transparent;
   scrollbar-width: thin;
-  transition: opacity 140ms 120ms;
 }
-.t-list.is-stale { opacity: 0.45; }
-.t-list-message { color: var(--t-faint); padding: 14px 16px; text-align: center; }
+/* The delay keeps quick loads from flashing. */
+.t-list.is-stale { opacity: 0.45; transition: opacity 0s 120ms; }
+.t-list-message { color: var(--t-faint); padding: 0 1ch; }
 .t-list-message.is-error, .t-status-message .is-error, .t-connect-message.is-error { color: var(--t-error); }
-
-/* Scrolled lists fade out at the edge they continue past. Only lists that overflow get the animation:
-   Chromium keeps a finished one's last value when its timeline goes away, so a scrolled list that
-   shrinks to fit would stay faded. */
-@supports (animation-timeline: scroll()) {
-  .t-list.is-overflowing {
-    animation: t-fade-top linear both, t-fade-bottom linear both;
-    animation-range: 0 32px, calc(100% - 32px) 100%;
-    animation-timeline: scroll(self), scroll(self);
-    -webkit-mask-image: linear-gradient(#0000, #000 var(--t-fade-top), #000 calc(100% - var(--t-fade-bottom)), #0000);
-    mask-image: linear-gradient(#0000, #000 var(--t-fade-top), #000 calc(100% - var(--t-fade-bottom)), #0000);
-  }
-}
-@keyframes t-fade-top { from { --t-fade-top: 0px; } to { --t-fade-top: 22px; } }
-@keyframes t-fade-bottom { from { --t-fade-bottom: 22px; } to { --t-fade-bottom: 0px; } }
+.t-loading { animation: t-show 0s 140ms backwards; }
+@keyframes t-show { from { visibility: hidden; } }
 
 .t-row {
   align-items: center;
-  border-radius: var(--t-radius-sm);
   column-gap: 1ch;
   cursor: default;
   display: flex;
   height: var(--t-row);
-  left: 5px;
-  padding: 0 7px;
+  left: 0;
+  padding: 0 1ch;
   position: absolute;
-  right: 5px;
+  right: 0;
   top: 0;
   user-select: none;
   white-space: nowrap;
 }
 .t-row:hover:not(.is-selected) { background: var(--t-hover); }
+.t-row.is-selected { background: var(--t-select-idle); }
 .t-row > span { flex: none; overflow: hidden; text-overflow: ellipsis; }
 
-.t-cell-star { align-items: center; color: var(--accent); display: inline-flex; font-size: 11px; justify-content: center; width: 2ch; }
+.t-cell-star { color: var(--accent); width: 1ch; }
 .t-cell-go { color: var(--t-faint); }
-.t-cell-kind {
-  border: 1px solid var(--t-line);
-  border-radius: 3px;
-  color: var(--t-faint);
-  font-size: 10px;
-  letter-spacing: 0.02em;
-  line-height: 14px;
-  text-align: center;
-  width: 4ch;
-}
-.t-cell-track { color: var(--t-faint); font-size: 12px; text-align: right; width: 4ch; }
+.t-cell-kind { color: var(--t-faint); width: 3ch; }
+.t-cell-track { color: var(--t-faint); text-align: right; width: 4ch; }
 .t-row > .t-cell-main { flex: 2 1 0; min-width: 0; }
 .t-row > .t-cell-sub { color: var(--t-dim); flex: 1 1 0; min-width: 0; }
-.t-cell-num { color: var(--t-faint); font-size: 12px; text-align: right; width: 5ch; }
+.t-cell-num { color: var(--t-faint); text-align: right; width: 5ch; }
 .t-cell-wide { width: 12ch; }
 .t-cell-label { color: var(--t-faint); width: 9ch; }
 .t-cell-value { color: var(--accent); }
 .t-row > .t-cell-danger { color: var(--t-error); }
 
-mark { background: none; color: var(--accent); font-weight: 600; }
-.t-row.is-selected > .t-cell-main { font-weight: 500; }
-.t-list.is-focused .t-row.is-selected > .t-cell-sub { color: var(--t-text); }
-.t-list.is-focused .t-row.is-selected > .t-cell-num,
-.t-list.is-focused .t-row.is-selected > .t-cell-track,
-.t-list.is-focused .t-row.is-selected > .t-cell-label,
-.t-list.is-focused .t-row.is-selected > .t-cell-go { color: var(--t-dim); }
-.t-row.is-current > .t-cell-main, .t-row.is-current > .t-cell-track { color: var(--accent); font-weight: 500; }
+mark { background: none; color: var(--accent); font-weight: 700; }
+.t-row.is-selected > .t-cell-sub { color: var(--t-text); }
+.t-row.is-current > .t-cell-main, .t-row.is-current > .t-cell-track { color: var(--accent); font-weight: 700; }
 .t-row.is-played > .t-cell-main, .t-row.is-played > .t-cell-sub { color: var(--t-faint); }
 .t-row.is-played.is-selected > .t-cell-main, .t-row.is-played.is-selected > .t-cell-sub { color: var(--t-dim); }
 .t-row-info { user-select: text; }
 
-.t-swatches { align-items: center; display: inline-flex; gap: 6px; margin-right: 8px; }
-.t-swatches i { background: currentColor; border-radius: 50%; display: block; height: 7px; opacity: 0.55; width: 7px; }
-.t-swatches i.is-on { box-shadow: 0 0 0 2px var(--t-pane), 0 0 0 3px currentColor; margin: 0 3px; opacity: 1; }
+/* Always on the page color, so each swatch still shows its color on an inverse row. */
+.t-row > .t-swatches { background: var(--t-page); font-weight: 700; padding: 0 1ch; }
+.t-swatches i.is-on::before { content: '['; }
+.t-swatches i.is-on::after { content: ']'; }
 
 @container (max-width: 44ch) {
   .t-row > .t-cell-sub { display: none; }
   .t-cell-wide { width: 9ch; }
 }
 
-/* Bars that show a track is live, in rows and beside the now playing view. */
-.t-bars { align-items: flex-end; color: var(--accent); display: inline-flex; gap: 1.5px; height: 10px; justify-content: flex-end; vertical-align: -1px; width: 100%; }
-.t-nav-count .t-bars { width: auto; }
-.t-bars i { background: currentColor; border-radius: 1px; display: block; height: 100%; transform: scaleY(0.25); transform-origin: bottom; width: 2px; }
-.t-bars.is-playing i { animation: t-bar 0.74s ease-in-out infinite alternate; }
-.t-bars.is-playing i:nth-child(2) { animation-delay: -0.42s; animation-duration: 0.58s; }
-.t-bars.is-playing i:nth-child(3) { animation-delay: -0.2s; animation-duration: 0.86s; }
-@keyframes t-bar { from { transform: scaleY(0.22); } to { transform: scaleY(1); } }
-
-.t-skeleton { animation: t-appear 200ms 140ms both; display: flex; flex-direction: column; gap: 10px; padding: 7px 14px; }
-.t-skeleton span {
-  animation: t-pulse 1.3s ease-in-out infinite;
-  background: var(--t-select-idle);
-  border-radius: 3px;
-  display: block;
-  height: 12px;
-}
-@keyframes t-pulse { 50% { opacity: 0.4; } }
-@keyframes t-appear { from { opacity: 0; } }
-
 /* ── Detail heading ────────────────────────────────────────── */
 .t-detail { container-type: inline-size; }
-.t-hero { align-items: flex-end; border-bottom: 1px solid var(--t-rule); display: flex; flex: none; gap: 16px; margin-bottom: 4px; padding: 3px 13px 9px; }
+.t-hero { align-items: flex-end; display: flex; flex: none; gap: 2ch; padding: 0 1ch; }
 .t-hero-text { flex: 1; min-width: 0; }
 /* Each album's shape: one bar per track, as tall as the track is long. */
-.t-print { align-items: flex-end; display: flex; flex: none; gap: 2px; height: 42px; margin-bottom: 3px; transition: opacity 140ms; }
-.t-print.is-stale { opacity: 0.4; }
-.t-print i { background: color-mix(in oklab, var(--text-primary) 24%, var(--t-pane)); border-radius: 1px; display: block; transition: background 140ms, box-shadow 140ms; width: 3px; }
+.t-print { align-items: flex-end; display: flex; flex: none; gap: 0.5ch; height: calc(var(--t-row) * 3); }
+.t-print.is-stale { opacity: 0.45; }
+.t-print i { background: var(--t-line); display: block; width: 0.5ch; }
 .t-print i.is-selected { background: var(--t-text); }
-.t-print i.is-current { background: var(--accent); box-shadow: 0 0 8px var(--t-glow); }
-@container (max-width: 52ch) { .t-print { display: none; } }
-.t-hero-title {
-  animation: t-swap 200ms var(--t-ease);
-  font-size: clamp(17px, 4.6cqi, 28px);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.25;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.t-hero-subtitle { color: var(--accent); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.t-hero-facts { color: var(--t-dim); font-size: 12px; overflow: hidden; text-overflow: ellipsis; transition: opacity 140ms; white-space: nowrap; }
+.t-print i.is-current { background: var(--accent); }
+@container (max-width: 60ch) { .t-print { display: none; } }
+.t-hero-title { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-hero-subtitle { color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-hero-facts { color: var(--t-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .t-hero-facts.is-stale { opacity: 0.5; }
-@keyframes t-swap { from { opacity: 0; transform: translateY(3px); } }
 
-.t-about { align-items: center; color: var(--t-faint); display: flex; flex: 1; flex-direction: column; font-size: 12px; gap: 14px; justify-content: center; padding: 24px; text-align: center; }
-.t-about .t-logo { opacity: 0.7; width: min(36ch, 80%); }
+.t-about { align-items: center; color: var(--t-faint); display: flex; flex: 1; flex-direction: column; gap: var(--t-row); justify-content: center; padding: var(--t-row) 1ch; text-align: center; }
 
 /* ── Spectrum ──────────────────────────────────────────────── */
 .t-spectrum { contain: strict; }
 .t-spectrum canvas { display: block; height: 100%; inset: 0; position: absolute; width: 100%; }
-/* A few dozen pixels stretched across the display and blurred into a soft glow. */
-.t-spectrum-bloom { filter: blur(6px); opacity: 0.34; }
-html[data-theme='light'] .t-spectrum-bloom { opacity: 0.2; }
 
 /* ── Now playing view ──────────────────────────────────────── */
 .t-main { container-type: inline-size; }
 .t-main.is-now > .t-list { flex: 0 1 auto; }
-.t-now { display: flex; flex: 1 1 0; flex-direction: column; min-height: 96px; padding: 4px 14px 10px; }
-.t-now-text { animation: t-swap 320ms var(--t-ease); flex: none; }
-.t-now-title {
-  font-size: clamp(22px, 7.2cqi, 46px);
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1.14;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.t-now-title.is-idle { color: var(--t-faint); font-weight: 300; }
-.t-now-artist { color: var(--accent); font-size: clamp(13px, 2.7cqi, 17px); font-weight: 500; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-now { display: flex; flex: 1 1 0; flex-direction: column; min-height: calc(var(--t-row) * 5); padding: 0 1ch; }
+.t-now-text { flex: none; }
+.t-now-title { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-now-title.is-idle { color: var(--t-faint); font-weight: 400; }
+.t-now-artist { color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .t-now-album { color: var(--t-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.t-now-spectrum { flex: 1 1 0; margin-top: 12px; min-height: 0; position: relative; width: 100%; }
+.t-now-spectrum { flex: 1 1 0; margin-top: var(--t-row); min-height: 0; position: relative; width: 100%; }
 
 /* ── Search ────────────────────────────────────────────────── */
-.t-search {
-  align-items: center;
-  background: var(--t-select-idle);
-  border-radius: var(--t-radius-sm);
-  display: flex;
-  flex: none;
-  gap: 8px;
-  height: calc(var(--t-row) + 8px);
-  margin: 0 5px 6px;
-  padding: 0 9px;
-  transition: box-shadow 160ms;
-}
-.t-search.is-focused { box-shadow: 0 0 0 1px var(--accent), 0 0 22px -8px var(--t-glow); }
-.t-search-prompt { color: var(--accent); flex: none; font-size: 13px; }
-.t-search-count { color: var(--t-faint); flex: none; font-size: 12px; }
+.t-search { display: flex; flex: none; gap: 1ch; height: var(--t-row); padding: 0 1ch; }
+.t-search-prompt { color: var(--t-faint); flex: none; }
+.t-search.is-focused .t-search-prompt { color: var(--accent); font-weight: 700; }
+.t-search-count { color: var(--t-faint); flex: none; }
 
 /* ── Player ────────────────────────────────────────────────── */
-.t-player {
-  margin-top: calc(var(--t-row) / 2 + 4px);
-  overflow: visible;
-  padding: 12px 14px 6px;
-}
-/* A mirrored skyline in the gap between the track and the controls, fading out behind the text. */
-.t-player-spectrum {
-  bottom: 28px;
-  height: 68px;
-  left: 0;
-  -webkit-mask-image: linear-gradient(90deg, transparent 29%, #000 42%, #000 58%, transparent 74%);
-  mask-image: linear-gradient(90deg, transparent 29%, #000 42%, #000 58%, transparent 74%);
-  pointer-events: none;
-  position: absolute;
-  transition: opacity 300ms;
-  width: 100%;
-}
-/* The now playing view has its own, and two on screen is one too many. */
-.t-app:has(.t-main.is-now) .t-player-spectrum { opacity: 0; }
-.t-player-main { align-items: center; display: flex; gap: 16px; min-height: 44px; position: relative; }
-.t-player-transport { align-items: center; display: flex; flex: none; gap: 6px; }
-.t-player-skip {
-  align-items: center;
-  border-radius: 50%;
-  color: var(--t-dim);
-  display: inline-flex;
-  font-size: 13px;
-  height: 26px;
-  justify-content: center;
-  transition: background 120ms, color 120ms, transform 120ms;
-  width: 26px;
-}
-.t-player-skip:hover:not(:disabled) { background: var(--t-hover); color: var(--t-text); }
-.t-player-skip:active:not(:disabled) { transform: scale(0.9); }
-.t-player-skip:disabled { color: var(--t-rule); }
-.t-player-toggle {
-  align-items: center;
-  background: var(--accent);
-  border-radius: 50%;
-  color: var(--bg);
-  display: inline-flex;
-  font-size: 15px;
-  height: 36px;
-  justify-content: center;
-  transition: box-shadow 260ms, transform 120ms var(--t-ease), background 160ms, color 160ms;
-  width: 36px;
-}
-.t-player.is-playing .t-player-toggle { box-shadow: 0 0 24px -3px var(--t-glow); }
-.t-player-toggle:hover:not(:disabled) { background: var(--accent-hover); transform: scale(1.06); }
-.t-player-toggle:active:not(:disabled) { transform: scale(0.94); }
-.t-player-toggle:disabled { background: var(--t-select-idle); color: var(--t-faint); }
-.t-player-track { animation: t-swap 260ms var(--t-ease); flex: 0 1 29%; min-width: 0; }
-.t-player-headline { align-items: center; display: flex; gap: 8px; line-height: 22px; min-width: 0; }
-.t-player-title { font-size: 15px; font-weight: 700; letter-spacing: -0.015em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.t-player-idle { color: var(--t-dim); font-weight: 500; }
-.t-player-by { color: var(--t-dim); font-size: 12px; line-height: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.t-player-link { cursor: pointer; transition: color 120ms; }
-.t-player-link:hover { color: var(--accent); }
-.t-player-star { color: var(--t-faint); flex: none; font-size: 13px; transition: color 120ms, transform 160ms var(--t-ease); }
-.t-player-star:hover { color: var(--accent); transform: scale(1.15); }
+.t-player { margin-top: var(--t-row); padding: calc(var(--t-row) / 2 - 1px) 1ch; }
+/* Equal side columns keep the spectrum in the middle of the pane, however long the title is. */
+.t-player-main { display: grid; gap: 2ch; grid-template-columns: repeat(3, minmax(0, 1fr)); height: calc(var(--t-row) * 2); }
+.t-player-track { min-width: 0; }
+.t-player-headline { display: flex; gap: 1ch; min-width: 0; }
+.t-player-title { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-player-idle { color: var(--t-dim); }
+.t-player-by { color: var(--t-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.t-player-link { cursor: pointer; }
+.t-player-link:hover { color: var(--accent); text-decoration: underline; }
+.t-player-star { color: var(--t-faint); flex: none; white-space: pre; }
+.t-player-star:hover { color: var(--accent); }
 .t-player-star.is-on { color: var(--accent); }
 
-.t-player-controls { align-items: center; display: flex; flex: none; font-size: 12px; gap: 16px; margin-left: auto; white-space: nowrap; }
-.t-flag { align-items: center; color: var(--t-dim); display: inline-flex; gap: 7px; transition: color 140ms; }
+.t-player-spectrum { height: 100%; min-width: 0; position: relative; }
+/* The now playing view has its own, and two on screen is one too many. */
+.t-app:has(.t-main.is-now) .t-player-spectrum { visibility: hidden; }
+
+.t-player-controls { align-items: flex-end; display: flex; flex-direction: column; justify-self: end; white-space: nowrap; }
+.t-player-flags { display: flex; gap: 2ch; }
+.t-flag { color: var(--t-dim); white-space: pre; }
 .t-flag:hover { color: var(--t-text); }
 .t-flag.is-on { color: var(--t-text); }
-/* An indicator lamp, dark until its control is on. */
-.t-led {
-  background: var(--t-line);
-  border-radius: 50%;
-  display: block;
-  height: 6px;
-  transition: background 160ms, box-shadow 160ms;
-  width: 6px;
-}
-.t-flag.is-on .t-led { background: var(--accent); box-shadow: 0 0 8px 1px var(--t-glow); }
+.t-flag.is-on .t-flag-mark { color: var(--accent); font-weight: 700; }
 
-.t-volume { align-items: center; color: var(--t-dim); display: flex; gap: 9px; }
-.t-volume-label { color: inherit; transition: color 120ms; }
+.t-volume { color: var(--t-dim); display: flex; gap: 1ch; }
 .t-volume-label:hover { color: var(--t-text); }
-.t-volume-cells { align-items: flex-end; cursor: pointer; display: flex; gap: 2px; height: 16px; }
-.t-volume-cells i { background: var(--t-line); border-radius: 1px; display: block; transition: background 120ms; width: 3px; }
-.t-volume-cells i.is-on { background: var(--accent); }
+/* Inline-block, because touch-action does nothing on an inline element. */
+.t-volume-cells { color: var(--t-faint); cursor: pointer; display: inline-block; outline: 0; touch-action: none; user-select: none; }
+.t-volume-cells .is-on { color: var(--accent); }
 .t-volume-pct { text-align: right; width: 4ch; }
 
-.t-player-progress { align-items: center; display: flex; gap: 12px; height: var(--t-row); margin-top: 4px; position: relative; }
-.t-player-time { color: var(--t-dim); flex: none; font-size: 12px; min-width: 4ch; }
-.t-player-time:last-child { text-align: right; }
-.t-progress { flex: 1; height: var(--t-row); min-width: 0; position: relative; }
+.t-player-progress { display: flex; gap: 1ch; height: var(--t-row); position: relative; }
+.t-player-transport { display: flex; flex: none; gap: 1ch; margin-right: 1ch; }
+.t-player-skip { color: var(--t-dim); }
+.t-player-skip:hover:not(:disabled) { background: var(--t-text); color: var(--t-page); }
+.t-player-skip:disabled, .t-player-toggle:disabled { color: var(--t-faint); }
+.t-player-toggle { color: var(--accent); font-weight: 700; }
+.t-player-toggle:hover:not(:disabled) { background: var(--accent); color: var(--t-on-accent); }
+.t-player-time { color: var(--t-dim); flex: none; min-width: 5ch; text-align: right; }
+.t-player-time:last-child { text-align: left; }
+.t-progress-bar { color: var(--t-faint); display: flex; flex: 1; min-width: 0; }
+.t-progress { color: var(--t-faint); flex: 1; min-width: 0; position: relative; white-space: pre; }
 .t-progress.is-active { cursor: pointer; }
-.t-progress::before {
-  background: var(--t-line);
-  border-radius: 2px;
-  content: '';
-  height: 2px;
-  left: 0;
-  position: absolute;
-  right: 0;
-  top: calc(50% - 1px);
-  transition: height 120ms, top 120ms;
-}
-.t-progress-ghost {
-  background: color-mix(in oklab, var(--text-primary) 28%, transparent);
-  border-radius: 2px;
-  height: 4px;
-  left: 0;
-  position: absolute;
-  top: calc(50% - 2px);
-}
-.t-progress-done {
-  background: linear-gradient(90deg, color-mix(in oklab, var(--accent) 45%, transparent), var(--accent) 70%);
-  border-radius: 2px;
-  height: 2px;
-  left: 0;
-  position: absolute;
-  top: calc(50% - 1px);
-  transition: width 260ms linear, height 120ms, top 120ms;
-}
-.t-progress-done::after {
-  background: var(--accent);
-  border-radius: 50%;
-  box-shadow: 0 0 12px 2px var(--t-glow);
-  content: '';
-  height: 8px;
-  position: absolute;
-  right: -4px;
-  top: -3px;
-  transition: transform 120ms var(--t-ease);
-  width: 8px;
-}
-.t-progress:not(.is-active) .t-progress-done::after { display: none; }
-.t-progress.is-active:hover::before, .t-progress.is-active:hover .t-progress-done { height: 4px; top: calc(50% - 2px); }
-.t-progress.is-active:hover .t-progress-done::after { top: -2px; transform: scale(1.3); }
+.t-progress-ruler { position: absolute; visibility: hidden; width: 1ch; }
+.t-progress-done { color: var(--accent); font-weight: 700; }
+.t-progress-hover { background: var(--t-text); bottom: 0; position: absolute; top: 0; width: 1ch; }
 .t-progress-tip {
-  background: var(--t-pane-raised);
-  border-radius: 4px;
+  background: var(--t-text);
   bottom: 100%;
-  box-shadow: 0 0 0 1px var(--t-line), 0 6px 16px -6px var(--t-shadow);
-  font-size: 11px;
-  line-height: 18px;
-  padding: 0 5px;
+  color: var(--t-page);
+  padding: 0 1ch;
   pointer-events: none;
   position: absolute;
   transform: translateX(-50%);
@@ -642,279 +369,156 @@ html[data-theme='light'] .t-spectrum-bloom { opacity: 0.2; }
 
 /* ── Status ────────────────────────────────────────────────── */
 .t-status {
-  align-items: flex-start;
   display: flex;
-  font-size: 12px;
-  gap: 4px 12px;
-  margin-top: calc(var(--t-row) / 2 - 1px);
-  min-height: 34px;
-  padding: 3px 0 6px;
+  gap: 0 2ch;
+  margin-top: calc(var(--t-row) / 2);
+  min-height: var(--t-row);
+  padding: 0 1ch;
   position: relative;
   white-space: nowrap;
 }
-.t-mode {
-  background: var(--accent);
-  border-radius: 4px;
-  color: var(--bg);
-  flex: none;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  line-height: 18px;
-  margin-top: 2px;
-  padding: 0 7px;
-  text-transform: uppercase;
-}
+.t-mode { align-self: flex-start; background: var(--accent); color: var(--t-on-accent); flex: none; font-weight: 700; padding: 0 1ch; text-transform: uppercase; }
 /* Hints are the mouse's way to every action, so they wrap rather than clip. */
-.t-hints { color: var(--t-dim); display: flex; flex: 0 1 auto; flex-wrap: wrap; gap: 0 2px; min-width: 0; }
+.t-hints { color: var(--t-dim); display: flex; flex: 0 1 auto; flex-wrap: wrap; gap: 0 1ch; min-width: 0; }
 .t-hints-global { justify-content: flex-end; margin-left: auto; }
-.t-hint { border-radius: var(--t-radius-sm); padding: 0 5px 0 2px; transition: background 120ms, color 120ms; }
 .t-hint:hover { background: var(--t-hover); color: var(--t-text); }
-.t-hint:hover kbd { color: var(--accent); }
-.t-hint:active kbd, .t-hint.is-lit kbd {
-  background: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), 0 0 10px var(--t-glow);
-  color: var(--bg);
-  transform: translateY(1px);
-}
+.t-hint:active kbd, .t-hint.is-lit kbd, .t-hint:hover kbd { background: var(--accent); color: var(--t-on-accent); }
 .t-hint.is-lit { color: var(--t-text); }
 /* Inset in the player's bottom border, so messages coming and going can't shift the layout. */
 .t-status-message {
-  align-items: center;
   display: flex;
-  left: 14px;
+  left: 3ch;
   max-width: 60%;
   overflow: hidden;
   position: absolute;
-  top: calc(var(--t-row) * -1 + 1px);
+  top: calc(var(--t-row) * -1);
   z-index: 2;
 }
 .t-status-message > span {
-  animation: t-toast 4s linear both;
-  background: linear-gradient(var(--t-pane) 50%, var(--t-page) 50%);
+  animation: t-toast 4s step-end both;
+  background: var(--t-page);
   color: var(--accent);
-  font-size: 12px;
   overflow: hidden;
   padding: 0 1ch;
   text-overflow: ellipsis;
 }
-@keyframes t-toast {
-  0% { opacity: 0; transform: translateY(5px); }
-  4% { opacity: 1; transform: none; }
-  92% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-.t-dots, .t-dots::before, .t-dots::after {
-  animation: t-pulse 1s ease-in-out infinite;
-  background: currentColor;
-  border-radius: 50%;
-  display: block;
-  height: 4px;
-  width: 4px;
-}
-.t-dots { margin-right: 12px; position: relative; }
-.t-dots::before, .t-dots::after { content: ''; position: absolute; top: 0; }
-.t-dots::before { animation-delay: 0.16s; left: 6px; }
-.t-dots::after { animation-delay: 0.32s; left: 12px; }
+@keyframes t-toast { 100% { visibility: hidden; } }
 
 /* ── Help and dialogs ──────────────────────────────────────── */
+/* A box drawn over the screen, which stays dimly visible around it. */
 .t-overlay {
   align-items: center;
-  animation: t-appear 140ms ease-out;
-  -webkit-backdrop-filter: blur(5px) saturate(1.15);
-  backdrop-filter: blur(5px) saturate(1.15);
-  background: color-mix(in oklab, var(--t-page) 62%, transparent);
+  background: var(--t-scrim);
   display: flex;
   inset: 0;
   justify-content: center;
   outline: 0;
-  padding: 24px;
+  padding: var(--t-row) 2ch;
   position: fixed;
   z-index: 10;
 }
+/* The spread clears the cells around the box, so its border can't cut through a row of text. */
 .t-overlay .t-pane {
-  animation: t-pop 180ms var(--t-ease);
-  background: var(--t-pane-raised);
-  box-shadow: 0 30px 80px -24px var(--t-shadow), 0 0 70px -36px var(--t-glow);
+  box-shadow: 0 0 0 calc(var(--t-row) / 2) var(--t-page);
   margin: 0;
   max-height: 100%;
-  padding: 18px 20px 14px;
+  padding: calc(var(--t-row) - 1px) 2ch;
   width: 100%;
 }
-@keyframes t-pop { from { opacity: 0; transform: translateY(6px) scale(0.985); } }
-/* There's no border to sit in here, because the blur behind the box has no single color to match. */
-.t-overlay .t-pane-title {
-  background: none;
-  flex: none;
-  font-size: 15px;
-  letter-spacing: -0.015em;
-  margin-bottom: 8px;
-  max-width: none;
-  padding: 0;
-  position: static;
-}
-.t-overlay .t-pane.is-focused .t-pane-title { color: var(--t-text); font-weight: 700; }
 
 .t-help { max-width: 134ch; }
 .t-help-groups {
-  column-gap: 34px;
+  column-gap: 4ch;
   columns: 4 30ch;
   min-height: 0;
   overflow-y: auto;
-  padding-top: 2px;
   scrollbar-color: var(--t-line) transparent;
   scrollbar-width: thin;
 }
-.t-help-group { break-inside: avoid; padding-bottom: 18px; }
-.t-help h3 {
-  border-bottom: 1px solid var(--t-rule);
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 7px;
-  padding-bottom: 3px;
-}
-.t-help dl > div { align-items: baseline; display: flex; gap: 10px; }
-.t-help dt { display: flex; flex: none; flex-wrap: wrap; width: 12ch; }
-.t-help dt kbd:first-child { margin-left: 1px; }
-.t-help dd { color: var(--t-dim); font-size: 12px; }
-.t-help-word { color: var(--t-text); font-size: 12px; font-weight: 500; }
+.t-help-group { break-inside: avoid; padding-bottom: var(--t-row); }
+.t-help h3 { color: var(--accent); font-weight: 700; }
+.t-help dl > div { display: flex; gap: 2ch; }
+.t-help dt { display: flex; flex: none; flex-wrap: wrap; font-weight: 700; gap: 0 1ch; width: 12ch; }
+/* Listed like a man page. Inverse keys stacked in a column would read as one solid wall. */
+.t-help dt kbd { background: none; color: inherit; padding: 0; }
+.t-help dd { color: var(--t-dim); }
 
-.t-dialog { gap: 10px; max-width: 60ch; }
-.t-dialog-list { display: flex; flex: none; margin: 0 -8px; }
-.t-dialog-form { display: flex; flex-direction: column; gap: 14px; }
+.t-dialog { gap: var(--t-row); max-width: 60ch; }
+.t-dialog-list { display: flex; flex: none; margin: 0 -2ch; }
+.t-dialog-form { display: flex; flex-direction: column; gap: var(--t-row); }
 .t-dialog .t-row { cursor: pointer; }
 .t-dialog-message { color: var(--t-dim); white-space: pre-wrap; }
-.t-dialog-actions { align-items: center; display: flex; flex: none; gap: 18px; justify-content: flex-end; }
-.t-help .t-dialog-actions { padding-top: 2px; }
+.t-dialog-actions { display: flex; flex: none; gap: 2ch; justify-content: flex-end; }
 
 /* ── Connect ───────────────────────────────────────────────── */
 .t-connect {
   align-items: center;
-  animation: t-appear 400ms ease-out;
   display: flex;
   flex-direction: column;
   justify-content: center;
   min-height: 100dvh;
   overflow: hidden;
-  padding: 24px;
+  padding: var(--t-row) 2ch;
   position: relative;
-  transition: opacity 380ms ease-in 120ms, transform 500ms ease-in 120ms;
 }
-.t-connect.is-connected { opacity: 0; transform: scale(1.012); }
 .t-connect-spectrum {
   bottom: 0;
-  height: 34vh;
+  height: calc(var(--t-row) * 6);
   left: 0;
-  -webkit-mask-image: linear-gradient(transparent, #000 90%);
-  mask-image: linear-gradient(transparent, #000 90%);
   opacity: 0.5;
   pointer-events: none;
   position: absolute;
   width: 100%;
 }
-.t-logo { display: block; fill: color-mix(in oklab, var(--text-primary) 5%, transparent); max-width: 100%; position: relative; width: 58ch; }
-.t-logo .is-lit { fill: var(--accent); }
-.t-logo.is-animated .is-lit { animation: t-warm 380ms ease-out both; }
-@keyframes t-warm {
-  0% { fill: color-mix(in oklab, var(--text-primary) 5%, transparent); }
-  55% { fill: var(--accent-hover); }
-}
-.t-tagline { color: var(--t-dim); margin: 10px 0 28px; position: relative; }
+.t-logo { display: block; fill: var(--accent); max-width: 100%; position: relative; shape-rendering: crispEdges; width: 51ch; }
+.t-tagline { color: var(--t-dim); margin: var(--t-row) 0; position: relative; }
 .t-caret {
-  animation: t-blink 1.1s steps(1) infinite;
+  animation: t-blink 1.1s step-end infinite;
   background: var(--accent);
   display: inline-block;
-  height: 15px;
-  margin-left: 5px;
-  vertical-align: -2px;
-  width: 8px;
+  height: var(--t-row);
+  margin-left: 1ch;
+  vertical-align: bottom;
+  width: 1ch;
 }
-@keyframes t-blink { 50% { opacity: 0; } }
+@keyframes t-blink { 50% { visibility: hidden; } }
 .t-connect-form {
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  background: color-mix(in oklab, var(--t-pane) 78%, transparent);
-  box-shadow: 0 30px 80px -30px var(--t-shadow);
-  display: flex;
   flex: none;
-  gap: 10px;
-  margin: 0;
+  margin: calc(var(--t-row) / 2) 0 0;
   max-width: 60ch;
-  padding: 20px 22px 18px;
+  padding: calc(var(--t-row) - 1px) 2ch;
   width: 100%;
 }
-.t-connect-form .t-pane-title {
-  background: none;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  color: var(--t-text);
-  margin-bottom: 4px;
-  max-width: none;
-  padding: 0;
-  position: static;
-}
-.t-field {
-  border-bottom: 1px solid var(--t-line);
-  display: flex;
-  gap: 1ch;
-  line-height: 28px;
-  transition: border-color 160ms, box-shadow 160ms;
-}
-.t-field:focus-within { border-color: var(--accent); box-shadow: 0 1px 0 var(--accent); }
+/* A prompt marks the field being typed in, because a browser's caret can't be a block. */
+.t-field { display: flex; gap: 1ch; }
+.t-field::before { content: ' '; flex: none; white-space: pre; width: 1ch; }
+.t-field:focus-within::before { color: var(--accent); content: '>'; font-weight: 700; }
 .t-field span { color: var(--t-dim); flex: none; width: 10ch; }
+.t-field:focus-within span { color: var(--accent); }
 .t-connect-actions {
   align-items: center;
   display: flex;
   justify-content: space-between;
-  margin-top: 8px;
+  margin-top: var(--t-row);
 }
-.t-button {
-  align-items: center;
-  background: var(--accent);
-  border-radius: 6px;
-  color: var(--bg);
-  display: inline-flex;
-  font-weight: 600;
-  gap: 4px;
-  padding: 3px 11px 3px 5px;
-  transition: background 120ms, box-shadow 200ms, color 120ms;
-}
-.t-button kbd { background: color-mix(in oklab, var(--bg) 16%, transparent); box-shadow: 0 0 0 1px color-mix(in oklab, var(--bg) 30%, transparent); color: inherit; }
-.t-button:hover:not(:disabled), .t-button:focus-visible { background: var(--accent-hover); box-shadow: 0 0 22px -6px var(--t-glow); outline: 0; }
-.t-button:disabled { background: var(--t-select-idle); color: var(--t-faint); }
-.t-button:disabled kbd { background: none; box-shadow: 0 0 0 1px var(--t-line); }
-.t-link { color: var(--t-dim); text-decoration: none; transition: color 120ms; }
-.t-link:hover, .t-link:focus-visible { color: var(--t-text); outline: 0; }
-.t-connect-message { color: var(--accent); font-size: 12px; margin-top: 12px; min-height: var(--t-row); position: relative; text-align: center; }
-
-/* ── The app starting up ───────────────────────────────────── */
-/* Panes settle in from the left. `backwards` leaves no transform behind afterward, so nothing else
-   has to account for it. */
-.t-header, .t-body > .t-pane, .t-player, .t-status { animation: t-settle 460ms var(--t-ease) backwards; }
-.t-body > .t-pane:nth-child(2) { animation-delay: 50ms; }
-.t-body > .t-pane:nth-child(3) { animation-delay: 100ms; }
-.t-player { animation-delay: 150ms; }
-.t-status { animation-delay: 200ms; }
-@keyframes t-settle { from { opacity: 0; transform: translateY(5px); } }
-
-/* ── Theme and accent changes ──────────────────────────────── */
-::view-transition-old(root),
-::view-transition-new(root) { animation-duration: 260ms; }
+.t-button { background: var(--accent); color: var(--t-on-accent); font-weight: 700; padding: 0 1ch; }
+.t-button kbd { background: none; color: inherit; padding: 0; }
+.t-button:hover:not(:disabled), .t-button:focus-visible { background: var(--accent-hover); outline: 0; }
+.t-button:disabled { background: var(--t-select-idle); color: var(--t-dim); }
+.t-link { color: var(--t-dim); text-decoration: none; }
+.t-link:hover, .t-link:focus-visible { color: var(--t-text); outline: 0; text-decoration: underline; }
+.t-connect-message { color: var(--accent); margin-top: var(--t-row); min-height: var(--t-row); position: relative; text-align: center; }
 
 /* ── Short screens ─────────────────────────────────────────── */
 @media (max-height: 620px) {
   .t-hero-facts, .t-now-album { display: none; }
-  .t-now { min-height: 72px; }
-  .t-now-title { font-size: clamp(18px, 4cqi, 24px); }
+  .t-now { min-height: calc(var(--t-row) * 4); }
 }
 
 /* ── Narrow screens ────────────────────────────────────────── */
 @media (max-width: 1100px) {
   .t-volume-pct, .t-player-spectrum { display: none; }
-  .t-player-track { flex: 1 1 0; }
+  .t-player-main { grid-template-columns: minmax(0, 1fr) auto; }
 }
 @media (max-width: 900px) {
   .t-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
@@ -923,26 +527,19 @@ html[data-theme='light'] .t-spectrum-bloom { opacity: 0.2; }
   .t-hints-global { margin-left: 0; }
   .t-status { flex-wrap: wrap; }
 }
-/* The tabs' padding still separates them, and this keeps all of them in view until they can scroll. */
 @media (max-width: 760px) {
-  .t-tabs { gap: 0; }
-  .t-tab { padding: 0 5px; }
-  .t-brand { font-size: 0; gap: 0; }
+  .t-brand { display: none; }
 }
 @media (max-width: 640px) {
   .t-body { grid-template-columns: minmax(0, 1fr); }
   .t-detail { display: none; }
   .t-tabs { flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
   /* The controls get a row of their own, because the mouse still needs all of them. */
-  .t-player-main { flex-wrap: wrap; gap: 6px 10px; }
-  .t-player-controls { flex-basis: 100%; justify-content: space-between; margin-left: 0; }
+  .t-player-main { gap: 0; grid-template-columns: minmax(0, 1fr); height: auto; }
+  .t-player-controls { align-items: stretch; flex-direction: row; justify-content: space-between; justify-self: stretch; }
+  .t-player-flags { gap: 1ch; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-delay: 0s !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; transition-delay: 0s !important; }
-  /* Timeline-driven and meaningful without motion, so the fades stay. */
-  .t-list { animation-duration: auto !important; }
-  .t-bars.is-playing i { transform: scaleY(0.7); }
-  .t-bars.is-playing i:nth-child(2) { transform: scaleY(1); }
-  .t-bars.is-playing i:nth-child(3) { transform: scaleY(0.45); }
+  .t-caret { animation: none; }
 }

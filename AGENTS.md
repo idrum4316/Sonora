@@ -4,7 +4,7 @@
 
 **Sonora** is a modern, self-hosted web client for [Navidrome](https://www.navidrome.org/) and other [Subsonic-compatible](http://www.subsonic.org/pages/api.jsp) music streaming servers. Built with React 18, TypeScript 5, and Vite 6, it provides a beautiful, responsive listening experience across desktop and tablet devices.
 
-It has two UIs on one shared core, both running in the browser: the classic UI at `/`, and a keyboard-first terminal-styled UI at `/terminal/`.
+It has two UIs on one shared core, both running in the browser: the classic UI at `/`, and a keyboard-first terminal UI at `/terminal/`, which is styled as a real TUI.
 
 - **License**: MIT
 - **Version**: 0.1.0
@@ -60,6 +60,7 @@ sonora/
     │   ├── audio.ts              # Audio element singleton
     │   ├── audioSync.ts          # startAudioSync: audio events, scrobbling, auto-advance
     │   ├── appearance.ts         # startAppearanceSync: applies theme and accent to <html>
+    │   ├── artPalette.ts         # Colors from the playing track's cover art, for the album accent
     │   ├── connect.ts            # Normalizes the server URL and verifies the connection
     │   ├── format.ts             # fmt, fmtDuration
     │   ├── library.ts            # groupByDisc
@@ -80,10 +81,10 @@ sonora/
         ├── commands.ts           # What keys do: play, queue, star, reorder
         ├── useKeymap.ts          # Key bindings
         ├── audioTap.ts           # Frequency levels of the playing track, for the spectrum
-        ├── motion.ts             # reducedMotion, and the crossfade for theme and accent changes
+        ├── motion.ts             # reducedMotion
         ├── terminal.css          # All terminal styles
         ├── views/Shell.tsx       # The screen: header, panes, player, status line
-        └── widgets/              # Pane, VirtualList, ItemRow, PlayerLine, Spectrum, Icons, DialogOverlay, …
+        └── widgets/              # Pane, VirtualList, ItemRow, PlayerLine, Spectrum, Glyphs, DialogOverlay, …
 ```
 
 ### Key Files Reference
@@ -121,6 +122,7 @@ sonora/
 - Star/unstar tracks and albums (synced to server)
 - Browse and play server playlists
 - Visual genre cards with dynamic gradient colors
+- Accent colors, including an album accent taken from the playing track's cover art
 - Configurable scrobble threshold
 
 ### ⚙️ Administration
@@ -232,14 +234,15 @@ docker compose up -d
 - All keys go through one global handler in `useKeymap.ts`, which ignores inputs and modified keys
 - Keyboard first, but everything must work with a mouse too. Hints in `StatusLine.tsx` show what's possible right now, and clicking one presses its key
 - Modal boxes go through `openDialog` in `nav.ts` (`pick`, `prompt`, or `confirm`), which `useKeymap.ts` and `DialogOverlay.tsx` handle
-- Rows are one `ROW_HEIGHT` tall, and each field clips to its column, so wide titles can't break the grid
+- It should look like a program running in a terminal, so ask whether a terminal could draw it. Everything sits on one character grid: one font size, cells `CELL_WIDTH` wide and `ROW_HEIGHT` tall (both in `nav.ts`), spacing in whole cells. Use `ch` and `--t-row`, never other sizes. No rounded corners, shadows, gradients, blur, or big type
+- Rows are one `ROW_HEIGHT` tall, and each field clips to its column, so wide titles can't break the grid. A separator is a whole row too (`.t-rule`), so rows stay on the grid in every pane
 - Facts about a whole list go in its pane's `summary`, not in rows, because actions go by row position. `detailSummary` in `items.ts` builds the detail pane's, and `Screen.summary` the list pane's
 - Colors come from `src/core/tokens.css`, through the `--t-*` mixes at the top of `terminal.css`. Use those rather than the raw tokens, so text stays legible and surfaces match in both themes and every accent
-- One accent only. Depth comes from type size and weight, lit cells, and soft light, never from more hues
-- Symbols the font lacks are drawn in `widgets/Icons.tsx`, not typed. JetBrains Mono's web font has no stars or transport glyphs, and fallback fonts draw them at widths that break the grid
-- The selection is one `.t-cursor` element that glides under the rows, so rows don't paint their own selected background
+- One accent only. Emphasis comes from bold, the accent, and inverse video, never from more hues or sizes. The one exception is the spectrum under the album accent, whose bars run along a gradient of the cover art's colors, one solid color per bar as a terminal would color a column
+- Controls and symbols are plain ASCII: `*`, `>`, `[x]`, `[|<]`, `[=====>---]`. JetBrains Mono's web font has no stars, transport, box-drawing, or block glyphs, and fallback fonts draw them at widths that break the grid. Box borders are CSS, and the spectrum and logo's blocks are painted shapes
+- The selected row is in inverse video where the focus is, and on a dim background in other panes. It jumps from row to row, rather than gliding
 - `Spectrum` draws real levels from `audioTap.ts` in browsers that can capture audio (Chromium), and a decorative pattern elsewhere. It stops its animation loop when there's nothing to show. Keep it that way, because music plays for hours
-- Motion is brief and always has a job. Everything respects `prefers-reduced-motion`, through the rule at the end of `terminal.css` and `reducedMotion` in `motion.ts`
+- Nothing tweens: changes repaint at once. Only the spectrum, the spinner, and the blinking caret move, and they respect `prefers-reduced-motion` through the rule at the end of `terminal.css` and `reducedMotion` in `motion.ts`
 
 ---
 
@@ -279,6 +282,7 @@ docker compose up -d
 | `useSliderDrag` | `src/classic/utils/useSliderDrag.ts` | Handle slider drag interactions |
 | `genreGradients` | `src/classic/utils/genreGradients.ts` | Predefined color gradients per genre |
 | `useImageColors` | `src/classic/utils/useImageColors.ts` | Extract dominant colors from images (currently unused) |
+| `useArtPalette`, `currentArtColors` | `src/core/artPalette.ts` | The playing track's cover art colors, fitted to the theme |
 
 ---
 
@@ -342,7 +346,8 @@ docker compose up -d
 5. **Virtual Scrolling**: Used for large lists (albums, tracks) via `@tanstack/react-virtual`.
 6. **Audio Element**: Managed as singleton in `src/core/audio.ts`. Each UI calls `startAudioSync()` once in its `main.tsx`.
 7. **Two Pages**: Each UI's CSS and fonts load only on its own page. Switching UIs is a full page load, which stops playback and clears the queue.
-8. **Stream CORS**: The terminal UI requests streams with CORS so `audioTap.ts` can read them. If a server refuses, it plays the track again without CORS and the spectrum falls back to its pattern. The classic UI doesn't do any of this. Never route the audio element through `createMediaElementSource`, which silences tracks that don't allow CORS.
+8. **Album Accent**: `appearance.ts` loads the cover art's palette only while the album accent is selected, and sets `--accent`, `--accent-dim`, and `--accent-hover` inline on `<html>`. It has no rule in `tokens.css`, so it shows the default accent until the art loads, and when the art is gray or the server sends no CORS headers for it.
+9. **Stream CORS**: The terminal UI requests streams with CORS so `audioTap.ts` can read them. If a server refuses, it plays the track again without CORS and the spectrum falls back to its pattern. The classic UI doesn't do any of this. Never route the audio element through `createMediaElementSource`, which silences tracks that don't allow CORS.
 
 ---
 

@@ -6,7 +6,7 @@ import { ROW_HEIGHT, VIEWS, openView, rootView, setCursor, setFocus, setSearchQu
 import { useKeymap } from '../useKeymap';
 import { DialogOverlay } from '../widgets/DialogOverlay';
 import { HelpOverlay } from '../widgets/HelpOverlay';
-import { BrandMark, ChevronIcon, EqBars } from '../widgets/Icons';
+import { PlaybackMark, Spinner } from '../widgets/Glyphs';
 import { Logo } from '../widgets/Logo';
 import { NowHero } from '../widgets/NowHero';
 import { Pane } from '../widgets/Pane';
@@ -22,18 +22,11 @@ function Header() {
   const view = useNav(s => s.view);
   const scanning = useNav(s => !!s.scan?.scanning);
   const host = config ? config.serverUrl.replace(/^https?:\/\//, '') : '';
-  const crumbs = [...back.map(entry => entry.screen.title), screenTitle];
+  const path = `:~/${[...back.map(entry => entry.screen.title), screenTitle].join('/')}`;
   return (
     <header className="t-header">
-      <span className="t-brand"><BrandMark />sonora</span>
-      <span className="t-crumbs">
-        {crumbs.map((crumb, index) => (
-          <span key={index} className="t-crumb">
-            {index > 0 && <ChevronIcon />}
-            {crumb}
-          </span>
-        ))}
-      </span>
+      <span className="t-brand">sonora</span>
+      <span className="t-crumbs" title={path}>{path}</span>
       {/* Stands in for the library pane, which narrow screens hide. */}
       <nav className="t-tabs" aria-label="Views">
         {VIEWS.map(v => (
@@ -50,21 +43,15 @@ function Header() {
         ))}
       </nav>
       <span className="t-identity">
-        {scanning && <span className="t-scanning"><i className="t-dots" aria-hidden="true" />scanning</span>}
+        {scanning && <span className="t-scanning"><Spinner /> scanning</span>}
         <span className="t-identity-name">{config?.username}<span className="t-sep">@</span>{host}</span>
       </span>
     </header>
   );
 }
 
-/** Views that start a new group in the library pane, set apart by a little space. */
+/** Views that start a new group in the library pane, set apart by a blank row. */
 const NAV_GROUP_STARTS = new Set<ViewId>(['queue', 'search']);
-const NAV_GROUP_GAP = 13;
-
-function navRowOffset(index: number): number {
-  const groupsAbove = VIEWS.slice(1, index + 1).filter(v => NAV_GROUP_STARTS.has(v.id)).length;
-  return index * ROW_HEIGHT + groupsAbove * NAV_GROUP_GAP;
-}
 
 function NavPane() {
   const view = useNav(s => s.view);
@@ -81,21 +68,19 @@ function NavPane() {
   return (
     <Pane title="library" focused={focused} className="t-nav" onMouseDown={() => setFocus('nav')}>
       <div ref={ref} className={`t-nav-list${focused ? ' is-focused' : ''}`} role="listbox" aria-label="Views" tabIndex={-1} aria-activedescendant={`nav-${view}`}>
-        <div className="t-cursor" style={{ transform: `translateY(${navRowOffset(VIEWS.findIndex(v => v.id === view))}px)` }} />
         {VIEWS.map(v => (
           <div
             key={v.id}
             id={`nav-${v.id}`}
             role="option"
             aria-selected={v.id === view}
-            className={`t-nav-row${v.id === view ? ' is-selected' : ''}`}
-            style={NAV_GROUP_STARTS.has(v.id) ? { marginTop: NAV_GROUP_GAP } : undefined}
+            className={`t-nav-row${v.id === view ? ' is-selected' : ''}${NAV_GROUP_STARTS.has(v.id) ? ' starts-group' : ''}`}
             onClick={() => openView(v.id, v.id === 'search' ? 'input' : 'nav')}
           >
             <kbd>{v.key}</kbd>
             <span>{v.label}</span>
             {v.id === 'queue' && queueLength > 0 && <span className="t-nav-count">{queueLength}</span>}
-            {v.id === 'now' && hasTrack && <span className="t-nav-count"><EqBars playing={isPlaying} /></span>}
+            {v.id === 'now' && hasTrack && <span className="t-nav-count is-live"><PlaybackMark playing={isPlaying} /></span>}
           </div>
         ))}
       </div>
@@ -122,7 +107,7 @@ function SearchBox() {
 
   return (
     <label className={`t-search${focused ? ' is-focused' : ''}`}>
-      <span className="t-search-prompt" aria-hidden="true"><ChevronIcon /></span>
+      <span className="t-search-prompt" aria-hidden="true">&gt;</span>
       <input
         ref={ref}
         value={query}
@@ -169,7 +154,6 @@ function ListPane() {
   const focused = useNav(s => s.focus === 'list');
   const inputFocused = useNav(s => s.focus === 'input');
   const query = useNav(s => s.searchQuery);
-  const isLive = useNav(s => !!s.screen.live);
   const queueIndex = useStore(s => s.queueIndex);
   const position = list.items.length ? `${list.cursor + 1}/${list.items.length.toLocaleString()}` : undefined;
   const emptyText = !view ? 'nothing here' : view === 'search' && !query.trim() ? 'type to search' : EMPTY_TEXT[view];
@@ -183,8 +167,8 @@ function ListPane() {
       className={`t-main${view === 'now' ? ' is-now' : ''}`}
       onMouseDown={() => { if (!inputFocused) setFocus('list'); }}
     >
-      {view === 'search' && <SearchBox />}
-      {view === 'now' && <NowHero />}
+      {view === 'search' && <><SearchBox /><hr className="t-rule" /></>}
+      {view === 'now' && <><NowHero /><hr className="t-rule" /></>}
       <VirtualList
         id="list"
         label={title}
@@ -194,7 +178,6 @@ function ListPane() {
         dimPlayed={view === 'queue'}
         showKind={view === 'search' || view === 'favorites'}
         highlight={view === 'search' ? query.trim().toLowerCase() : undefined}
-        reveal={!isLive}
         emptyText={emptyText}
         onSelect={index => { setFocus('list'); setCursor('list', index); }}
         onActivate={index => selectAndActivate('list', index)}
@@ -236,6 +219,7 @@ function DetailPane() {
           <TrackPrint songs={songsIn(detail.items)} selected={focused ? detail.cursor : null} stale={detail.loading} />
         </header>
       )}
+      {heading && <hr className="t-rule" />}
       {settings ? (
         <div className="t-about">
           <Logo />
@@ -249,7 +233,6 @@ function DetailPane() {
           focused={focused}
           // The current track is never in up next, though another copy of it can be.
           currentRow={upNext ? -1 : undefined}
-          reveal={!isLive}
           emptyText={upNext ? 'no upcoming tracks' : showingHistory ? 'nothing played yet' : showingPlaylist ? <>no tracks yet. press <kbd>P</kbd> on anything to add it</> : ''}
           onSelect={index => { setFocus('detail'); setCursor('detail', index); }}
           onActivate={index => selectAndActivate('detail', index)}

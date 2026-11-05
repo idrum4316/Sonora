@@ -1,9 +1,9 @@
 import { useStore } from '../../core/store';
-import { Spectrum, type CellSize } from './Spectrum';
+import { Spectrum, type BarSize } from './Spectrum';
 
-const CELL: CellSize = { width: 8, height: 4, gapX: 3, gapY: 3 };
+const BARS: BarSize = { width: 2, gap: 1 };
 
-/** The top of the now playing view: the track in large type, over a large spectrum. */
+/** The top of the now playing view: the track, over a large spectrum. */
 export function NowHero() {
   const track = useStore(s => s.currentTrack);
   return (
@@ -20,7 +20,7 @@ export function NowHero() {
           <p className="t-now-album">nothing is playing</p>
         </div>
       )}
-      <Spectrum className="t-now-spectrum" cell={CELL} />
+      <Spectrum className="t-now-spectrum" bars={BARS} />
     </div>
   );
 }

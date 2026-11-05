@@ -1,8 +1,12 @@
 import { useStore } from '../../core/store';
 import type { Song } from '../../core/subsonic';
+import { ROW_HEIGHT } from '../nav';
 
-/** Past this, the bars would be too fine to read and the pane too narrow to hold them. */
-const MAX_TRACKS = 64;
+/** Bars are a cell apart, so past this they'd take the room the album's name needs. */
+const MAX_TRACKS = 32;
+/** A row divides into eighths, as block characters divide it, and the bars can be three rows tall. */
+const STEP_HEIGHT = ROW_HEIGHT / 8;
+const STEPS = 24;
 
 interface TrackPrintProps {
   songs: Song[];
@@ -25,7 +29,7 @@ export function TrackPrint({ songs, selected, stale }: TrackPrintProps) {
         <i
           key={`${song.id}-${index}`}
           className={song.id === currentId ? 'is-current' : index === selected ? 'is-selected' : undefined}
-          style={{ height: `${Math.max(14, (song.duration / longest) * 100)}%` }}
+          style={{ height: Math.max(1, Math.round((song.duration / longest) * STEPS)) * STEP_HEIGHT }}
         />
       ))}
     </span>

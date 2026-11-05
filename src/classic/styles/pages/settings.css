@@ -211,11 +211,11 @@
 
 .accent-swatch:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--swatch);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--swatch-ring, var(--swatch));
 }
 
 .accent-swatch.is-selected {
-  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--swatch);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--swatch-ring, var(--swatch));
   transform: scale(1.05);
 }
 

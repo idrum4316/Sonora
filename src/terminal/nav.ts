@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useArtPalette } from '../core/artPalette';
 import { addRecentSearch, loadRecentSearches } from '../core/recentSearches';
 import { useStore } from '../core/store';
 import {
@@ -11,8 +12,10 @@ import {
   type Item,
 } from './items';
 
-/** Height of one list row in pixels. CSS reads it via --t-row, so there's one source of truth. */
-export const ROW_HEIGHT = 22;
+/** Height of one row of the character grid in pixels. --t-row in terminal.css must match, for the connect screen. */
+export const ROW_HEIGHT = 18;
+/** Width of one character cell in pixels. terminal.css sizes the font so that 1ch is exactly this. */
+export const CELL_WIDTH = 8;
 
 export type ViewId = 'albums' | 'artists' | 'playlists' | 'genres' | 'favorites' | 'queue' | 'now' | 'search' | 'settings';
 export const VIEWS: { id: ViewId; label: string; key: string }[] = [
@@ -671,8 +674,11 @@ export function startNav(): () => void {
       || s.scrobbleThreshold !== prev.scrobbleThreshold;
     if (changed) refreshLive();
   });
+  // The settings view's album swatch shows the art's color once it loads.
+  const unsubscribePalette = useArtPalette.subscribe(refreshLive);
   return () => {
     unsubscribe();
+    unsubscribePalette();
     clearTimeout(scanTimer);
     ++scanToken;
   };

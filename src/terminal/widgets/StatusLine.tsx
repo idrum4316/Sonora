@@ -91,7 +91,7 @@ function Hints({ hints, lit, className }: { hints: Hint[]; lit: string | null; c
           onMouseDown={e => e.preventDefault()}
           onClick={() => press(key)}
         >
-          <kbd>{KEY_NAMES[key] ?? key}</kbd> {label}
+          <kbd>{KEY_NAMES[key] ?? key}</kbd>{label}
         </button>
       ))}
     </div>

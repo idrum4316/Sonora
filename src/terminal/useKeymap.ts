@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useStore } from '../core/store';
-import { crossfade } from './motion';
 import {
   activate, addSelectionToPlaylist, changeVolume, createOrClear, cycleAccent, enqueue, goToAlbum, goToArtist, moveBy,
   moveFocus, moveSelected, moveToEdge, removeSelected, seekBy, starCurrent, starSelected,
@@ -67,7 +66,7 @@ const BINDINGS: Record<string, () => void> = {
   '/': startNewSearch,
   o: cycleAlbumSort,
   R: reload,
-  t: () => crossfade(() => store().toggleTheme()),
+  t: () => store().toggleTheme(),
   T: cycleAccent,
   '?': () => useNav.setState({ helpOpen: true }),
 };

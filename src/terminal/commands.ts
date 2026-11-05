@@ -5,7 +5,6 @@ import {
   type Playlist, type Song,
 } from '../core/subsonic';
 import { removeRecentSearch } from '../core/recentSearches';
-import { crossfade } from './motion';
 import { holdsSongs, itemName, songItem, songsFor, songsIn, starTarget, type Item } from './items';
 import {
   VIEWS, closeDialog, dropPlaylist, emptyPane, openAlbumOf, openArtist, openArtistOf, openDialog, openView, patchStarred,
@@ -411,7 +410,7 @@ export function cycleAccent() {
   const { accentColor, setAccentColor } = useStore.getState();
   const index = ACCENT_COLORS.findIndex(a => a.id === accentColor);
   const next = ACCENT_COLORS[(index + 1) % ACCENT_COLORS.length];
-  crossfade(() => setAccentColor(next.id));
+  setAccentColor(next.id);
   setStatus(`accent: ${next.label.toLowerCase()}`);
 }
 

@@ -1,6 +1,6 @@
 import { fmt, fmtDuration } from '../../core/format';
 import type { Item } from '../items';
-import { ChevronIcon, EqBars, RecentIcon, StarIcon } from './Icons';
+import { PlaybackMark, Star as StarMark } from './Glyphs';
 
 interface ItemRowProps {
   item: Item;
@@ -13,7 +13,7 @@ interface ItemRowProps {
 }
 
 const Star = ({ on }: { on: boolean }) => (
-  <span className="t-cell-star">{on && <StarIcon filled label="starred" />}</span>
+  <span className="t-cell-star">{on && <StarMark />}</span>
 );
 /** The type tag. In mixed lists, non-songs also leave the track column blank so columns line up. */
 const Kind = ({ label, show, blankTrack }: { label: string; show?: boolean; blankTrack?: boolean }) =>
@@ -79,7 +79,7 @@ export function ItemRow({ item, playback, showKind, highlight }: ItemRowProps) {
           <Star on={!!song.starred} />
           <Kind label="trk" show={showKind} />
           <span className="t-cell-track">
-            {playback ? <EqBars playing={playback === 'playing'} /> : disc && track ? `${disc}-${track}` : track}
+            {playback ? <PlaybackMark playing={playback === 'playing'} /> : disc && track ? `${disc}-${track}` : track}
           </span>
           <Name text={song.title} highlight={highlight} />
           {!sameArtist && <span className="t-cell-sub">{song.artist}</span>}
@@ -90,12 +90,12 @@ export function ItemRow({ item, playback, showKind, highlight }: ItemRowProps) {
     case 'action':
       return (
         <>
-          <span className="t-cell-star t-cell-go"><ChevronIcon /></span>
+          <span className="t-cell-star t-cell-go">&gt;</span>
           <span className={`t-cell-main${item.danger ? ' t-cell-danger' : ''}`}>{item.label}</span>
           {item.swatches && (
             <span className="t-swatches" aria-hidden="true">
-              {item.swatches.map(swatch => (
-                <i key={swatch.color} className={swatch.on ? 'is-on' : undefined} style={{ color: swatch.color }} />
+              {item.swatches.map((swatch, index) => (
+                <i key={index} className={swatch.on ? 'is-on' : undefined} style={{ color: swatch.color }}>#</i>
               ))}
             </span>
           )}
@@ -105,7 +105,7 @@ export function ItemRow({ item, playback, showKind, highlight }: ItemRowProps) {
     case 'link':
       return (
         <>
-          <span className="t-cell-star t-cell-go"><ChevronIcon /></span>
+          <span className="t-cell-star t-cell-go">&gt;</span>
           <span className="t-cell-label">{item.label}</span>
           <span className="t-cell-main">{item.value}</span>
         </>
@@ -121,7 +121,7 @@ export function ItemRow({ item, playback, showKind, highlight }: ItemRowProps) {
     case 'recent':
       return (
         <>
-          <span className="t-cell-star t-cell-go"><RecentIcon /></span>
+          <span className="t-cell-star t-cell-go">~</span>
           <span className="t-cell-main">{item.term}</span>
         </>
       );

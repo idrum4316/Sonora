@@ -2,10 +2,10 @@ import { useState, type FormEvent } from 'react';
 import { connect } from '../../core/connect';
 import { useStore } from '../../core/store';
 import { Logo } from './Logo';
-import { Spectrum, type CellSize } from './Spectrum';
+import { Spectrum, type BarSize } from './Spectrum';
 
-const BACKDROP_CELL: CellSize = { width: 6, height: 3, gapX: 3, gapY: 3 };
-/** Long enough to read the success message, and for the screen to fade into the app. */
+const BACKDROP_BARS: BarSize = { width: 2, gap: 1 };
+/** Long enough to read the success message. */
 const CONNECTED_MS = 520;
 
 export function Connect() {
@@ -14,8 +14,7 @@ export function Connect() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
-  const [connected, setConnected] = useState(false);
-  const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null);
+    const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -25,7 +24,6 @@ export function Connect() {
       const { config, info } = await connect(serverUrl, username, password);
       const server = [info.type, info.serverVersion].filter(Boolean).join(' ');
       setMessage({ text: `connected${server ? ` to ${server}` : ''}`, isError: false });
-      setConnected(true);
       // Leave the success message up briefly; setConfig swaps this screen for the app.
       setTimeout(() => setConfig(config), CONNECTED_MS);
     } catch (err) {
@@ -36,11 +34,11 @@ export function Connect() {
   }
 
   return (
-    <main className={`t-connect${connected ? ' is-connected' : ''}`}>
-      <Spectrum className="t-connect-spectrum" cell={BACKDROP_CELL} demo />
-      <Logo animated />
+    <main className="t-connect">
+      <Spectrum className="t-connect-spectrum" bars={BACKDROP_BARS} demo />
+      <Logo />
       <p className="t-tagline">a keyboard-first client for navidrome<i className="t-caret" /></p>
-      <form className="t-pane t-connect-form" onSubmit={handleSubmit}>
+      <form className="t-pane is-focused t-connect-form" onSubmit={handleSubmit}>
         <h1 className="t-pane-title">connect</h1>
         <label className="t-field">
           <span>server</span>

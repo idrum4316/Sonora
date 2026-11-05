@@ -1,3 +1,4 @@
+import { currentArtColors, useArtPalette } from '../core/artPalette';
 import { fmtDuration, plural } from '../core/format';
 import { groupByDisc, releaseType } from '../core/library';
 import { ACCENT_COLORS, useStore } from '../core/store';
@@ -5,7 +6,6 @@ import {
   getAlbum, getArtist, getPlaylist, getSongsByGenre,
   type Album, type Artist, type ArtistDetail, type Genre, type Playlist, type ScanStatus, type Song, type SubsonicConfig,
 } from '../core/subsonic';
-import { crossfade } from './motion';
 
 /** Anything a terminal list can show. Rows and key actions are driven by `kind`. */
 export type Item =
@@ -235,6 +235,19 @@ function scanText(server: string | null, scan: ScanStatus | null): string {
   return scan.count != null ? `scanning · ${scan.count.toLocaleString()} items` : 'scanning…';
 }
 
+/** The accent's name, and why the album accent shows the default one when it does. */
+function accentValue(index: number): string {
+  const { accentColor, currentTrack } = useStore.getState();
+  const name = ACCENT_COLORS[index]?.label.toLowerCase() ?? accentColor;
+  if (accentColor !== 'album') return name;
+  if (!currentTrack?.coverArt) return `${name} (nothing playing)`;
+  const { coverArt, palette } = useArtPalette.getState();
+  if (coverArt !== currentTrack.coverArt) return name;
+  if (!palette) return `${name} (art unreadable)`;
+  if (!palette.length) return `${name} (no colors in art)`;
+  return name;
+}
+
 // Rows are rebuilt on every refresh, so this has to outlive them.
 let disconnectArmed = false;
 
@@ -242,14 +255,19 @@ let disconnectArmed = false;
 export function settingsItems({ notify, server, scan, startScan }: SettingsContext): Item[] {
   const s = useStore.getState();
   const accentIndex = ACCENT_COLORS.findIndex(a => a.id === s.accentColor);
+  const artAccent = currentArtColors()?.accent;
   return [
-    { kind: 'action', label: 'theme', value: s.theme, run: () => crossfade(() => useStore.getState().toggleTheme()) },
+    { kind: 'action', label: 'theme', value: s.theme, run: () => useStore.getState().toggleTheme() },
     {
       kind: 'action',
       label: 'accent',
-      value: ACCENT_COLORS[accentIndex]?.label.toLowerCase() ?? s.accentColor,
-      swatches: ACCENT_COLORS.map((accent, index) => ({ color: accent.swatch, on: index === accentIndex })),
-      run: () => crossfade(() => useStore.getState().setAccentColor(ACCENT_COLORS[(accentIndex + 1) % ACCENT_COLORS.length].id)),
+      value: accentValue(accentIndex),
+      swatches: ACCENT_COLORS.map((accent, index) => ({
+        // Dim until there's art to take a color from.
+        color: accent.id === 'album' ? artAccent ?? 'var(--t-dim)' : accent.swatch,
+        on: index === accentIndex,
+      })),
+      run: () => useStore.getState().setAccentColor(ACCENT_COLORS[(accentIndex + 1) % ACCENT_COLORS.length].id),
     },
     {
       kind: 'action',
