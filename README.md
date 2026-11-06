@@ -119,7 +119,7 @@ On first launch, you'll see a connection screen. Enter your Navidrome server det
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) 20+
+- [Node.js](https://nodejs.org/) 20.19+ or 22.12+
 - npm
 
 ### Installation
@@ -151,7 +151,7 @@ Production-ready files are output to the `dist/` directory. Serve with any stati
 | Layer | Technology |
 |-------|------------|
 | **Framework** | React 18 + TypeScript |
-| **Build Tool** | Vite 6 |
+| **Build Tool** | Vite 8 |
 | **Routing** | React Router v6 |
 | **State Management** | Zustand v5 (with persistence) |
 | **Virtualization** | TanStack React Virtual |

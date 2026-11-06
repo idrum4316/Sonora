@@ -416,8 +416,8 @@ html[data-theme='light'] .np-play {
   overflow: hidden;
   min-height: 0;
   align-self: stretch;
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 .np-panel-tabs {
   display: flex;

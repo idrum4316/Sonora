@@ -27,7 +27,7 @@ Sonora connects to Subsonic API-compatible music servers (primarily Navidrome) a
 |----------|------------|---------|
 | **Framework** | React | 18.3.1 |
 | **Language** | TypeScript | 5.6.3 |
-| **Build Tool** | Vite | 6.0.3 |
+| **Build Tool** | Vite | 8.3.6 |
 | **Routing** | React Router | 7.18.5 |
 | **State Management** | Zustand | 5.0.2 |
 | **Virtualization** | TanStack React Virtual | 3.13.22 |
@@ -177,7 +177,7 @@ The terminal UI keeps its own navigation state in `src/terminal/nav.ts`.
 ## 🚀 Development
 
 ### Prerequisites
-- Node.js 20+
+- Node.js 20.19+ or 22.12+
 - npm
 
 ### Commands
@@ -334,6 +334,7 @@ docker compose up -d
 - Classic: global rules in `src/classic/styles/base.css`; component and page styles under `src/classic/styles/components/` and `pages/`. Register new files in `src/classic/styles/index.css`.
 - Terminal: `src/terminal/terminal.css`
 - Follow the existing color scheme and typography
+- Put a vendor-prefixed property before its standard one (`-webkit-backdrop-filter`, then `backdrop-filter`). Vite minifies CSS with Lightning CSS, which keeps only the last of the pair
 
 ---
 
