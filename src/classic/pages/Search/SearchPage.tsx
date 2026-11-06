@@ -41,27 +41,23 @@ export function SearchPage() {
 
   const { openMenu, menuPortal } = useTrackMenu();
 
-  const initialQuery = searchParams.get('q') ?? '';
-  const [query, setQuery] = useState(initialQuery);
+  // The URL is the only copy of the query. The sidebar writes it on every
+  // keystroke, so this page reads it and never writes it back, or a stale
+  // copy could overwrite what is being typed.
+  const query = searchParams.get('q') ?? '';
   const [artists, setArtists] = useState<Artist[]>([]);
   const [albums, setAlbums] = useState<Album[]>([]);
   const [songs, setSongs] = useState<Song[]>([]);
   const [genres, setGenres] = useState<Genre[]>([]);
   const [recentSearches, setRecentSearches] = useState<string[]>(loadRecentSearches);
   const [loading, setLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(!!initialQuery);
+  const [hasSearched, setHasSearched] = useState(!!query.trim());
 
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Focus input on mount
   useEffect(() => { inputRef.current?.focus(); }, []);
-
-  // Sync search param → query on popstate
-  useEffect(() => {
-    const q = searchParams.get('q') ?? '';
-    if (q !== query) setQuery(q);
-  }, [searchParams]);
 
   // Load genres for empty-state browse
   useEffect(() => {
@@ -78,13 +74,11 @@ export function SearchPage() {
       setAlbums([]);
       setSongs([]);
       setHasSearched(false);
-      setSearchParams({}, { replace: true });
       return;
     }
 
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
-      setSearchParams({ q: trimmed }, { replace: true });
       try {
         const result = await search3(config, trimmed, 6, 9, 8);
         setArtists(result.artist);
@@ -104,9 +98,9 @@ export function SearchPage() {
   }, [query, config]);
 
   const handleRecentClick = useCallback((term: string) => {
-    setQuery(term);
+    setSearchParams({ q: term }, { replace: true });
     inputRef.current?.focus();
-  }, []);
+  }, [setSearchParams]);
 
   const handleRecentRemove = useCallback((term: string, e: React.MouseEvent) => {
     e.stopPropagation();

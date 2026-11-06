@@ -1,4 +1,4 @@
-import { NavLink, useNavigate, useLocation } from 'react-router';
+import { NavLink, useNavigate, useLocation, useNavigationType } from 'react-router';
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useStore } from '../../../core/store';
 import { getPlaylists } from '../../../core/subsonic';
@@ -35,11 +35,15 @@ const IconLogo = () => (
   </svg>
 );
 
+type SearchState = { fromSidebar?: boolean };
+const FROM_SIDEBAR: SearchState = { fromSidebar: true };
+
 export function Sidebar() {
   const config = useStore(s => s.config);
   const playlistVersion = useStore(s => s.playlistVersion);
   const navigate = useNavigate();
   const location = useLocation();
+  const navigationType = useNavigationType();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -49,24 +53,29 @@ export function Sidebar() {
     getPlaylists(config).then(setPlaylists).catch(console.error);
   }, [config, playlistVersion]);
 
-  // Keep sidebar search in sync with URL when on /search
+  // Fill the search box from the URL when something else changed the query:
+  // a recent search, back or forward, or loading the page. Skip the URLs typed
+  // here, because the router renders them in transitions, which can land after
+  // later keystrokes and would overwrite them.
   useEffect(() => {
-    if (location.pathname === '/search') {
-      const q = new URLSearchParams(location.search).get('q') ?? '';
-      setSearchQuery(prev => (prev !== q ? q : prev));
-    }
-  }, [location.pathname, location.search]);
+    if (location.pathname !== '/search') return;
+    if (navigationType !== 'POP' && (location.state as SearchState | null)?.fromSidebar) return;
+    setSearchQuery(new URLSearchParams(location.search).get('q') ?? '');
+  }, [location, navigationType]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
     const encoded = value.trim() ? `?q=${encodeURIComponent(value.trim())}` : '';
-    navigate(`/search${encoded}`, { replace: location.pathname === '/search' });
-  }, [navigate, location.pathname]);
+    // Read the address bar, not useLocation, which lags while the router
+    // renders the last keystroke's navigation, and would push extra entries.
+    const onSearch = window.location.pathname === '/search';
+    navigate(`/search${encoded}`, { replace: onSearch, state: FROM_SIDEBAR });
+  }, [navigate]);
 
   const handleSearchClear = useCallback(() => {
     setSearchQuery('');
-    navigate('/search', { replace: true });
+    navigate('/search', { replace: true, state: FROM_SIDEBAR });
     searchInputRef.current?.focus();
   }, [navigate]);
 
