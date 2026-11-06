@@ -28,7 +28,7 @@ Sonora connects to Subsonic API-compatible music servers (primarily Navidrome) a
 | **Framework** | React | 18.3.1 |
 | **Language** | TypeScript | 5.6.3 |
 | **Build Tool** | Vite | 6.0.3 |
-| **Routing** | React Router | 6.28.0 |
+| **Routing** | React Router | 7.18.5 |
 | **State Management** | Zustand | 5.0.2 |
 | **Virtualization** | TanStack React Virtual | 3.13.22 |
 | **API** | Subsonic REST API | v1.16.1 |
@@ -290,7 +290,7 @@ docker compose up -d
 
 ### Runtime
 - `react` & `react-dom` - UI library
-- `react-router-dom` - Client-side routing
+- `react-router` - Client-side routing
 - `@tanstack/react-virtual` - Virtual scrolling
 - `zustand` - State management
 

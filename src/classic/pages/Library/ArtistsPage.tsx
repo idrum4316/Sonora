@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useStore } from '../../../core/store';
 import { getArtistsIndexed } from '../../../core/subsonic';
 import type { ArtistIndex } from '../../../core/subsonic';

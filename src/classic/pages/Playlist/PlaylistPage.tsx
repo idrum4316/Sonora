@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import { useStore } from '../../../core/store';
 import { getPlaylist, star, unstar, getCoverArtUrl, removeFromPlaylist, deletePlaylist } from '../../../core/subsonic';
 import type { PlaylistDetail, Song } from '../../../core/subsonic';

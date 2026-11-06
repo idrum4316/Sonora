@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useStore } from '../../../core/store';
 import { CoverArt, artClass } from '../CoverArt';
 import { fmt } from '../../../core/format';

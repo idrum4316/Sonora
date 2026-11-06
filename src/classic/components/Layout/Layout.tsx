@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router';
 import { useStore } from '../../../core/store';
 import { NowPlayingPage } from '../../pages/NowPlaying/NowPlayingPage';
 import { Sidebar } from './Sidebar';

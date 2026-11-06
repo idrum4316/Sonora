@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import { useStore } from '../../../core/store';
 import { releaseType } from '../../../core/library';
 import { getArtist, getArtistInfo, star, unstar, getCoverArtUrl } from '../../../core/subsonic';

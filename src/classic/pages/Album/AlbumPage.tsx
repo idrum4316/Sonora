@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router';
 import { useStore } from '../../../core/store';
 import { getAlbum, getArtist, star, unstar, getCoverArtUrl } from '../../../core/subsonic';
 import type { Album, Song } from '../../../core/subsonic';

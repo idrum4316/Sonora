@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { useStore } from '../core/store';
 import { Layout } from './components/Layout/Layout';
 import { ConnectPage } from './pages/Connect/ConnectPage';

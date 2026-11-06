@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useStore } from '../../../core/store';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { AccentPicker } from '../../components/AccentPicker';

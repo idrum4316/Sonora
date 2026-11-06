@@ -1,4 +1,4 @@
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router';
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useStore } from '../../../core/store';
 import { getPlaylists } from '../../../core/subsonic';

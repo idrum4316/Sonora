@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useStore } from '../../../core/store';
 import { CoverArt, artClass } from '../../components/CoverArt';
 import { QueueItem } from '../../components/QueueItem';

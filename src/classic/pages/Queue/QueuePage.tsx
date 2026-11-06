@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router';
 import { useStore } from '../../../core/store';
 import type { Song } from '../../../core/subsonic';
 import { CoverArt, artClass } from '../../components/CoverArt';

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useStore } from '../../../core/store';
 import { search3, getGenres } from '../../../core/subsonic';
 import type { Album, Artist, Song, Genre } from '../../../core/subsonic';
