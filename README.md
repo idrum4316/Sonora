@@ -1,7 +1,7 @@
 # 🎵 Sonora
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![React](https://img.shields.io/badge/react-18+-61DAFB.svg)](https://react.dev/)
+[![React](https://img.shields.io/badge/react-19+-61DAFB.svg)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/typescript-5+-3178C6.svg)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/vite-6+-646CFF.svg)](https://vitejs.dev/)
 
@@ -150,7 +150,7 @@ Production-ready files are output to the `dist/` directory. Serve with any stati
 
 | Layer | Technology |
 |-------|------------|
-| **Framework** | React 18 + TypeScript |
+| **Framework** | React 19 + TypeScript |
 | **Build Tool** | Vite 8 |
 | **Routing** | React Router v6 |
 | **State Management** | Zustand v5 (with persistence) |

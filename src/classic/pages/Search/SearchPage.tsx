@@ -54,7 +54,7 @@ export function SearchPage() {
   const [hasSearched, setHasSearched] = useState(!!query.trim());
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Focus input on mount
   useEffect(() => { inputRef.current?.focus(); }, []);

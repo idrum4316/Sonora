@@ -2,7 +2,7 @@
 
 ## 📋 Project Overview
 
-**Sonora** is a modern, self-hosted web client for [Navidrome](https://www.navidrome.org/) and other [Subsonic-compatible](http://www.subsonic.org/pages/api.jsp) music streaming servers. Built with React 18, TypeScript 5, and Vite 6, it provides a beautiful, responsive listening experience across desktop and tablet devices.
+**Sonora** is a modern, self-hosted web client for [Navidrome](https://www.navidrome.org/) and other [Subsonic-compatible](http://www.subsonic.org/pages/api.jsp) music streaming servers. Built with React 19, TypeScript 5, and Vite 8, it provides a beautiful, responsive listening experience across desktop and tablet devices.
 
 It has two UIs on one shared core, both running in the browser: the classic UI at `/`, and a keyboard-first terminal UI at `/terminal/`, which is styled as a real TUI.
 
@@ -25,7 +25,7 @@ Sonora connects to Subsonic API-compatible music servers (primarily Navidrome) a
 
 | Category | Technology | Version |
 |----------|------------|---------|
-| **Framework** | React | 18.3.1 |
+| **Framework** | React | 19.3.1 |
 | **Language** | TypeScript | 5.6.3 |
 | **Build Tool** | Vite | 8.3.6 |
 | **Routing** | React Router | 7.18.5 |
