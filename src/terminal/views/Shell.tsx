@@ -2,7 +2,9 @@ import { useEffect, useRef, type CSSProperties, type KeyboardEvent, type ReactNo
 import { useStore } from '../../core/store';
 import { activate } from '../commands';
 import { detailHeading, songsIn } from '../items';
-import { ROW_HEIGHT, VIEWS, openView, rootView, setCursor, setFocus, setSearchQuery, startNav, useNav, type ViewId } from '../nav';
+import {
+  ROW_HEIGHT, VIEWS, openView, rootView, setCursor, setFocus, setProseColumns, setSearchQuery, startNav, useNav, type ViewId,
+} from '../nav';
 import { useKeymap } from '../useKeymap';
 import { DialogOverlay } from '../widgets/DialogOverlay';
 import { HelpOverlay } from '../widgets/HelpOverlay';
@@ -199,6 +201,13 @@ function DetailPane() {
   // The list's own rows are what live views select, not what this pane is showing.
   const heading = !isLive && selected ? detailHeading(selected) : null;
   const showingPlaylist = selected?.kind === 'playlist';
+  const infoPart = selected?.kind === 'artistInfo' ? selected.part : null;
+  let emptyText: ReactNode = '';
+  if (upNext) emptyText = 'no upcoming tracks';
+  else if (showingHistory) emptyText = 'nothing played yet';
+  else if (showingPlaylist) emptyText = <>no tracks yet. press <kbd>P</kbd> on anything to add it</>;
+  else if (infoPart === 'about') emptyText = 'the server has no biography for this artist';
+  else if (infoPart === 'similar') emptyText = 'the server knows no similar artists';
 
   return (
     <Pane
@@ -233,7 +242,8 @@ function DetailPane() {
           focused={focused}
           // The current track is never in up next, though another copy of it can be.
           currentRow={upNext ? -1 : undefined}
-          emptyText={upNext ? 'no upcoming tracks' : showingHistory ? 'nothing played yet' : showingPlaylist ? <>no tracks yet. press <kbd>P</kbd> on anything to add it</> : ''}
+          emptyText={emptyText}
+          onColumns={setProseColumns}
           onSelect={index => { setFocus('detail'); setCursor('detail', index); }}
           onActivate={index => selectAndActivate('detail', index)}
         />

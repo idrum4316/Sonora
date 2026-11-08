@@ -98,6 +98,9 @@ export async function activate() {
     case 'recent':
       setSearchQuery(item.term);
       return;
+    case 'artistInfo':
+      if (pane === 'list') moveFocus(1);
+      return;
     case 'album':
       started = await store.playAlbum(item.album);
       break;

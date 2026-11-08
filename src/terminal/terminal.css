@@ -257,7 +257,11 @@ mark { background: none; color: var(--accent); font-weight: 700; }
 .t-row.is-current > .t-cell-main, .t-row.is-current > .t-cell-track { color: var(--accent); font-weight: 700; }
 .t-row.is-played > .t-cell-main, .t-row.is-played > .t-cell-sub { color: var(--t-faint); }
 .t-row.is-played.is-selected > .t-cell-main, .t-row.is-played.is-selected > .t-cell-sub { color: var(--t-dim); }
-.t-row-info { user-select: text; }
+.t-row-info, .t-row-text { user-select: text; }
+/* Prose fills the row. It's wrapped to fit, so nothing clips. */
+.t-row > .t-cell-text { flex: 1 1 0; min-width: 0; }
+/* Only mark the cursor's line while reading, so an unread biography doesn't look selected. */
+.t-list:not(.is-focused) .t-row-text.is-selected { background: none; }
 
 /* Always on the page color, so each swatch still shows its color on an inverse row. */
 .t-row > .t-swatches { background: var(--t-page); font-weight: 700; padding: 0 1ch; }

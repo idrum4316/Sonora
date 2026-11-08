@@ -1,5 +1,5 @@
 import { fmt, fmtDuration } from '../../core/format';
-import type { Item } from '../items';
+import { infoLabel, type Item } from '../items';
 import { PlaybackMark, Star as StarMark } from './Glyphs';
 
 interface ItemRowProps {
@@ -118,6 +118,15 @@ export function ItemRow({ item, playback, showKind, highlight }: ItemRowProps) {
           <span className="t-cell-main">{item.value}</span>
         </>
       );
+    case 'artistInfo':
+      return (
+        <>
+          <span className="t-cell-star t-cell-go">&gt;</span>
+          <span className="t-cell-main">{infoLabel(item.part)}</span>
+        </>
+      );
+    case 'text':
+      return <span className="t-cell-text">{item.text}</span>;
     case 'recent':
       return (
         <>

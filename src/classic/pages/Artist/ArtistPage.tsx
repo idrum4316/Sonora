@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useStore } from '../../../core/store';
+import { stripHtml } from '../../../core/format';
 import { releaseType } from '../../../core/library';
 import { getArtist, getArtistInfo, star, unstar, getCoverArtUrl } from '../../../core/subsonic';
 import type { ArtistDetail, ArtistInfo, Album } from '../../../core/subsonic';
@@ -16,20 +17,6 @@ function initials(name: string): string {
     .slice(0, 2)
     .map(w => w[0]?.toUpperCase() ?? '')
     .join('');
-}
-
-function stripHtml(html: string): string {
-  return html
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, ' ')
-    .trim();
 }
 
 // ── ArtistPage ────────────────────────────────────────────────────────────────

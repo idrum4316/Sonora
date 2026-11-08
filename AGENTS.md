@@ -115,6 +115,7 @@ sonora/
 - Browse: albums, artists, playlists, genres, favorites
 - Sort options: newest, recent, random, starred, frequent
 - Full-text search across artists, albums, songs, genres
+- Artist biographies and similar artists
 - Recent search history
 - Virtual scrolling for large libraries
 
@@ -236,6 +237,7 @@ docker compose up -d
 - Modal boxes go through `openDialog` in `nav.ts` (`pick`, `prompt`, or `confirm`), which `useKeymap.ts` and `DialogOverlay.tsx` handle
 - It should look like a program running in a terminal, so ask whether a terminal could draw it. Everything sits on one character grid: one font size, cells `CELL_WIDTH` wide and `ROW_HEIGHT` tall (both in `nav.ts`), spacing in whole cells. Use `ch` and `--t-row`, never other sizes. No rounded corners, shadows, gradients, blur, or big type
 - Rows are one `ROW_HEIGHT` tall, and each field clips to its column, so wide titles can't break the grid. A separator is a whole row too (`.t-rule`), so rows stay on the grid in every pane
+- Prose, like an artist's biography, is `text` items holding whole paragraphs. `setDetailItems` in `nav.ts` wraps them to the detail pane's width with `wrapText`, so each line is one row
 - Facts about a whole list go in its pane's `summary`, not in rows, because actions go by row position. `detailSummary` in `items.ts` builds the detail pane's, and `Screen.summary` the list pane's
 - Colors come from `src/core/tokens.css`, through the `--t-*` mixes at the top of `terminal.css`. Use those rather than the raw tokens, so text stays legible and surfaces match in both themes and every accent
 - One accent only. Emphasis comes from bold, the accent, and inverse video, never from more hues or sizes. The one exception is the spectrum under the album accent, whose bars run along a gradient of the cover art's colors, one solid color per bar as a terminal would color a column
@@ -279,6 +281,7 @@ docker compose up -d
 | `groupByDisc` | `src/core/library.ts` | Group an album's songs by disc |
 | `releaseType` | `src/core/library.ts` | Call a release a Single, EP, or Album by its track count |
 | `plural` | `src/core/format.ts` | "1 track", "2 tracks" |
+| `stripHtml` | `src/core/format.ts` | Plain text from a server's HTML, such as a biography |
 | `useSliderDrag` | `src/classic/utils/useSliderDrag.ts` | Handle slider drag interactions |
 | `genreGradients` | `src/classic/utils/genreGradients.ts` | Predefined color gradients per genre |
 | `useImageColors` | `src/classic/utils/useImageColors.ts` | Extract dominant colors from images (currently unused) |

@@ -25,7 +25,9 @@ function selectionHints(item: Item, inList: boolean): Hint[] {
     case 'action': return [['Enter', 'select']];
     case 'link': return [['Enter', 'open']];
     case 'recent': return [['Enter', 'search'], ['d', 'forget']];
-    case 'info': return [];
+    case 'artistInfo': return inList ? [['Enter', item.part === 'about' ? 'read' : 'open']] : [];
+    case 'info':
+    case 'text': return [];
   }
 }
 

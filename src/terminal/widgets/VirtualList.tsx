@@ -2,7 +2,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useStore } from '../../core/store';
 import type { PaneState } from '../nav';
-import { ROW_HEIGHT } from '../nav';
+import { CELL_WIDTH, ROW_HEIGHT } from '../nav';
 import { Spinner } from './Glyphs';
 import { ItemRow } from './ItemRow';
 
@@ -19,6 +19,8 @@ interface VirtualListProps {
   /** Lowercase text to pick out in each row's name, for search results. */
   highlight?: string;
   emptyText: ReactNode;
+  /** Told how many cells of text fit in a row, whenever that changes. */
+  onColumns?: (columns: number) => void;
   onSelect: (index: number) => void;
   onActivate: (index: number) => void;
 }
@@ -26,7 +28,7 @@ interface VirtualListProps {
 /** Rows kept between the cursor and the edge of the list when it scrolls, like vim's scrolloff. */
 const SCROLL_MARGIN = ROW_HEIGHT * 2;
 
-export function VirtualList({ id, label, pane, focused, currentRow, dimPlayed, showKind, highlight, emptyText, onSelect, onActivate }: VirtualListProps) {
+export function VirtualList({ id, label, pane, focused, currentRow, dimPlayed, showKind, highlight, emptyText, onColumns, onSelect, onActivate }: VirtualListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const currentId = useStore(s => s.currentTrack?.id);
   const isPlaying = useStore(s => s.isPlaying);
@@ -44,6 +46,15 @@ export function VirtualList({ id, label, pane, focused, currentRow, dimPlayed, s
   useEffect(() => {
     if (items.length) virtualizer.scrollToIndex(cursor, { align: 'auto' });
   }, [cursor, items.length, virtualizer]);
+
+  useEffect(() => {
+    const element = scrollRef.current;
+    if (!element || !onColumns) return;
+    // A row has a cell of padding on each side.
+    const observer = new ResizeObserver(() => onColumns(Math.floor(element.clientWidth / CELL_WIDTH) - 2));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [onColumns]);
 
   // Follow the focused pane with DOM focus, so assistive tech hears the active row.
   useEffect(() => {

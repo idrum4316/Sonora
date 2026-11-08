@@ -248,7 +248,7 @@ export interface ArtistInfo {
   smallImageUrl?: string;
   mediumImageUrl?: string;
   largeImageUrl?: string;
-  similarArtist?: { id: string; name: string; albumCount: number; artistImageUrl?: string; coverArt?: string }[];
+  similarArtist?: Artist[];
 }
 
 export async function getArtistInfo(config: SubsonicConfig, id: string): Promise<ArtistInfo> {

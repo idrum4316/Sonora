@@ -1,10 +1,10 @@
 import { currentArtColors, useArtPalette } from '../core/artPalette';
-import { fmtDuration, plural } from '../core/format';
+import { fmtDuration, plural, stripHtml } from '../core/format';
 import { groupByDisc, releaseType } from '../core/library';
 import { ACCENT_COLORS, useStore } from '../core/store';
 import {
-  getAlbum, getArtist, getPlaylist, getSongsByGenre,
-  type Album, type Artist, type ArtistDetail, type Genre, type Playlist, type ScanStatus, type Song, type SubsonicConfig,
+  getAlbum, getArtist, getArtistInfo, getPlaylist, getSongsByGenre,
+  type Album, type Artist, type ArtistDetail, type ArtistInfo, type Genre, type Playlist, type ScanStatus, type Song, type SubsonicConfig,
 } from '../core/subsonic';
 
 /** Anything a terminal list can show. Rows and key actions are driven by `kind`. */
@@ -20,7 +20,11 @@ export type Item =
   | { kind: 'action'; label: string; value?: string; swatches?: { color: string; on: boolean }[]; danger?: boolean; run: () => void }
   | { kind: 'link'; label: string; value: string; run: () => void }
   | { kind: 'info'; label: string; value: string }
-  | { kind: 'recent'; term: string };
+  | { kind: 'recent'; term: string }
+  /** Part of what the server knows about an artist, shown beside it. Both parts share one `info` request. */
+  | { kind: 'artistInfo'; part: 'about' | 'similar'; artist: Pick<Artist, 'id' | 'name'>; info: () => Promise<ArtistInfo> }
+  /** A line of prose. Lists hold whole paragraphs, and `wrapText` breaks them into lines that fit the pane. */
+  | { kind: 'text'; text: string };
 
 export const songItem = (song: Song): Item => ({ kind: 'song', song });
 export const albumItem = (album: Album): Item => ({ kind: 'album', album });
@@ -33,6 +37,70 @@ export function discography(artist: ArtistDetail): Item[] {
     .map(album => ({ kind: 'album', album, release: releaseType(album.songCount ?? 0).toLowerCase() }));
 }
 
+/** What an artist's own screen lists: its biography and similar artists, then its albums. */
+export function artistPageItems(config: SubsonicConfig, artist: ArtistDetail): Item[] {
+  let request: Promise<ArtistInfo> | undefined;
+  // Asked for when either row is first selected. A failure isn't kept, so the next try asks again.
+  const info = () => (request ??= getArtistInfo(config, artist.id).catch(e => {
+    request = undefined;
+    throw e;
+  }));
+  const { id, name } = artist;
+  return [
+    { kind: 'artistInfo', part: 'about', artist: { id, name }, info },
+    { kind: 'artistInfo', part: 'similar', artist: { id, name }, info },
+    ...discography(artist),
+  ];
+}
+
+const isWebUrl = (url: string | undefined): url is string => !!url && /^https?:\/\//i.test(url);
+
+/** An artist's biography as paragraphs with a blank line between them, then a link to read more. */
+function aboutItems(info: ArtistInfo): Item[] {
+  const paragraphs = stripHtml(info.biography ?? '')
+    .split(/\n+/)
+    .map(paragraph => paragraph.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+  const rows = paragraphs.flatMap((text, index): Item[] => [
+    ...(index ? [{ kind: 'text' as const, text: '' }] : []),
+    { kind: 'text', text },
+  ]);
+  const url = info.lastFmUrl;
+  if (isWebUrl(url)) {
+    if (rows.length) rows.push({ kind: 'text', text: '' });
+    rows.push({ kind: 'link', label: 'last.fm', value: url, run: () => window.open(url, '_blank', 'noopener,noreferrer') });
+  }
+  return rows;
+}
+
+function wrapLine(text: string, columns: number): string[] {
+  const lines: string[] = [];
+  let line = '';
+  for (let word of text.split(' ')) {
+    while (word.length > columns) {
+      if (line) lines.push(line);
+      line = '';
+      lines.push(word.slice(0, columns));
+      word = word.slice(columns);
+    }
+    if (!word) continue;
+    if (!line) line = word;
+    else if (line.length + 1 + word.length <= columns) line += ` ${word}`;
+    else {
+      lines.push(line);
+      line = word;
+    }
+  }
+  return line || !lines.length ? [...lines, line] : lines;
+}
+
+/** Breaks each `text` item into lines of at most `columns` cells, at spaces where it can. */
+export function wrapText(items: Item[], columns: number): Item[] {
+  if (!items.some(item => item.kind === 'text')) return items;
+  const width = Math.max(columns, 8);
+  return items.flatMap(item => item.kind === 'text' ? wrapLine(item.text, width).map((text): Item => ({ kind: 'text', text })) : [item]);
+}
+
 /** Identifies an item's children in the cache, or null if they aren't worth caching. */
 export function childrenKey(item: Item): string | null {
   switch (item.kind) {
@@ -40,6 +108,7 @@ export function childrenKey(item: Item): string | null {
     case 'artist': return `artist:${item.artist.id}`;
     case 'playlist': return `playlist:${item.playlist.id}`;
     case 'genre': return `genre:${item.genre.value}`;
+    case 'artistInfo': return `${item.part}:${item.artist.id}`;
     default: return null;
   }
 }
@@ -90,6 +159,10 @@ export async function loadChildren(config: SubsonicConfig, item: Item): Promise<
       return (await getSongsByGenre(config, item.genre.value, 100)).map(songItem);
     case 'song':
       return songDetails(item.song);
+    case 'artistInfo': {
+      const info = await item.info();
+      return item.part === 'about' ? aboutItems(info) : (info.similarArtist ?? []).map(artistItem);
+    }
     default:
       return [];
   }
@@ -145,14 +218,18 @@ export function detailSummary(item: Item, children: Item[]): string | undefined 
     case 'album': return albumSummary(item.album, children);
     case 'artist': return artistSummary(children);
     case 'playlist': return joinSummary([!!item.playlist.owner && `by ${item.playlist.owner}`, item.playlist.comment]);
+    case 'artistInfo': return item.part === 'similar' && children.length ? plural(children.length, 'artist') : undefined;
     default: return undefined;
   }
 }
+
+export const infoLabel = (part: 'about' | 'similar') => (part === 'about' ? 'about' : 'similar artists');
 
 /** What the detail pane calls its contents when `item` is selected. */
 export function detailLabel(item: Item): string {
   switch (item.kind) {
     case 'artist': return 'albums';
+    case 'artistInfo': return infoLabel(item.part);
     case 'album':
     case 'playlist':
     case 'genre': return 'tracks';
@@ -168,14 +245,16 @@ export function detailHeading(item: Item): { title: string; subtitle?: string } 
     case 'playlist': return { title: item.playlist.name };
     case 'genre': return { title: item.genre.value, subtitle: `${plural(item.genre.albumCount, 'album')} · ${plural(item.genre.songCount, 'track')}` };
     case 'song': return { title: item.song.title, subtitle: item.song.artist };
+    case 'artistInfo': return { title: item.artist.name };
     default: return null;
   }
 }
 
 /** Whether `item` stands for songs, so it can be queued or added to a playlist. */
 export function holdsSongs(item: Item): boolean {
-  return item.kind !== 'action' && item.kind !== 'link' && item.kind !== 'info' && item.kind !== 'recent';
+  return SONG_KINDS.has(item.kind);
 }
+const SONG_KINDS = new Set<Item['kind']>(['album', 'artist', 'playlist', 'genre', 'song']);
 
 export function songsIn(items: Item[]): Song[] {
   return items.flatMap(item => item.kind === 'song' ? [item.song] : []);
@@ -216,6 +295,8 @@ export function itemName(item: Item): string {
     case 'link':
     case 'info': return item.label;
     case 'recent': return item.term;
+    case 'artistInfo': return infoLabel(item.part);
+    case 'text': return item.text;
   }
 }
 

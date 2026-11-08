@@ -7,8 +7,8 @@ import {
   startScan, type Artist, type ScanStatus, type Song, type SubsonicConfig,
 } from '../core/subsonic';
 import {
-  albumItem, artistItem, artistSummary, childrenKey, detailLabel, detailSummary, discography, loadChildren, nowPlayingItems,
-  settingsItems, songItem, upNextSummary, withStarred,
+  albumItem, artistItem, artistPageItems, artistSummary, childrenKey, detailLabel, detailSummary, loadChildren,
+  nowPlayingItems, settingsItems, songItem, upNextSummary, withStarred, wrapText,
   type Item,
 } from './items';
 
@@ -93,7 +93,7 @@ function artistScreen(artist: Pick<Artist, 'id' | 'name'>): Screen {
   return {
     key: `artist:${artist.id}:albums`,
     title: artist.name,
-    load: async config => discography(await getArtist(config, artist.id)),
+    load: async config => artistPageItems(config, await getArtist(config, artist.id)),
     summary: artistSummary,
   };
 }
@@ -220,8 +220,25 @@ function cancelDetail() {
   ++detailToken;
 }
 
-function setDetailItems(items: Item[], title: string, summary?: string) {
+// How many cells wide a line of prose can be in the detail pane. The pane reports it as it resizes.
+let proseColumns = 60;
+
+function setDetailItems(raw: Item[], title: string, summary?: string) {
+  const items = wrapText(raw, proseColumns);
   set(s => ({ detail: { ...emptyPane, items, summary, cursor: clamp(s.detail.cursor, items.length - 1) }, detailTitle: title }));
+}
+
+/** Rewraps any prose in the detail pane to fit a new width. */
+export function setProseColumns(columns: number) {
+  if (columns === proseColumns) return;
+  proseColumns = columns;
+  const { screen, list, detail } = get();
+  const item = list.items[list.cursor];
+  const key = item && !screen.live ? childrenKey(item) : null;
+  const cached = key ? childCache.get(key) : undefined;
+  if (cached && !detail.loading && cached.some(child => child.kind === 'text')) {
+    setDetailItems(cached, detailLabel(item), detailSummary(item, cached));
+  }
 }
 
 /** Loads the selected item's children, after a short wait so holding `j` doesn't flood the server. */
