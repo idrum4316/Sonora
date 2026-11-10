@@ -270,8 +270,8 @@
 /* Playlist grid */
 .library-playlist-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 20px 16px;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+  gap: 28px 20px;
 }
 .library-playlist-card {
   cursor: pointer;

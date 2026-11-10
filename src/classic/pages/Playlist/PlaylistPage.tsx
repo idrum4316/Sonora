@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router';
 import { useStore } from '../../../core/store';
 import { getPlaylist, star, unstar, getCoverArtUrl, removeFromPlaylist, deletePlaylist } from '../../../core/subsonic';
 import type { PlaylistDetail, Song } from '../../../core/subsonic';
+import { HeroBackdrop } from '../../components/HeroBackdrop';
 import { CoverArt, artClass } from '../../components/CoverArt';
 import { fmtDuration } from '../../../core/format';
 import { Skeleton, IconPlay, IconShuffle, IconPlayNext, IconAddQueue } from '../../components/ui';
@@ -120,31 +121,7 @@ export function PlaylistPage() {
     <>
       {/* ── Hero ── */}
       <div className="album-hero">
-        {/* Blurred cover background */}
-        {playlist?.coverArt && (
-          <div
-            aria-hidden="true"
-            style={{
-              position: 'absolute', inset: -40,
-              backgroundImage: `url(${getCoverArtUrl(config, playlist.coverArt, 300)})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              filter: 'blur(80px) saturate(1.4)',
-              opacity: 0.22,
-              transform: 'scale(1.15)',
-              pointerEvents: 'none',
-            }}
-          />
-        )}
-        {/* Gradient to bg */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(to bottom, transparent 0%, var(--bg) 100%)',
-            pointerEvents: 'none',
-          }}
-        />
+        <HeroBackdrop src={playlist?.coverArt ? getCoverArtUrl(config, playlist.coverArt, 300) : undefined} />
 
         <div className="album-hero-inner" style={{ animation: 'fadeUp 400ms ease both' }}>
           {/* Cover art */}
@@ -156,7 +133,7 @@ export function PlaylistPage() {
                 <CoverArt
                   coverArt={playlist?.coverArt}
                   id={id ?? ''}
-                  size={440}
+                  size={800}
                   alt={playlist ? `${playlist.name} cover art` : ''}
                 />
               </div>

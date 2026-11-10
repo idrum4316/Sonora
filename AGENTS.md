@@ -227,6 +227,8 @@ docker compose up -d
 - `TrackRow` - Standard track listing with menu
 - `AlbumCard` / `ArtistCard` - Grid card components
 - `CoverArt` - Handles cover art loading and placeholders
+- `HeroBackdrop` - Blurred wash of the artwork behind an album, artist, playlist, or home hero
+- Artwork leads: hero art is `--hero-art` wide and grid cards at least `--card-min` (both in `base.css`). Keep art square and whole, with text beside or below it, never over it
 - `QueueItem` - Queue track display
 - `TrackMenu` - Context menu for track actions
 

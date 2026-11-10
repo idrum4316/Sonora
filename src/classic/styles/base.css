@@ -2,6 +2,16 @@
 /* ── Reset ──────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { height: 100%; font-size: 16px; }
+
+/* Size of the cover or photo in album, artist, and playlist heroes.
+   Big enough to lead the page, capped by height so short screens still
+   show the track list. Stacked heroes (narrow screens) get their own. */
+:root { --hero-art: clamp(240px, min(30vw, 52vh), 400px); }
+/* Narrowest a card in an album, artist, or playlist grid gets */
+:root { --card-min: 200px; }
+@media (max-width: 900px) {
+  :root { --hero-art: clamp(220px, 50vw, 340px); }
+}
 body {
   height: 100%;
   background: var(--bg);

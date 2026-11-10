@@ -16,7 +16,7 @@ export const ALBUM_SORT_LABELS: Record<AlbumSort, string> = {
 };
 
 // ── Hook: compute column count from container width ──
-export function useGridColumns(containerRef: React.RefObject<HTMLElement | null>, minColWidth = 160, gap = 16) {
+export function useGridColumns(containerRef: React.RefObject<HTMLElement | null>, minColWidth = 200, gap = 20) {
   const [columns, setColumns] = useState(5);
   useEffect(() => {
     const el = containerRef.current;

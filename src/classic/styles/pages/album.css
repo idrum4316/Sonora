@@ -8,13 +8,13 @@
 .album-hero-inner {
   position: relative;
   display: flex;
-  gap: 36px;
+  gap: 40px;
   align-items: flex-end;
 }
 .album-cover-wrap { flex-shrink: 0; position: relative; }
 .album-cover {
-  width: 260px;
-  height: 260px;
+  width: var(--hero-art);
+  height: var(--hero-art);
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border);
@@ -34,7 +34,7 @@
 }
 .album-title {
   font-family: var(--font-display);
-  font-size: 48px;
+  font-size: clamp(32px, 3.6vw, 52px);
   font-weight: 700;
   letter-spacing: -2px;
   line-height: 1.0;
@@ -76,6 +76,8 @@
   gap: 32px;
   padding: 32px 32px 48px;
 }
+.album-body + .album-more { margin-top: -8px; }
+.album-more { padding: 0 32px 48px; }
 .album-tracks-col { min-width: 0; }
 .album-sidebar { position: sticky; top: 72px; align-self: start; }
 
@@ -120,38 +122,6 @@
 .credit-role { font-size: 11px; color: var(--text-tertiary); margin-bottom: 2px; }
 .credit-name { font-size: 13.5px; font-weight: 500; color: var(--text-primary); }
 
-.related-album-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 0;
-  border-radius: var(--radius-sm);
-  transition: opacity var(--transition);
-}
-.related-album-art {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-xs);
-  flex-shrink: 0;
-  overflow: hidden;
-  cursor: zoom-in;
-}
-.related-album-info {
-  min-width: 0;
-  cursor: pointer;
-}
-.related-album-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: color var(--transition);
-}
-.related-album-item:hover .related-album-title { color: var(--text-primary); }
-.related-album-year { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
-
 /* ── Multi-disc support ──────────────────────────────────── */
 .disc-section + .disc-section { margin-top: 18px; }
 .disc-section-header {
@@ -181,4 +151,15 @@
   color: var(--text-tertiary);
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+/* ── Narrow screens: stack the hero so the cover stays large ── */
+@media (max-width: 900px) {
+  .album-hero-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 28px;
+  }
+  .album-body { grid-template-columns: 1fr; }
+  .album-sidebar { position: static; }
 }

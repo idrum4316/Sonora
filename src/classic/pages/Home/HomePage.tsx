@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useStore } from '../../../core/store';
 import {
-  getAlbumList, getPlaylists, getGenres, getArtists,
+  getAlbumList, getPlaylists, getGenres, getArtists, getCoverArtUrl,
 } from '../../../core/subsonic';
 import type { Album, Playlist, Genre, Artist } from '../../../core/subsonic';
 import { AlbumCard } from '../../components/AlbumCard';
 import { ArtistCard } from '../../components/ArtistCard';
+import { HeroBackdrop } from '../../components/HeroBackdrop';
 import { CoverArt, artClass } from '../../components/CoverArt';
 import { AlbumCardSkeleton } from '../../components/ui';
 import { IconPlay as IconPlayUI } from '../../components/ui';
@@ -107,9 +108,9 @@ export function HomePage() {
       <PageSection title="Recently Played" seeAllLabel="See all" onSeeAll={() => navigate('/library/albums')}>
         <div className="shelf" role="list" aria-label="Recently played albums">
           {loading
-            ? Array.from({ length: 6 }, (_, i) => <AlbumCardSkeleton key={i} width={160} />)
+            ? Array.from({ length: 6 }, (_, i) => <AlbumCardSkeleton key={i} width={200} />)
             : recentAlbums.map(a => (
-                <AlbumCard key={a.id} album={a} width={160} onPlay={playAlbum} onClick={a => navigate(`/album/${a.id}`)} />
+                <AlbumCard key={a.id} album={a} width={200} onPlay={playAlbum} onClick={a => navigate(`/album/${a.id}`)} />
               ))}
         </div>
       </PageSection>
@@ -140,7 +141,7 @@ export function HomePage() {
             {loading
               ? Array.from({ length: 6 }, (_, i) => <ArtistBubbleSkeleton key={i} />)
               : artists.map(artist => (
-                  <ArtistCard key={artist.id} artist={artist} variant="circle" size={140} />
+                  <ArtistCard key={artist.id} artist={artist} variant="circle" size={170} />
                 ))}
           </div>
         </PageSection>
@@ -165,12 +166,14 @@ export function HomePage() {
 // ── Hero Section ──────────────────────────────────────────────────────────────
 function HeroSection({ album, loading, onPlay }: { album: Album | null; loading: boolean; onPlay: (a: Album) => void }) {
   const navigate = useNavigate();
+  const config = useStore(s => s.config)!;
   const albumMeta = album
     ? [album.year, album.genre, album.songCount ? `${album.songCount} tracks` : ''].filter(Boolean).join(' · ')
     : '';
 
   return (
     <section className="home-hero" role="banner">
+      <HeroBackdrop src={album?.coverArt ? getCoverArtUrl(config, album.coverArt, 300) : undefined} />
       <div className={`home-featured-card${loading ? ' is-loading' : ''}`} style={{ animation: 'fadeUp 500ms ease both' }}>
         {loading ? (
           <>
@@ -193,7 +196,7 @@ function HeroSection({ album, loading, onPlay }: { album: Album | null; loading:
                 onClick={() => navigate(`/album/${album.id}`)}
                 aria-label={`View album ${album.name}`}
               >
-                <CoverArt coverArt={album.coverArt} id={album.id} size={520} alt={`${album.name} cover art`} />
+                <CoverArt coverArt={album.coverArt} id={album.id} size={800} alt={`${album.name} cover art`} />
               </button>
             </div>
 
@@ -302,8 +305,8 @@ function MoodCard({ genre, index }: { genre: Genre; index: number }) {
 // ── Artist Bubble Skeleton ────────────────────────────────────────────────────
 function ArtistBubbleSkeleton() {
   return (
-    <div style={{ width: 140, textAlign: 'center', flexShrink: 0 }}>
-      <div className="skeleton" style={{ width: 140, height: 140, borderRadius: '50%', margin: '0 auto' }} />
+    <div style={{ width: 170, textAlign: 'center', flexShrink: 0 }}>
+      <div className="skeleton" style={{ width: 170, height: 170, borderRadius: '50%', margin: '0 auto' }} />
       <div className="skeleton" style={{ height: 13, width: 100, borderRadius: 4, margin: '10px auto 0' }} />
     </div>
   );

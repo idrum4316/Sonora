@@ -3,12 +3,14 @@ import { useParams, useNavigate } from 'react-router';
 import { useStore } from '../../../core/store';
 import { getAlbum, getArtist, star, unstar, getCoverArtUrl } from '../../../core/subsonic';
 import type { Album, Song } from '../../../core/subsonic';
+import { HeroBackdrop } from '../../components/HeroBackdrop';
 import { CoverArt, artClass } from '../../components/CoverArt';
 import { ImageLightbox } from '../../components/ImageLightbox';
 import { fmtDuration } from '../../../core/format';
-import { groupByDisc } from '../../../core/library';
+import { groupByDisc, releaseType } from '../../../core/library';
 import { Skeleton, IconPlay, IconHeart, IconShuffle, IconPlayNext, IconAddQueue, IconExpand } from '../../components/ui';
 import { TrackRow } from '../../components/TrackRow';
+import { AlbumCard } from '../../components/AlbumCard';
 import { useTrackMenu } from '../../components/TrackMenu';
 import { AddToPlaylistDialog } from '../../components/AddToPlaylistDialog';
 
@@ -21,6 +23,7 @@ export function AlbumPage() {
   const playOrToggle = useStore(s => s.playOrToggle);
   const playMultipleNext = useStore(s => s.playMultipleNext);
   const addMultipleToQueue = useStore(s => s.addMultipleToQueue);
+  const playAlbumById = useStore(s => s.playAlbum);
   const currentTrack = useStore(s => s.currentTrack);
   const isPlaying = useStore(s => s.isPlaying);
 
@@ -53,7 +56,12 @@ export function AlbumPage() {
           try {
             const artistDetail = await getArtist(config, detail.artistId);
             if (!cancelled) {
-              setRelatedAlbums((artistDetail.album ?? []).filter(a => a.id !== id).slice(0, 5));
+              setRelatedAlbums(
+                (artistDetail.album ?? [])
+                  .filter(a => a.id !== id)
+                  .sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
+                  .slice(0, 12),
+              );
             }
           } catch { /* not critical */ }
         }
@@ -123,31 +131,7 @@ export function AlbumPage() {
     <>
       {/* ── Hero ── */}
       <div className="album-hero">
-        {/* Blurred art background */}
-        {album?.coverArt && (
-          <div
-            aria-hidden="true"
-            style={{
-              position: 'absolute', inset: -40,
-              backgroundImage: `url(${getCoverArtUrl(config, album.coverArt, 300)})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              filter: 'blur(80px) saturate(1.4)',
-              opacity: 0.22,
-              transform: 'scale(1.15)',
-              pointerEvents: 'none',
-            }}
-          />
-        )}
-        {/* Gradient overlay */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(to bottom, transparent 0%, var(--bg) 100%)',
-            pointerEvents: 'none',
-          }}
-        />
+        <HeroBackdrop src={album?.coverArt ? getCoverArtUrl(config, album.coverArt, 300) : undefined} />
 
         <div className="album-hero-inner" style={{ animation: 'fadeUp 400ms ease both' }}>
           {/* Cover art */}
@@ -181,7 +165,7 @@ export function AlbumPage() {
                 <CoverArt
                   coverArt={album?.coverArt}
                   id={album?.id ?? ''}
-                  size={440}
+                  size={800}
                   alt=""
                 />
                 {album?.coverArt && (
@@ -433,61 +417,39 @@ export function AlbumPage() {
                   )}
                 </div>
               )}
-
-              {/* More by artist */}
-              {relatedAlbums.length > 0 && album && (
-                <div className="credits-panel" style={{ marginTop: 16 }}>
-                  <div className="credits-title">More by {album.artist}</div>
-                  {relatedAlbums.map(rel => (
-                    <div
-                      key={rel.id}
-                      className="related-album-item"
-                    >
-                      <div
-                        className={`related-album-art ${artClass(rel.id)}${rel.coverArt ? ' expandable-image' : ''}`}
-                        role={rel.coverArt ? 'button' : undefined}
-                        tabIndex={rel.coverArt ? 0 : -1}
-                        aria-label={rel.coverArt ? `View larger image of ${rel.name} cover art` : undefined}
-                        onClick={e => {
-                          e.stopPropagation();
-                          if (rel.coverArt) {
-                            setLightbox({
-                              src: getCoverArtUrl(config, rel.coverArt, 1200),
-                              alt: `${rel.name} cover art`,
-                            });
-                          }
-                        }}
-                        onKeyDown={e => {
-                          if (rel.coverArt && (e.key === 'Enter' || e.key === ' ')) {
-                            e.preventDefault();
-                            setLightbox({
-                              src: getCoverArtUrl(config, rel.coverArt, 1200),
-                              alt: `${rel.name} cover art`,
-                            });
-                          }
-                        }}
-                      >
-                        <CoverArt coverArt={rel.coverArt} id={rel.id} size={80} alt="" />
-                      </div>
-                      <div
-                        className="related-album-info"
-                        role="button"
-                        tabIndex={0}
-                        aria-label={`View album ${rel.name}`}
-                        onClick={() => navigate(`/album/${rel.id}`)}
-                        onKeyDown={e => e.key === 'Enter' && navigate(`/album/${rel.id}`)}
-                      >
-                        <div className="related-album-title">{rel.name}</div>
-                        {rel.year && <div className="related-album-year">{rel.year}</div>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </>
           )}
         </div>
       </div>
+
+      {/* ── More by artist ── */}
+      {relatedAlbums.length > 0 && album && (
+        <section className="album-more" aria-labelledby="album-more-heading">
+          <div className="section-header">
+            <h2 className="section-title" id="album-more-heading">More by {album.artist}</h2>
+            <span
+              className="section-link"
+              role="link"
+              tabIndex={0}
+              onClick={() => navigate(`/artist/${album.artistId}`)}
+              onKeyDown={e => e.key === 'Enter' && navigate(`/artist/${album.artistId}`)}
+            >
+              View artist
+            </span>
+          </div>
+          <div className="albums-grid" role="list" aria-label={`More albums by ${album.artist}`}>
+            {relatedAlbums.map(rel => (
+              <AlbumCard
+                key={rel.id}
+                album={rel}
+                subtitle={[rel.year, releaseType(rel.songCount ?? 0)].filter(Boolean).join(' · ')}
+                onPlay={playAlbumById}
+                onClick={a => navigate(`/album/${a.id}`)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
       {menuPortal}
       {showPlaylistDialog && album?.song && (
         <AddToPlaylistDialog

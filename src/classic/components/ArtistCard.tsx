@@ -41,7 +41,7 @@ export function ArtistCard({ artist, variant = 'grid', size, onClick }: ArtistCa
   const imageUrl = imgFailed
     ? undefined
     : artist.artistImageUrl ||
-      (config && artist.coverArt ? getCoverArtUrl(config, artist.coverArt, variant === 'grid' ? 400 : 200) : undefined);
+      (config && artist.coverArt ? getCoverArtUrl(config, artist.coverArt, variant === 'grid' ? 500 : 400) : undefined);
 
   // ── Circle variant ──────────────────────────────────────────────────────────
   if (variant === 'circle') {
@@ -85,27 +85,29 @@ export function ArtistCard({ artist, variant = 'grid', size, onClick }: ArtistCa
   // ── Grid variant ────────────────────────────────────────────────────────────
   return (
     <div
-      className={`artist-card ${cls}`}
+      className="artist-card"
       role="listitem"
       tabIndex={0}
       aria-label={`${artist.name}${artist.albumCount ? `, ${artist.albumCount} ${artist.albumCount === 1 ? 'album' : 'albums'}` : ''}`}
       onClick={handleClick}
       onKeyDown={e => e.key === 'Enter' && handleClick()}
     >
-      {imageUrl ? (
-        <img
-          src={imageUrl}
-          alt=""
-          className="artist-card-img"
-          loading="lazy"
-          onError={() => setImgFailed(true)}
-        />
-      ) : (
-        <div className="artist-card-monogram" aria-hidden="true">
-          {initials(artist.name)}
-        </div>
-      )}
-      <div className="artist-card-overlay">
+      <div className={`artist-card-art ${cls}`}>
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt=""
+            className="artist-card-img"
+            loading="lazy"
+            onError={() => setImgFailed(true)}
+          />
+        ) : (
+          <div className="artist-card-monogram" aria-hidden="true">
+            {initials(artist.name)}
+          </div>
+        )}
+      </div>
+      <div className="artist-card-info">
         <div className="artist-card-name">{artist.name}</div>
         {artist.albumCount != null && artist.albumCount > 0 && (
           <div className="artist-card-sub">

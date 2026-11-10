@@ -1,19 +1,22 @@
 
 /* ── Homepage hero ───────────────────────────────────────────── */
 .home-hero {
+  position: relative;
+  overflow: hidden;
   padding: 36px 32px 0;
 }
 .home-featured-card {
+  position: relative;
   width: 100%;
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  gap: 32px;
-  align-items: center;
+  grid-template-columns: var(--hero-art) minmax(0, 1fr);
+  gap: 40px;
+  align-items: end;
   padding: 24px 0;
 }
 .home-featured-art-shell {
   position: relative;
-  width: 220px;
+  width: var(--hero-art);
   aspect-ratio: 1;
 }
 .home-featured-art {
@@ -21,7 +24,7 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   transition: border-color var(--transition);
 }
@@ -61,7 +64,7 @@
   margin-bottom: 8px;
   color: var(--text-primary);
   font-family: var(--font-display);
-  font-size: clamp(28px, 3vw, 44px);
+  font-size: clamp(32px, 3.6vw, 52px);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
@@ -118,7 +121,7 @@
   font-size: 14px;
 }
 .home-featured-card.is-loading {
-  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-columns: var(--hero-art) minmax(0, 1fr);
 }
 .home-featured-card.is-loading .home-featured-eyebrow {
   width: 120px;
@@ -126,9 +129,9 @@
   border-radius: 4px;
 }
 .home-featured-art-skeleton {
-  width: 220px;
-  height: 220px;
-  border-radius: var(--radius-sm);
+  width: var(--hero-art);
+  height: var(--hero-art);
+  border-radius: var(--radius-lg);
 }
 .home-featured-title-skeleton {
   width: min(380px, 80%);
@@ -149,27 +152,12 @@
   .home-hero {
     padding: 28px 24px 0;
   }
-  .home-featured-card {
-    grid-template-columns: 180px minmax(0, 1fr);
-    gap: 24px;
-    padding: 20px 0;
-  }
-  .home-featured-art-shell {
-    width: 180px;
-  }
-}
-@media (max-width: 720px) {
   .home-featured-card,
   .home-featured-card.is-loading {
     grid-template-columns: 1fr;
     justify-items: start;
+    gap: 28px;
     padding: 20px 0;
-  }
-  .home-featured-art-shell {
-    width: min(180px, 55vw);
-  }
-  .home-featured-title {
-    font-size: clamp(24px, 7vw, 36px);
   }
 }
 

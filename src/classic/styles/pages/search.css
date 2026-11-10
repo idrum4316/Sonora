@@ -236,8 +236,8 @@
 /* Album grid in search results */
 .search-album-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 16px 14px;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+  gap: 28px 20px;
 }
 
 /* Search highlight */

@@ -4,8 +4,10 @@ import { useStore } from '../../../core/store';
 import { stripHtml } from '../../../core/format';
 import { releaseType } from '../../../core/library';
 import { getArtist, getArtistInfo, star, unstar, getCoverArtUrl } from '../../../core/subsonic';
-import type { ArtistDetail, ArtistInfo, Album } from '../../../core/subsonic';
-import { CoverArt, artClass } from '../../components/CoverArt';
+import type { ArtistDetail, ArtistInfo } from '../../../core/subsonic';
+import { HeroBackdrop } from '../../components/HeroBackdrop';
+import { artClass } from '../../components/CoverArt';
+import { AlbumCard } from '../../components/AlbumCard';
 import { ArtistCard } from '../../components/ArtistCard';
 import { ImageLightbox } from '../../components/ImageLightbox';
 import { Skeleton, IconPlay, IconHeart, IconShuffle, IconExpand } from '../../components/ui';
@@ -97,7 +99,7 @@ export function ArtistPage() {
   // Best available image: external URL from info, then coverArt from artist
   const photoUrl = info?.largeImageUrl || info?.mediumImageUrl ||
     (artist?.artistImageUrl) ||
-    (artist?.coverArt ? getCoverArtUrl(config, artist.coverArt, 400) : undefined);
+    (artist?.coverArt ? getCoverArtUrl(config, artist.coverArt, 800) : undefined);
 
   // High-res version for the lightbox — re-requests cover art at full size
   const hiResUrl = info?.largeImageUrl ||
@@ -115,31 +117,7 @@ export function ArtistPage() {
     <>
       {/* ── Hero ── */}
       <div className="artist-hero">
-        {/* Blurred photo background */}
-        {photoUrl && (
-          <div
-            aria-hidden="true"
-            style={{
-              position: 'absolute', inset: -40,
-              backgroundImage: `url(${photoUrl})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              filter: 'blur(80px) saturate(1.4)',
-              opacity: 0.2,
-              transform: 'scale(1.15)',
-              pointerEvents: 'none',
-            }}
-          />
-        )}
-        {/* Gradient overlay */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(to bottom, transparent 0%, var(--bg) 100%)',
-            pointerEvents: 'none',
-          }}
-        />
+        <HeroBackdrop src={photoUrl} />
 
         <div className="artist-hero-inner" style={{ animation: 'fadeUp 400ms ease both' }}>
           {/* Artist photo */}
@@ -286,7 +264,8 @@ export function ArtistPage() {
                 <AlbumCard
                   key={album.id}
                   album={album}
-                  onPlay={() => playAlbum(album)}
+                  subtitle={[album.year, releaseType(album.songCount ?? 0)].filter(Boolean).join(' · ')}
+                  onPlay={playAlbum}
                   onClick={() => navigate(`/album/${album.id}`)}
                 />
               ))}
@@ -406,43 +385,6 @@ function BiographyText({ text }: { text: string }) {
           {expanded ? 'Show less' : 'Read more'}
         </button>
       )}
-    </div>
-  );
-}
-
-// ── AlbumCard ─────────────────────────────────────────────────────────────────
-function AlbumCard({ album, onClick, onPlay }: { album: Album; onClick: () => void; onPlay: () => void }) {
-  const cls = artClass(album.id);
-
-  const typeLabel = releaseType(album.songCount ?? 0);
-
-  return (
-    <div
-      className="album-card"
-      role="listitem"
-      tabIndex={0}
-      aria-label={`${album.name}${album.year ? `, ${album.year}` : ''}, ${typeLabel}`}
-      onClick={onClick}
-      onKeyDown={e => e.key === 'Enter' && onClick()}
-    >
-      <div className={`album-card-art ${cls}`}>
-        <CoverArt coverArt={album.coverArt} id={album.id} size={300} alt="" />
-        <div className="album-card-play">
-          <button
-            className="album-card-play-btn"
-            aria-label={`Play ${album.name}`}
-            onClick={e => { e.stopPropagation(); onPlay(); }}
-          >
-            <IconPlay size={18} />
-          </button>
-        </div>
-      </div>
-      <div className="album-card-info">
-        <div className="album-card-title">{album.name}</div>
-        <div className="album-card-sub">
-          {[album.year, typeLabel].filter(Boolean).join(' · ')}
-        </div>
-      </div>
     </div>
   );
 }

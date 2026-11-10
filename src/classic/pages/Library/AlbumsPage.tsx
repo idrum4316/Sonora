@@ -37,7 +37,8 @@ export function AlbumsPage() {
   const virtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => scrollRef.current,
-    estimateSize: useCallback(() => 260, []),
+    // Rows are measured, since a card's height follows the column width
+    estimateSize: useCallback(() => 300, []),
     overscan: 3,
   });
 
@@ -115,6 +116,8 @@ export function AlbumsPage() {
                 return (
                   <div
                     key={virtualRow.key}
+                    ref={virtualizer.measureElement}
+                    data-index={virtualRow.index}
                     className="albums-grid"
                     style={{
                       position: 'absolute',
@@ -123,6 +126,7 @@ export function AlbumsPage() {
                       width: '100%',
                       transform: `translateY(${virtualRow.start}px)`,
                       gridTemplateColumns: `repeat(${columns}, 1fr)`,
+                      paddingBottom: 28,
                     }}
                   >
                     {rowAlbums.map(album => (

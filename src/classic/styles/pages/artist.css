@@ -10,13 +10,13 @@
 .artist-hero-inner {
   position: relative;
   display: flex;
-  gap: 36px;
+  gap: 40px;
   align-items: flex-end;
 }
 .artist-photo-wrap { flex-shrink: 0; }
 .artist-photo {
-  width: 260px;
-  height: 260px;
+  width: var(--hero-art);
+  height: var(--hero-art);
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--border);
@@ -30,7 +30,7 @@
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  font-size: 72px;
+  font-size: calc(var(--hero-art) * 0.3);
   font-weight: 700;
   color: rgba(255,255,255,0.20);
   letter-spacing: -4px;
@@ -39,7 +39,7 @@
 .artist-info { min-width: 0; padding-bottom: 8px; }
 .artist-hero-name {
   font-family: var(--font-display);
-  font-size: 52px;
+  font-size: clamp(34px, 4vw, 60px);
   font-weight: 700;
   letter-spacing: -2.5px;
   line-height: 1.0;
@@ -175,3 +175,11 @@
   color: var(--text-tertiary);
 }
 
+
+@media (max-width: 900px) {
+  .artist-hero-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 28px;
+  }
+}

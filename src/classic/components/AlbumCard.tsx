@@ -4,11 +4,13 @@ import { CoverArt, artClass } from './CoverArt';
 interface AlbumCardProps {
   album: Album;
   width?: number;
+  /** Replaces the default "artist · year" line */
+  subtitle?: string;
   onPlay?: (album: Album) => void;
   onClick?: (album: Album) => void;
 }
 
-export function AlbumCard({ album, width, onPlay, onClick }: AlbumCardProps) {
+export function AlbumCard({ album, width, subtitle, onPlay, onClick }: AlbumCardProps) {
   const fallbackClass = artClass(album.id);
 
   return (
@@ -22,7 +24,7 @@ export function AlbumCard({ album, width, onPlay, onClick }: AlbumCardProps) {
       onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onClick?.(album)}
     >
       <div className={`album-card-art ${fallbackClass}`}>
-        <CoverArt coverArt={album.coverArt} id={album.id} size={300} alt="" />
+        <CoverArt coverArt={album.coverArt} id={album.id} size={500} alt="" />
         <div className="album-card-play">
           <button
             className="album-card-play-btn"
@@ -37,7 +39,9 @@ export function AlbumCard({ album, width, onPlay, onClick }: AlbumCardProps) {
       </div>
       <div className="album-card-info">
         <div className="album-card-title">{album.name}</div>
-        <div className="album-card-sub">{album.artist}{album.year ? ` · ${album.year}` : ''}</div>
+        <div className="album-card-sub">
+          {subtitle ?? `${album.artist}${album.year ? ` · ${album.year}` : ''}`}
+        </div>
       </div>
     </div>
   );

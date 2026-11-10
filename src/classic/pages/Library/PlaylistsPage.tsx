@@ -120,7 +120,7 @@ export function PlaylistsPage() {
               >
                 <div className={`library-playlist-art ${artClass(pl.id)}`}>
                   {pl.coverArt && config && (
-                    <CoverArt coverArt={pl.coverArt} id={pl.id} size={300} alt="" />
+                    <CoverArt coverArt={pl.coverArt} id={pl.id} size={500} alt="" />
                   )}
                   <div className="library-playlist-play">
                     <button
