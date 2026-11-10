@@ -56,7 +56,10 @@ export function Connect() {
           <button className="t-button" type="submit" disabled={busy}>
             <kbd>enter</kbd> {busy ? 'connecting…' : 'connect'}
           </button>
-          <a className="t-link" href="/">classic ui</a>
+          <span className="t-connect-links">
+            <a className="t-link" href="/">classic ui</a>
+            <a className="t-link" href="/gallery/">gallery ui</a>
+          </span>
         </div>
       </form>
       <p className={`t-connect-message${message?.isError ? ' is-error' : ''}`} role="status">{message?.text}</p>

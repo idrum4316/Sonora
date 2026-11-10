@@ -505,6 +505,11 @@ mark { background: none; color: var(--accent); font-weight: 700; }
   justify-content: space-between;
   margin-top: var(--t-row);
 }
+
+.t-connect-links {
+  display: flex;
+  gap: 2ch;
+}
 .t-button { background: var(--accent); color: var(--t-on-accent); font-weight: 700; padding: 0 1ch; }
 .t-button kbd { background: none; color: inherit; padding: 0; }
 .t-button:hover:not(:disabled), .t-button:focus-visible { background: var(--accent-hover); outline: 0; }

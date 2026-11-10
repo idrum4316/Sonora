@@ -5,7 +5,7 @@ import './terminal.css';
 import { startAppearanceSync } from '../core/appearance';
 import { startAudioSync } from '../core/audioSync';
 import { App } from './App';
-import { startAudioTap } from './audioTap';
+import { startAudioTap } from '../core/audioTap';
 
 startAppearanceSync();
 startAudioSync();

@@ -9,6 +9,7 @@ export default defineConfig({
       input: {
         main: 'index.html',
         terminal: 'terminal/index.html',
+        gallery: 'gallery/index.html',
       },
     },
   },

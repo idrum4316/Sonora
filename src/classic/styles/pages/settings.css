@@ -239,3 +239,9 @@ html[data-theme='light'] .accent-swatch-check {
   color: #fff;
   filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25));
 }
+
+.settings-interfaces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

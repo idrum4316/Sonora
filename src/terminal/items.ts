@@ -363,6 +363,7 @@ export function settingsItems({ notify, server, scan, startScan }: SettingsConte
     { kind: 'info', label: 'user', value: s.config?.username ?? '' },
     { kind: 'info', label: 'software', value: server ?? '…' },
     { kind: 'action', label: 'switch to classic ui', run: () => window.location.assign('/') },
+    { kind: 'action', label: 'switch to gallery ui', run: () => window.location.assign('/gallery/') },
     {
       kind: 'action',
       label: 'disconnect',

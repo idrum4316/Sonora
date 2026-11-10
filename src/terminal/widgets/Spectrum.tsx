@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { currentArtColors, gradientAt, useArtPalette } from '../../core/artPalette';
 import { useStore } from '../../core/store';
-import { readDecorative, readLevels } from '../audioTap';
+import { readDecorative, readLevels } from '../../core/audioTap';
 import { reducedMotion } from '../motion';
 import { CELL_WIDTH, ROW_HEIGHT } from '../nav';
 

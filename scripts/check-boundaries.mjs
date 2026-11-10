@@ -1,13 +1,14 @@
 // Fails the build if an import crosses a UI boundary:
-// core may not import either UI, and the two UIs may not import each other.
+// core may not import any UI, and the UIs may not import each other.
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 
 const SRC = resolve('src');
 const FORBIDDEN = {
-  core: ['classic', 'terminal'],
-  classic: ['terminal'],
-  terminal: ['classic'],
+  core: ['classic', 'terminal', 'gallery'],
+  classic: ['terminal', 'gallery'],
+  terminal: ['classic', 'gallery'],
+  gallery: ['classic', 'terminal'],
 };
 const IMPORT = /(?:from\s+|import\s*\(\s*|import\s+|@import\s+(?:url\()?)['"](\.[^'"]+)['"]/g;
 

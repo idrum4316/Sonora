@@ -10,7 +10,7 @@ import { getCoverArtUrl, type SubsonicConfig } from './subsonic';
  */
 
 /** A color in OKLCH: lightness 0–1, chroma, hue in degrees. */
-interface Lch {
+export interface Lch {
   l: number;
   c: number;
   h: number;
@@ -200,7 +200,7 @@ const toLinear = (v: number) => {
 };
 const fromLinear = (x: number) => 255 * (x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055);
 
-function srgbToOklab(r8: number, g8: number, b8: number): [number, number, number] {
+export function srgbToOklab(r8: number, g8: number, b8: number): [number, number, number] {
   const r = toLinear(r8), g = toLinear(g8), b = toLinear(b8);
   const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
   const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
@@ -255,7 +255,7 @@ function hexToOklab(hex: string) {
   return srgbToOklab((n >> 16) & 255, (n >> 8) & 255, n & 255);
 }
 
-const lchToHex = (color: Lch) => rgbToHex(lchToSrgb(color));
+export const lchToHex = (color: Lch) => rgbToHex(lchToSrgb(color));
 
 function lchToRgba(color: Lch, alpha: number) {
   const [r, g, b] = lchToSrgb(color);

@@ -4,7 +4,7 @@
 
 **Sonora** is a modern, self-hosted web client for [Navidrome](https://www.navidrome.org/) and other [Subsonic-compatible](http://www.subsonic.org/pages/api.jsp) music streaming servers. Built with React 19, TypeScript 5, and Vite 8, it provides a beautiful, responsive listening experience across desktop and tablet devices.
 
-It has two UIs on one shared core, both running in the browser: the classic UI at `/`, and a keyboard-first terminal UI at `/terminal/`, which is styled as a real TUI.
+It has three UIs on one shared core, all running in the browser: the classic UI at `/`, a keyboard-first terminal UI at `/terminal/`, which is styled as a real TUI, and the gallery UI at `/gallery/`, where cover art is the interface.
 
 - **License**: MIT
 - **Version**: 0.1.0
@@ -38,12 +38,13 @@ Sonora connects to Subsonic API-compatible music servers (primarily Navidrome) a
 
 ### Project Structure
 
-One npm package and one Vite build, with a page per UI. Dependencies only point inward: `classic -> core` and `terminal -> core`. `scripts/check-boundaries.mjs` enforces this during `npm run build`, so shared logic belongs in `src/core/`, never imported from the other UI.
+One npm package and one Vite build, with a page per UI. Dependencies only point inward: `classic -> core`, `terminal -> core` and `gallery -> core`. `scripts/check-boundaries.mjs` enforces this during `npm run build`, so shared logic belongs in `src/core/`, never imported from another UI.
 
 ```
 sonora/
 ├── index.html                    # Classic UI page, served at /
 ├── terminal/index.html           # Terminal UI page, served at /terminal/
+├── gallery/index.html            # Gallery UI page, served at /gallery/
 ├── package.json                  # Dependencies and scripts
 ├── tsconfig.json                 # TypeScript configuration
 ├── vite.config.ts                # Build configuration, lists both pages
@@ -59,6 +60,7 @@ sonora/
     │   ├── store.ts              # Main Zustand store
     │   ├── audio.ts              # Audio element singleton
     │   ├── audioSync.ts          # startAudioSync: audio events, scrobbling, auto-advance
+    │   ├── audioTap.ts           # Frequency levels of the playing track, for spectrums and light walls
     │   ├── appearance.ts         # startAppearanceSync: applies theme and accent to <html>
     │   ├── artPalette.ts         # Colors from the playing track's cover art, for the album accent
     │   ├── connect.ts            # Normalizes the server URL and verifies the connection
@@ -73,18 +75,29 @@ sonora/
     │   ├── pages/                # One folder per route (Album, Artist, Home, Library, …)
     │   ├── styles/               # index.css aggregates base, layout, components, pages
     │   └── utils/                # genreGradients, useImageColors, useSliderDrag
-    └── terminal/                 # Terminal UI
-        ├── main.tsx              # Entry point: imports styles, starts sync, renders App
+    ├── terminal/                 # Terminal UI
+    │   ├── main.tsx              # Entry point: imports styles, starts sync, renders App
+    │   ├── App.tsx               # Shows the connect screen or the shell
+    │   ├── nav.ts                # Local store: views, panes, cursors, focus, loading, status
+    │   ├── items.ts              # The Item union behind every list, and how each kind loads
+    │   ├── commands.ts           # What keys do: play, queue, star, reorder
+    │   ├── useKeymap.ts          # Key bindings
+    │   ├── motion.ts             # reducedMotion
+    │   ├── terminal.css          # All terminal styles
+    │   ├── views/Shell.tsx       # The screen: header, panes, player, status line
+    │   └── widgets/              # Pane, VirtualList, ItemRow, PlayerLine, Spectrum, Glyphs, DialogOverlay, …
+    └── gallery/                  # Gallery UI
+        ├── main.tsx              # Entry point: imports styles, starts sync and the audio tap, renders App
         ├── App.tsx               # Shows the connect screen or the shell
-        ├── nav.ts                # Local store: views, panes, cursors, focus, loading, status
-        ├── items.ts              # The Item union behind every list, and how each kind loads
-        ├── commands.ts           # What keys do: play, queue, star, reorder
-        ├── useKeymap.ts          # Key bindings
-        ├── audioTap.ts           # Frequency levels of the playing track, for the spectrum
-        ├── motion.ts             # reducedMotion
-        ├── terminal.css          # All terminal styles
-        ├── views/Shell.tsx       # The screen: header, panes, player, status line
-        └── widgets/              # Pane, VirtualList, ItemRow, PlayerLine, Spectrum, Glyphs, DialogOverlay, …
+        ├── router.ts             # Hash routes (#/album/id, #/now, …) and shared-element "flights"
+        ├── library.ts            # Local store: every album, arrangement, search and filters, tour
+        ├── art.ts                # Cover images by size, color samples, the mosaic atlas, palettes, kindred covers
+        ├── layouts.ts            # Where each album sits on the atlas in each arrangement
+        ├── hooks.ts, ui.ts       # usePalette, useIdle; queue panel and toast state
+        ├── gallery.css           # All gallery styles
+        ├── wall/                 # The atlas: engine.ts draws it on a canvas, Atlas.tsx wires it up
+        ├── views/                # Shell, TopBar, AlbumView, ArtistView, PlaylistViews, Stage, Connect
+        └── widgets/              # Cover, Player (dock, transport), PixelCover, pixelField, QueuePanel, Icons
 ```
 
 ### Key Files Reference
@@ -98,7 +111,9 @@ sonora/
 | `src/classic/components/Layout/Layout.tsx` | Classic layout with sidebar navigation and player bar |
 | `src/terminal/nav.ts` | Terminal navigation, list loading, and caching |
 | `src/terminal/items.ts` | Terminal list contents, driven by `Item.kind` |
-| `src/terminal/audioTap.ts` | Where the terminal spectrum's levels come from, and its CORS fallback |
+| `src/core/audioTap.ts` | Where spectrum levels come from, and the stream CORS fallback |
+| `src/gallery/wall/engine.ts` | The gallery atlas: canvas drawing, camera, morphs, input |
+| `src/gallery/art.ts` | Gallery image loading and the color index behind Spectrum and kindred covers |
 
 ---
 
@@ -171,7 +186,7 @@ The main store (`src/core/store.ts`) is one flat store with no library data. Pag
 
 Only `config`, `isConnected`, `volume`, `shuffle`, `repeat`, `scrobbleThreshold`, `theme`, and `accentColor` persist to localStorage (key `sonora-store`). The queue doesn't, so a reload or switching UIs clears it.
 
-The terminal UI keeps its own navigation state in `src/terminal/nav.ts`.
+The terminal UI keeps its own navigation state in `src/terminal/nav.ts`, and the gallery keeps its album list and atlas state in `src/gallery/library.ts`.
 
 ---
 
@@ -184,7 +199,7 @@ The terminal UI keeps its own navigation state in `src/terminal/nav.ts`.
 ### Commands
 ```bash
 npm install      # Install dependencies
-npm run dev      # Start dev server at http://localhost:5173 (terminal UI at /terminal/)
+npm run dev      # Start dev server at http://localhost:5173 (terminal UI at /terminal/, gallery at /gallery/)
 npm run build    # Check import boundaries and types, then build to dist/
 npm run preview  # Preview production build
 ```
@@ -248,6 +263,15 @@ docker compose up -d
 - `Spectrum` draws real levels from `audioTap.ts` in browsers that can capture audio (Chromium), and a decorative pattern elsewhere. It stops its animation loop when there's nothing to show. Keep it that way, because music plays for hours
 - Nothing tweens: changes repaint at once. Only the spectrum, the spinner, and the blinking caret move, and they respect `prefers-reduced-motion` through the rule at the end of `terminal.css` and `reducedMotion` in `motion.ts`
 
+### Gallery UI Patterns
+- The art is the interface. Covers stay square and whole, with text beside or below them, never over them. Their corners round a little, more on bigger art: `--r-*` and `--cover-r` in `gallery.css`, and `tileRadius` in `wall/engine.ts` for atlas tiles, which stay square while they're too small to show it It's a digital, screen-lit look: pixels, grids and light. No LP or vinyl imagery
+- Always dark. It doesn't follow the theme or accent settings: color comes from the art. `usePalette` turns a cover into `--p-accent`, `--p-deep` and `--p-deep2`, and views set them with `paletteStyle`. They're registered with `@property`, so they fade as covers change
+- The atlas (`wall/engine.ts`) draws every album on one canvas. Far out, a tile is its 3×3 color grid from the mosaic atlas in `art.ts`; closer, the cover at the size the screen needs. It only draws while something moves, so an idle atlas costs nothing
+- Color samples come from 40px cover fetches with CORS, a size no `<img>` uses, so they never collide with a cached copy fetched without CORS. They're cached in localStorage (`sonora-gallery-colors-v1`). If the server sends no CORS headers for art, Spectrum can't sort and says so, and everything else still works
+- Views other than the atlas open over it in `.g-layer`, so it keeps its place. Opening from a cover calls `openFrom` or `launch`, and `HeroArt` flies the hero in from where the cover was
+- Arrangements live in `layouts.ts`. A new one needs a case in `arrange`, an entry in `ARRANGEMENTS`, and a key in `Atlas.tsx`. A tile can span k×k cells through `Layout.size`, as the newest albums do at the heart of Rings
+- The stage's light wall (`widgets/pixelField.ts`) and the connect screen's demo stop animating when there's nothing to play, and everything respects `prefers-reduced-motion`
+
 ---
 
 ## 🔍 Code Conventions
@@ -267,6 +291,7 @@ docker compose up -d
 - Classic pages in `src/classic/pages/` with subdirectories per route
 - Classic components in `src/classic/components/`
 - Terminal code in `src/terminal/`
+- Gallery code in `src/gallery/`
 
 ### Naming
 - PascalCase for components and types
@@ -338,6 +363,7 @@ docker compose up -d
 - Shared tokens go in `src/core/tokens.css`
 - Classic: global rules in `src/classic/styles/base.css`; component and page styles under `src/classic/styles/components/` and `pages/`. Register new files in `src/classic/styles/index.css`.
 - Terminal: `src/terminal/terminal.css`
+- Gallery: `src/gallery/gallery.css`
 - Follow the existing color scheme and typography
 - Put a vendor-prefixed property before its standard one (`-webkit-backdrop-filter`, then `backdrop-filter`). Vite minifies CSS with Lightning CSS, which keeps only the last of the pair
 
@@ -351,9 +377,9 @@ docker compose up -d
 4. **Responsive Design**: Targets desktop and tablet screens (not mobile-optimized).
 5. **Virtual Scrolling**: Used for large lists (albums, tracks) via `@tanstack/react-virtual`.
 6. **Audio Element**: Managed as singleton in `src/core/audio.ts`. Each UI calls `startAudioSync()` once in its `main.tsx`.
-7. **Two Pages**: Each UI's CSS and fonts load only on its own page. Switching UIs is a full page load, which stops playback and clears the queue.
+7. **Separate Pages**: Each UI's CSS and fonts load only on its own page. Switching UIs is a full page load, which stops playback and clears the queue.
 8. **Album Accent**: `appearance.ts` loads the cover art's palette only while the album accent is selected, and sets `--accent`, `--accent-dim`, and `--accent-hover` inline on `<html>`. It has no rule in `tokens.css`, so it shows the default accent until the art loads, and when the art is gray or the server sends no CORS headers for it.
-9. **Stream CORS**: The terminal UI requests streams with CORS so `audioTap.ts` can read them. If a server refuses, it plays the track again without CORS and the spectrum falls back to its pattern. The classic UI doesn't do any of this. Never route the audio element through `createMediaElementSource`, which silences tracks that don't allow CORS.
+9. **Stream CORS**: The terminal and gallery UIs request streams with CORS so `audioTap.ts` can read them. If a server refuses, it plays the track again without CORS and the spectrum falls back to its pattern. The classic UI doesn't do any of this. Never route the audio element through `createMediaElementSource`, which silences tracks that don't allow CORS.
 
 ---
 
@@ -373,6 +399,8 @@ docker compose up -d
 |-----------|-----------|
 | Add a classic route | `src/classic/App.tsx` |
 | Add a terminal view or key | `src/terminal/nav.ts`, `src/terminal/useKeymap.ts` |
+| Add a gallery view | `src/gallery/router.ts`, `src/gallery/views/Shell.tsx` |
+| Add an atlas arrangement | `src/gallery/layouts.ts`, `src/gallery/library.ts` |
 | Modify API calls | `src/core/subsonic.ts` |
 | Update state logic | `src/core/store.ts` |
 | Change audio behavior | `src/core/audioSync.ts` |

@@ -85,7 +85,10 @@ export function SettingsPage() {
           </div>
           <div className="settings-row">
             <span className="settings-label">Interface</span>
-            <a className="btn btn-secondary" href="/terminal/">Switch to terminal UI</a>
+            <div className="settings-interfaces">
+              <a className="btn btn-secondary" href="/gallery/">Gallery UI</a>
+              <a className="btn btn-secondary" href="/terminal/">Terminal UI</a>
+            </div>
           </div>
         </div>
       </section>

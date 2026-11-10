@@ -103,6 +103,9 @@ interface StoreState {
   moveInQueue: (from: number, to: number) => void;
 }
 
+/** The latest star or unstar request for each song, still in flight. */
+const starRequests = new Map<string, Promise<unknown>>();
+
 export const useStore = create<StoreState>()(
   persist(
     (set, get) => ({
@@ -277,12 +280,20 @@ export const useStore = create<StoreState>()(
         }));
         const timestamp = new Date().toISOString();
         patch(starred ? timestamp : undefined);
+        // One request at a time per song, so quick toggles reach the server in the order they were made.
+        const request = (starRequests.get(id) ?? Promise.resolve())
+          .catch(() => {})
+          .then(() => (starred ? star(config, id) : unstar(config, id)));
+        starRequests.set(id, request);
         try {
-          await (starred ? star(config, id) : unstar(config, id));
+          await request;
           return true;
         } catch {
-          patch(starred ? undefined : timestamp);
+          // A later toggle has already said what the song should be.
+          if (starRequests.get(id) === request) patch(starred ? undefined : timestamp);
           return false;
+        } finally {
+          if (starRequests.get(id) === request) starRequests.delete(id);
         }
       },
 
