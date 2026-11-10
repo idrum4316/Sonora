@@ -19,6 +19,10 @@ export interface Album {
   genre?: string;
   created?: string;
   starred?: string;
+  /** Plays of the album's tracks, counted by the server across every client. Navidrome sends it. */
+  playCount?: number;
+  /** When one of its tracks was last played. */
+  played?: string;
 }
 
 export interface Artist {

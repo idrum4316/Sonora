@@ -30,7 +30,7 @@ export function Shell() {
   }, [status, load]);
 
   // Disconnecting unmounts the shell; the next server starts from scratch.
-  useEffect(() => () => useGallery.setState({ albums: [], status: 'idle', query: '', genre: null, starredOnly: false, touring: false }), []);
+  useEffect(() => () => useGallery.setState({ albums: [], status: 'idle', query: '', genre: null, starredOnly: false, unheardOnly: false, touring: false }), []);
 
   useEffect(() => {
     if (route.view === 'atlas') document.title = 'Sonora Gallery';

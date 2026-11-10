@@ -6,7 +6,7 @@ import { ARRANGEMENTS, genresOf, useGallery } from '../library';
 import { artistPath, back, go, type Route } from '../router';
 import { atlasApi } from '../wall/Atlas';
 import { Cover } from '../widgets/Cover';
-import { BackIcon, CloseIcon, GridIcon, HeartIcon, MenuIcon, PlayIcon, SearchIcon, StackIcon, TourIcon } from '../widgets/Icons';
+import { BackIcon, CloseIcon, GridIcon, HeartIcon, MenuIcon, PlayIcon, SearchIcon, StackIcon, TourIcon, UnheardIcon } from '../widgets/Icons';
 
 /** The wordmark: a 3×3 grid of lights, one per arrangement of a cover's colors. */
 export function Wordmark({ onClick }: { onClick?: () => void }) {
@@ -177,6 +177,8 @@ function Filters() {
   const albums = useGallery(s => s.albums);
   const starredOnly = useGallery(s => s.starredOnly);
   const setStarredOnly = useGallery(s => s.setStarredOnly);
+  const unheardOnly = useGallery(s => s.unheardOnly);
+  const setUnheardOnly = useGallery(s => s.setUnheardOnly);
   const genre = useGallery(s => s.genre);
   const setGenre = useGallery(s => s.setGenre);
   const genres = useMemo(() => genresOf(albums).slice(0, 40), [albums]);
@@ -192,8 +194,11 @@ function Filters() {
 
   return (
     <>
-      <button className={`g-pill${starredOnly ? ' is-accent' : ''}`} onClick={() => setStarredOnly(!starredOnly)} aria-pressed={starredOnly} title="Light up favorites only">
-        <HeartIcon size={16} filled={starredOnly} />Favorites
+      <button className={`g-pill${starredOnly ? ' is-accent' : ''}`} onClick={() => setStarredOnly(!starredOnly)} aria-pressed={starredOnly} aria-label="Favorites" title="Light up favorites only">
+        <HeartIcon size={16} filled={starredOnly} /><span className="g-pill-label">Favorites</span>
+      </button>
+      <button className={`g-pill${unheardOnly ? ' is-accent' : ''}`} onClick={() => setUnheardOnly(!unheardOnly)} aria-pressed={unheardOnly} aria-label="Unheard" title="Light up albums you've never played">
+        <UnheardIcon size={16} /><span className="g-pill-label">Unheard</span>
       </button>
       {genres.length > 0 && (
         <div className="g-menu-wrap" ref={ref}>
@@ -245,7 +250,7 @@ function AppMenu() {
             <span className="g-eyebrow">Keys</span>
             <span><kbd>space</kbd> play / pause</span>
             <span><kbd>/</kbd> search</span>
-            <span><kbd>1</kbd>–<kbd>4</kbd> arrangements</span>
+            <span><kbd>1</kbd>–<kbd>6</kbd> arrangements</span>
             <span><kbd>t</kbd> tour · <kbd>l</kbd> find playing</span>
             <span><kbd>f</kbd> stage · <kbd>q</kbd> queue</span>
             <span><kbd>n</kbd> / <kbd>p</kbd> next / previous</span>

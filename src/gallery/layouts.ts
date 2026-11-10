@@ -1,5 +1,5 @@
 import type { Album } from '../core/subsonic';
-import { albumSample, sortName, type Arrangement } from './library';
+import { albumSample, lastPlayedAt, listenedSeconds, sortName, type Arrangement } from './library';
 
 /**
  * Where each album sits on the atlas, in grid cells. A tile fills most of its cell, and the rest is the
@@ -42,6 +42,8 @@ export function arrange(arrangement: Arrangement, albums: Album[], aspect: numbe
     case 'timeline': return timeline(albums, aspect);
     case 'alphabet': return alphabet(albums, aspect);
     case 'rings': return rings(albums);
+    case 'heat': return heat(albums);
+    case 'played': return lastPlayed(albums, aspect);
   }
 }
 
@@ -121,12 +123,18 @@ interface Group {
   gap: number;
   /** Takes a column even when empty, so a year with no albums still shows as a gap in time. */
   keep?: boolean;
+  /** Columns the group takes however few albums it has, so its heading has room. */
+  minCols?: number;
 }
+
+/** The smallest a heading gets, in cells, and how wide its letters run for their height. */
+const MIN_HEADING = 0.7;
+const HEADING_WIDTH = 0.62;
 
 /** Each group becomes a block of columns standing on one baseline, as tall as the layout allows. */
 function skyline(albumCount: number, groups: Group[], aspect: number, labelSize: number): Layout {
   const pos = new Float32Array(albumCount * 2);
-  const colsOf = (g: Group, h: number) => Math.max(g.keep ? 1 : 0, Math.ceil(g.items.length / h));
+  const colsOf = (g: Group, h: number) => Math.max(g.keep ? 1 : 0, g.minCols ?? 0, Math.ceil(g.items.length / h));
   const widthAt = (h: number) => groups.reduce((w, g, k) => w + colsOf(g, h) + (k ? g.gap : 0), 0);
   let height = 1;
   let best = Infinity;
@@ -147,13 +155,13 @@ function skyline(albumCount: number, groups: Group[], aspect: number, labelSize:
       pos[2 * i + 1] = -1 - (n % height);
     });
     if (group.major) majors.push({ x, y: 0.95, text: group.major, size: 0, align: 'left', major: true });
-    if (group.items.length) labels.push({ x: x + cols / 2, y: 0.25, text: group.label, size: labelSize, align: 'center', major: false });
+    if (group.items.length && group.label) labels.push({ x: x + cols / 2, y: 0.25, text: group.label, size: labelSize, align: 'center', major: false });
     x += cols;
   });
   // Each heading as large as the run of columns under it allows, so neighbors never collide.
   majors.forEach((label, k) => {
     const span = (majors[k + 1]?.x ?? x) - label.x - 0.6;
-    label.size = Math.max(0.7, Math.min(height / 6, span / (label.text.length * 0.62)));
+    label.size = Math.max(MIN_HEADING, Math.min(height / 6, span / (label.text.length * HEADING_WIDTH)));
   });
   return finish(pos, [...labels, ...majors]);
 }
@@ -211,6 +219,45 @@ function alphabet(albums: Album[], aspect: number): Layout {
   return skyline(albums.length, groups, aspect, 0.8);
 }
 
+/**
+ * When you last played each album, most recent on the left: today, this week, and so on back through
+ * the years, with the albums never played standing apart at the end. Within a stretch, the most recent
+ * play is at the bottom left.
+ */
+function lastPlayed(albums: Album[], aspect: number): Layout {
+  const now = Date.now();
+  const at = albums.map(lastPlayedAt);
+  const played: number[] = [];
+  const never: number[] = [];
+  albums.forEach((_, i) => (Number.isFinite(at[i]) ? played : never).push(i));
+  played.sort((a, b) => at[b] - at[a]);
+
+  const groups: Group[] = [];
+  let last = '';
+  for (const i of played) {
+    const { key, label } = playedBand(at[i], now);
+    if (key !== last) {
+      groups.push({ label: '', major: label, items: [], gap: groups.length ? 1 : 0, minCols: headingCols(label) });
+      last = key;
+    }
+    groups[groups.length - 1].items.push(i);
+  }
+  if (never.length) {
+    const names = albums.map(a => sortName(a.artist));
+    never.sort((x, y) => (names[x] < names[y] ? -1 : names[x] > names[y] ? 1 : 0));
+    groups.push({ label: '', major: 'NEVER PLAYED', items: never, gap: groups.length ? 2 : 0, minCols: headingCols('NEVER PLAYED') });
+  }
+  return skyline(albums.length, groups, aspect, 0.3);
+}
+
+/** Columns a heading needs at its smallest, so short stretches don't run their names together. */
+const headingCols = (text: string) => Math.ceil(text.length * HEADING_WIDTH * MIN_HEADING + 0.6);
+
+function playedBand(t: number, now: number): { key: string; label: string } {
+  if (new Date(t).toDateString() === new Date(now).toDateString()) return { key: 'today', label: 'TODAY' };
+  return ageBand(t, now);
+}
+
 // ── Rings ────────────────────────────────────────────────────────────────────
 /**
  * The library as tree rings. The newest albums bloom large at the heart, and the rest grow outward in
@@ -223,6 +270,11 @@ const DAY = 86_400_000;
 function addedBand(created: string | undefined, now: number): { key: string; label: string } {
   const t = created ? Date.parse(created) : NaN;
   if (!Number.isFinite(t)) return { key: 'undated', label: 'UNDATED' };
+  return ageBand(t, now);
+}
+
+/** Recent times by how recent, older ones by year. */
+function ageBand(t: number, now: number): { key: string; label: string } {
   const age = now - t;
   if (age <= 7 * DAY) return { key: 'week', label: 'THIS WEEK' };
   if (age <= 31 * DAY) return { key: 'month', label: 'PAST MONTH' };
@@ -315,13 +367,7 @@ function rings(albums: Album[]): Layout {
   bands.sort((a, b) => (a.label === 'UNDATED' ? 1 : 0) - (b.label === 'UNDATED' ? 1 : 0));
 
   const freeCells = (ring: number) => ringCells(ring).filter(c => !taken.has(cellKey(c.x, c.y)));
-  const hueOf = (i: number) => {
-    const s = albumSample(albums[i]);
-    if (!s) return 3;
-    // Black and white covers, then ones not read yet, close the circle just before 12 o'clock.
-    if (s.c < GRAY_CHROMA) return 2 - s.l;
-    return ((s.h + 360 - HUE_START) % 360) / 360;
-  };
+  const hueOf = (i: number) => ringHue(albums[i]);
 
   let ring = reach >= 0 ? reach + 2 : 0;
   // A band too small to go once around would be a stray arc, so it joins the next one out.
@@ -378,3 +424,112 @@ function rings(albums: Album[]): Layout {
 
 /** Where the color wheel starts at 12 o'clock: a red, so warm colors run down the right side. */
 const HUE_START = 20;
+
+/** Where an album goes around a ring, 0 to 1 clockwise, then black and white ones, then ones not read yet. */
+function ringHue(album: Album): number {
+  const s = albumSample(album);
+  if (!s) return 3;
+  // Black and white covers, then ones not read yet, close the circle just before 12 o'clock.
+  if (s.c < GRAY_CHROMA) return 2 - s.l;
+  return ((s.h + 360 - HUE_START) % 360) / 360;
+}
+
+// ── Heat ─────────────────────────────────────────────────────────────────────
+/**
+ * What you listen to most, at the heart and largest, cooling outward ring by ring. Each ring runs by
+ * color like Rings does. Past a dark ring, the albums never played wait in a ring of their own.
+ */
+function heat(albums: Album[]): Layout {
+  const n = albums.length;
+  const pos = new Float32Array(n * 2);
+  const size = new Uint8Array(n).fill(1);
+  const labels: Label[] = [];
+  const taken = new Set<number>();
+
+  const time = albums.map(listenedSeconds);
+  const hue = albums.map(ringHue);
+  const played: number[] = [];
+  const never: number[] = [];
+  albums.forEach((_, i) => (time[i] > 0 ? played : never).push(i));
+  played.sort((a, b) => time[b] - time[a]);
+
+  // The most played grow, each packed as close to the middle as it fits.
+  const sizes = heatSizes(played.length);
+  sizes.forEach((k, rank) => {
+    const i = played[rank];
+    const { x, y } = nearestFree(taken, k);
+    pos[2 * i] = x; pos[2 * i + 1] = y; size[i] = k;
+    for (let dx = 0; dx < k; dx++) for (let dy = 0; dy < k; dy++) taken.add(cellKey(x + dx, y + dy));
+  });
+
+  const freeCells = (ring: number) => ringCells(ring).filter(c => !taken.has(cellKey(c.x, c.y)));
+  const put = (i: number, c: Cell) => {
+    pos[2 * i] = c.x; pos[2 * i + 1] = c.y;
+    taken.add(cellKey(c.x, c.y));
+  };
+
+  // The rest one ring at a time, so heat falls off outward. Gaps the big tiles left fill first.
+  let ring = 0;
+  let next = sizes.length;
+  while (next < played.length) {
+    const cells = freeCells(ring++);
+    if (!cells.length) continue;
+    const chunk = played.slice(next, next + cells.length);
+    next += chunk.length;
+    chunk.sort((a, b) => hue[a] - hue[b]);
+    // A last ring that isn't full is spread evenly around, so it closes into a circle.
+    chunk.forEach((i, k) => put(i, cells[Math.floor(((k + 0.5) * cells.length) / chunk.length)]));
+  }
+
+  if (never.length) {
+    // A dark ring, named at 12 o'clock, and then one color wheel of everything unplayed.
+    if (played.length) {
+      while (freeCells(ring).length < ringCells(ring).length) ring++;
+      const top = ringCells(ring)[0];
+      const textSize = Math.min(0.46, 0.12 * ring);
+      labels.push({ x: 0, y: top.y + 0.5 - textSize / 2, text: 'NEVER PLAYED', size: textSize, align: 'center', major: true });
+      ring++;
+    }
+    const cells: Cell[] = [];
+    while (cells.length < never.length) {
+      const ringFree = freeCells(ring++);
+      const need = never.length - cells.length;
+      if (need >= ringFree.length) cells.push(...ringFree);
+      else for (let j = 0; j < need; j++) cells.push(ringFree[Math.floor(((j + 0.5) * ringFree.length) / need)]);
+    }
+    cells.sort((a, b) => a.angle - b.angle || a.ring - b.ring);
+    [...never].sort((a, b) => hue[a] - hue[b]).forEach((i, k) => put(i, cells[k]));
+  }
+  return finish(pos, labels, size);
+}
+
+/** Tile sizes for the most played albums, by rank. A small listening history gets a small heart. */
+function heatSizes(played: number): number[] {
+  if (played < 6) return [];
+  if (played < 20) return [2];
+  if (played < 60) return [3, 2, 2, 2, 2, 2, 2];
+  return [4, ...Array<number>(6).fill(3), ...Array<number>(18).fill(2)];
+}
+
+/** The free k×k spot whose middle is nearest the center, clockwise from 12 o'clock on a tie. */
+function nearestFree(taken: Set<number>, k: number): { x: number; y: number } {
+  const fits = (x: number, y: number) => {
+    for (let dx = 0; dx < k; dx++) for (let dy = 0; dy < k; dy++) if (taken.has(cellKey(x + dx, y + dy))) return false;
+    return true;
+  };
+  for (let r = k; ; r += 2) {
+    let best: { x: number; y: number } | null = null;
+    let bestD = Infinity, bestA = Infinity;
+    for (let x = -r; x <= r - k; x++) {
+      for (let y = -r; y <= r - k; y++) {
+        const cx = x + k / 2, cy = y + k / 2;
+        const d = Math.round(Math.hypot(cx, cy) * 1000);
+        if (d > bestD || !fits(x, y)) continue;
+        const a = clockAngle(cx, cy);
+        if (d < bestD || a < bestA) { best = { x, y }; bestD = d; bestA = a; }
+      }
+    }
+    // Anything outside this window has its middle further out than r - k/2, so a spot inside it is the nearest.
+    if (best && bestD <= (r - k / 2) * 1000) return best;
+  }
+}

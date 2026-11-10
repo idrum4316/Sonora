@@ -3,7 +3,9 @@ import { useStore } from '../../core/store';
 import type { Album } from '../../core/subsonic';
 import { getSample, paletteOf, pendingSamples, preload, useSamples } from '../art';
 import { arrange } from '../layouts';
-import { albumAtlasId, albumSample, ARRANGEMENTS, litMask, useGallery } from '../library';
+import {
+  albumAtlasId, albumSample, ARRANGEMENTS, countsPlays, LISTENING_ARRANGEMENTS, listeningLine, litMask, useGallery,
+} from '../library';
 import { albumPath, artistPath, go, launch } from '../router';
 import { Mosaic } from '../widgets/Cover';
 import { FitIcon, MinusIcon, PlayIcon, PlusIcon, TargetIcon } from '../widgets/Icons';
@@ -14,6 +16,9 @@ export const atlasApi = {
   focusFirstLit: () => {},
   fit: () => {},
 };
+
+/** Arrangements that sort by color, so they re-sort as covers are read. */
+const COLOR_SORTED = ['spectrum', 'rings', 'heat'];
 
 /** How often a color sort re-sorts while covers are still being read. */
 const RESORT_MS = 2600;
@@ -30,6 +35,7 @@ export function Atlas({ active }: { active: boolean }) {
   const arrangement = useGallery(s => s.arrangement);
   const query = useGallery(s => s.query);
   const starredOnly = useGallery(s => s.starredOnly);
+  const unheardOnly = useGallery(s => s.unheardOnly);
   const genre = useGallery(s => s.genre);
   const touring = useGallery(s => s.touring);
   const locateTick = useGallery(s => s.locateTick);
@@ -137,7 +143,7 @@ export function Atlas({ active }: { active: boolean }) {
 
   // A color sort keeps re-sorting as covers are read, so the wall visibly sorts itself.
   useEffect(() => {
-    if ((arrangement !== 'spectrum' && arrangement !== 'rings') || !albums.length) return;
+    if (!COLOR_SORTED.includes(arrangement) || !albums.length) return;
     const engine = engineRef.current!;
     const run = () => {
       // Tiles shouldn't slide out from under someone exploring; they get one final sort when reading ends.
@@ -164,7 +170,10 @@ export function Atlas({ active }: { active: boolean }) {
   }, []);
 
   // ── Lit tiles ───────────────────────────────────────────────────────────────
-  const mask = useMemo(() => litMask(albums, query, starredOnly, genre), [albums, query, starredOnly, genre]);
+  const mask = useMemo(
+    () => litMask(albums, query, starredOnly, genre, unheardOnly),
+    [albums, query, starredOnly, genre, unheardOnly],
+  );
   const litCount = useMemo(() => (mask ? mask.reduce((n, v) => n + v, 0) : albums.length), [mask, albums]);
   useEffect(() => { engineRef.current?.setLit(mask); }, [mask]);
 
@@ -241,6 +250,8 @@ export function Atlas({ active }: { active: boolean }) {
         '2': () => useGallery.getState().setArrangement('timeline'),
         '3': () => useGallery.getState().setArrangement('alphabet'),
         '4': () => useGallery.getState().setArrangement('rings'),
+        '5': () => useGallery.getState().setArrangement('heat'),
+        '6': () => useGallery.getState().setArrangement('played'),
         t: () => useGallery.getState().setTouring(!useGallery.getState().touring),
         l: () => useGallery.getState().locate(),
       };
@@ -257,6 +268,8 @@ export function Atlas({ active }: { active: boolean }) {
   const hovered = albums[hover];
   const toured = albums[tourIndex];
   const arrangementInfo = ARRANGEMENTS.find(a => a.id === arrangement)!;
+  const listening = LISTENING_ARRANGEMENTS.includes(arrangement);
+  const noCounts = useMemo(() => albums.length > 0 && !countsPlays(albums), [albums]);
 
   return (
     <section className={`g-atlas${active ? '' : ' is-hidden'}${touring ? ' is-touring' : ''}`} aria-label="Album atlas">
@@ -267,6 +280,7 @@ export function Atlas({ active }: { active: boolean }) {
           <>
             <span className="g-hover-title">{hovered.name}</span>
             <span className="g-hover-sub">{hovered.artist}{hovered.year ? <span className="g-mono"> · {hovered.year}</span> : null}</span>
+            {listening && !noCounts && <span className="g-hover-sub g-mono">{listeningLine(hovered)}</span>}
           </>
         )}
       </div>
@@ -288,6 +302,9 @@ export function Atlas({ active }: { active: boolean }) {
           )}
           {arrangement === 'spectrum' && blocked && (
             <span className="g-mono g-hud-reading">This server hides cover colors (no CORS), so Spectrum can't sort.</span>
+          )}
+          {(listening || unheardOnly) && noCounts && (
+            <span className="g-mono g-hud-reading">This server doesn't count plays, so every album looks unplayed.</span>
           )}
         </div>
         <div className="g-hud-zoom">

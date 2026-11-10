@@ -270,6 +270,7 @@ docker compose up -d
 - Color samples come from 40px cover fetches with CORS, a size no `<img>` uses, so they never collide with a cached copy fetched without CORS. They're cached in localStorage (`sonora-gallery-colors-v1`). If the server sends no CORS headers for art, Spectrum can't sort and says so, and everything else still works
 - Views other than the atlas open over it in `.g-layer`, so it keeps its place. Opening from a cover calls `openFrom` or `launch`, and `HeroArt` flies the hero in from where the cover was
 - Arrangements live in `layouts.ts`. A new one needs a case in `arrange`, an entry in `ARRANGEMENTS`, and a key in `Atlas.tsx`. A tile can span k×k cells through `Layout.size`, as the newest albums do at the heart of Rings
+- Heat, Last played, and the Unheard filter read the `playCount` and `played` Navidrome sends on each album. The server counts every track play, so Heat weighs albums by time listened (`listenedSeconds` in `library.ts`) rather than raw plays. Servers that leave the fields out get a note in the HUD
 - The stage's light wall (`widgets/pixelField.ts`) and the connect screen's demo stop animating when there's nothing to play, and everything respects `prefers-reduced-motion`
 
 ---

@@ -51,4 +51,6 @@ export const NextUpIcon = (p: IconProps) => <Svg {...p}><path d="M4 7h10M4 12h10
 export const AddIcon = (p: IconProps) => <Svg {...p}><path d="M4 7h11M4 12h11M4 17h7M18 13v8M14 17h8" /></Svg>;
 export const StackIcon = (p: IconProps) => <Svg {...p}><rect x="7" y="7" width="13" height="13" rx="1.5" /><path d="M4 16.5V5.5A1.5 1.5 0 0 1 5.5 4h11" /></Svg>;
 export const MenuIcon = (p: IconProps) => <Svg {...p}><circle cx="5.5" cy="12" r="1.4" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" /><circle cx="18.5" cy="12" r="1.4" fill="currentColor" stroke="none" /></Svg>;
+/** A note with a slash: music not heard yet. */
+export const UnheardIcon = (p: IconProps) => <Svg {...p}><path d="M10 17.5V5.5l8-1.5v10" /><circle cx="7.5" cy="17.5" r="2.5" /><circle cx="15.5" cy="14" r="2.5" /><path d="M4 4l16 16" /></Svg>;
 export const SparkIcon = (p: IconProps) => <Svg {...p}><path d="M12 3v5M12 16v5M3 12h5M16 12h5M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18" /></Svg>;
