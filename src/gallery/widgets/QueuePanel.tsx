@@ -13,10 +13,17 @@ export function QueuePanel() {
   const queueIndex = useStore(s => s.queueIndex);
   const isPlaying = useStore(s => s.isPlaying);
   const { playTrack, removeFromQueue, clearQueue } = useStore.getState();
+  const listRef = useRef<HTMLOListElement>(null);
   const currentRef = useRef<HTMLLIElement>(null);
 
+  // Centers the current song by scrolling the list alone. scrollIntoView would also scroll the shell
+  // sideways toward the panel, which is still off screen as it starts to slide in, and drag every view with it.
   useEffect(() => {
-    if (open) currentRef.current?.scrollIntoView({ block: 'center' });
+    const list = listRef.current;
+    const item = currentRef.current;
+    if (!open || !list || !item) return;
+    const offset = item.getBoundingClientRect().top - list.getBoundingClientRect().top;
+    list.scrollTop += offset - (list.clientHeight - item.offsetHeight) / 2;
   }, [open]);
 
   return (
@@ -28,7 +35,7 @@ export function QueuePanel() {
         <button className="g-icon-btn" onClick={() => setOpen(false)} aria-label="Close queue"><CloseIcon size={18} /></button>
       </header>
       {!queue.length && <p className="g-queue-empty">Nothing queued yet. Pick something on the atlas.</p>}
-      <ol className="g-queue-list">
+      <ol className="g-queue-list" ref={listRef}>
         {queue.map((song, i) => (
           <li
             key={`${song.id}-${i}`}
