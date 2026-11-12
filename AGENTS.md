@@ -94,11 +94,11 @@ sonora/
         ├── library.ts            # Local store: every album, arrangement, search and filters, tour
         ├── art.ts                # Cover images by size, color samples, the mosaic atlas, palettes, kindred covers
         ├── layouts.ts            # Where each album sits on the atlas in each arrangement
-        ├── hooks.ts, ui.ts       # usePalette, useIdle; queue panel and toast state
+        ├── hooks.ts, ui.ts       # usePalette, useIdle; queue panel, toast, and playlist picker state
         ├── gallery.css           # All gallery styles
         ├── wall/                 # The atlas: engine.ts draws it on a canvas, Atlas.tsx wires it up
         ├── views/                # Shell, TopBar, AlbumView, ArtistView, PlaylistViews, Stage, Connect
-        └── widgets/              # Cover, Player (dock, transport), PixelCover, pixelField, QueuePanel, Icons
+        └── widgets/              # Cover, Player (dock, transport), PixelCover, pixelField, QueuePanel, PlaylistPicker, Icons
 ```
 
 ### Key Files Reference
@@ -274,6 +274,7 @@ docker compose up -d
 - Arrangements live in `layouts.ts`. A new one needs a case in `arrange`, an entry in `ARRANGEMENTS`, and a key in `Atlas.tsx`. A tile can span k×k cells through `Layout.size`, as the newest albums do at the heart of Rings
 - Heat, Last played, and the Unheard filter read the `playCount` and `played` Navidrome sends on each album. The server counts every track play, so Heat weighs albums by time listened (`listenedSeconds` in `library.ts`) rather than raw plays. Servers that leave the fields out get a note in the HUD
 - The stage's light wall (`widgets/pixelField.ts`) and the connect screen's demo stop animating when there's nothing to play, and everything respects `prefers-reduced-motion`
+- Adding to playlists goes through one picker (`widgets/PlaylistPicker.tsx`), opened with `openPick` or `pickForSong` in `ui.ts` and rendered once by the shell. It lists only playlists the user owns, and keeps keys to itself while open. Changes call `bumpPlaylistVersion`, which the playlist views refetch on. Removing a track checks first that its position still holds that song, since tracks are removed by position
 
 ---
 

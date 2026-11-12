@@ -995,6 +995,104 @@ kbd {
 }
 .g-toast.is-shown { opacity: 1; transform: translate(-50%, 0); }
 
+/* ── Playlist picker ─────────────────────────────────────── */
+/* Under the toast, so a failure still reads while the picker stays open. */
+.g-pick {
+  position: absolute;
+  inset: 0;
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(var(--g-bg-rgb) / 0.55);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  animation: g-fade-in 0.2s ease;
+}
+@keyframes g-fade-in { from { opacity: 0; } }
+.g-pick-panel {
+  width: min(440px, 100%);
+  max-height: min(640px, calc(100vh - 48px));
+  display: flex;
+  flex-direction: column;
+  border-radius: 24px;
+  background: var(--g-glass-solid);
+  border: 1px solid var(--g-line);
+  box-shadow: var(--g-shadow-panel);
+  outline: none;
+  animation: g-pop 0.26s var(--ease-out);
+}
+.g-pick-head {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 14px 16px 18px;
+  border-bottom: 1px solid var(--g-line);
+}
+.g-pick-art { --cover-r: var(--r-sm); box-shadow: var(--g-shadow-card); }
+.g-pick-what { display: grid; gap: 3px; min-width: 0; }
+.g-pick-what h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.g-pick-sub { font-size: 12.5px; color: var(--g-ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.g-pick-sub:empty { display: none; }
+.g-pick-head > .g-icon-btn { align-self: start; }
+.g-pick-list {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 8px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--g-scroll) transparent;
+}
+.g-pick-row, .g-pick-new {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 56px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 12px;
+  text-align: left;
+}
+.g-pick-row:hover:not(:disabled), button.g-pick-new:hover:not(:disabled) { background: var(--g-hover); }
+.g-pick-new.is-naming { background: var(--g-hover); padding-right: 6px; }
+.g-pick-tile { width: 44px; height: 44px; }
+.g-pick-row .g-pick-tile { --cover-r: var(--r-xs); }
+span.g-pick-tile {
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-xs);
+  border: 1px dashed var(--g-line-2);
+  color: var(--g-ink-2);
+}
+.g-pick-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.g-pick-row .g-mono { font-size: 12px; }
+.g-pick-new input {
+  min-width: 0;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid var(--g-line-2);
+  background: rgb(var(--g-tint) / 0.04);
+  color: var(--g-ink);
+  font: inherit;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.g-pick-new input:focus { border-color: var(--g-ink-2); box-shadow: 0 0 0 4px rgb(var(--g-tint) / 0.07); }
+.g-pick-new input::placeholder { color: var(--g-ink-3); }
+.g-pick-note { margin: 0; padding: 12px; font-size: 13px; color: var(--g-ink-3); }
+
 /* ── Pages ───────────────────────────────────────────────── */
 .g-page {
   position: absolute;
@@ -1174,6 +1272,7 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
 /* Each button fades on its own, so a favorite's heart can stay lit while the rest hide. */
 .g-track-actions .g-icon-btn { width: 32px; height: 32px; opacity: 0; transition: background 0.2s, color 0.2s, opacity 0.15s, transform 0.2s var(--ease-out); }
 .g-track:hover .g-track-actions .g-icon-btn, .g-track:focus-within .g-track-actions .g-icon-btn, .g-track-actions .g-icon-btn.is-on { opacity: 1; }
+.g-track:hover .g-track-actions .g-icon-btn:disabled { opacity: 0.4; }
 .g-track-time { text-align: right; padding-right: 14px; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--g-ink-3); }
 
 .g-tracks.is-loading, .g-grid.is-loading { display: grid; gap: 10px; }
@@ -1369,6 +1468,7 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
 }
 .g-stage-controls > :first-child { justify-self: start; }
 .g-stage-controls > :last-child { justify-self: end; }
+.g-stage-marks { display: flex; align-items: center; gap: 4px; }
 
 .g-stage-next {
   position: absolute;

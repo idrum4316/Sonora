@@ -50,6 +50,10 @@ export const MinusIcon = (p: IconProps) => <Svg {...p}><path d="M5 12h14" /></Sv
 export const NextUpIcon = (p: IconProps) => <Svg {...p}><path d="M4 7h10M4 12h10M4 17h6" /><path d="M16 14.5v6l4.5-3z" fill="currentColor" stroke="none" /></Svg>;
 export const AddIcon = (p: IconProps) => <Svg {...p}><path d="M4 7h11M4 12h11M4 17h7M18 13v8M14 17h8" /></Svg>;
 export const StackIcon = (p: IconProps) => <Svg {...p}><rect x="7" y="7" width="13" height="13" rx="1.5" /><path d="M4 16.5V5.5A1.5 1.5 0 0 1 5.5 4h11" /></Svg>;
+/** The playlists stack, with a plus: add to a playlist. */
+export const PlaylistAddIcon = (p: IconProps) => <Svg {...p}><rect x="7" y="7" width="13" height="13" rx="1.5" /><path d="M4 16.5V5.5A1.5 1.5 0 0 1 5.5 4h11M13.5 10.5v6M10.5 13.5h6" /></Svg>;
+/** The playlists stack, with a minus: take out of this playlist. */
+export const PlaylistRemoveIcon = (p: IconProps) => <Svg {...p}><rect x="7" y="7" width="13" height="13" rx="1.5" /><path d="M4 16.5V5.5A1.5 1.5 0 0 1 5.5 4h11M10.5 13.5h6" /></Svg>;
 export const MenuIcon = (p: IconProps) => <Svg {...p}><circle cx="5.5" cy="12" r="1.4" fill="currentColor" stroke="none" /><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" /><circle cx="18.5" cy="12" r="1.4" fill="currentColor" stroke="none" /></Svg>;
 /** A note with a slash: music not heard yet. */
 export const UnheardIcon = (p: IconProps) => <Svg {...p}><path d="M10 17.5V5.5l8-1.5v10" /><circle cx="7.5" cy="17.5" r="2.5" /><circle cx="15.5" cy="14" r="2.5" /><path d="M4 4l16 16" /></Svg>;

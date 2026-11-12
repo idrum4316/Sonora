@@ -6,6 +6,7 @@ import { back, go, useRoute } from '../router';
 import { useUi } from '../ui';
 import { Atlas } from '../wall/Atlas';
 import { Dock } from '../widgets/Player';
+import { PlaylistPicker } from '../widgets/PlaylistPicker';
 import { QueuePanel, Toast } from '../widgets/QueuePanel';
 import { AlbumView } from './AlbumView';
 import { ArtistView } from './ArtistView';
@@ -56,6 +57,7 @@ export function Shell() {
       <TopBar route={route} />
       {route.view !== 'stage' && <Dock />}
       <QueuePanel />
+      <PlaylistPicker />
       <Toast />
     </div>
   );
@@ -69,6 +71,11 @@ function useGlobalKeys(view: string) {
       if (target.closest('input, textarea, select')) return;
       const store = useStore.getState();
       const ui = useUi.getState();
+      // The playlist picker handles its own keys; this only catches any that slip out of it.
+      if (ui.pick) {
+        if (e.key === 'Escape') ui.closePick();
+        return;
+      }
       switch (e.key) {
         case ' ':
           if (target.closest('button, a, [role="slider"]')) return;
