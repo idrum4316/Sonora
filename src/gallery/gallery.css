@@ -1,7 +1,9 @@
 /* ============================================================
    Sonora Gallery — the art is the interface.
-   Always dark, so covers glow. Color comes from the art: --p-* are
-   set per view from the cover on show, and fade as covers change.
+   Dark, so covers glow, or light, a white wall the covers hang on. It follows the shared theme but
+   not the accent: color comes from the art. --p-* are set per view from the cover on show, fitted
+   to the ground (paletteOf in art.ts), and fade as covers change.
+   Every color that differs between the two is a --g-* token below; rules use those, not raw colors.
    Art stays square and whole; text sits beside or below it.
    Corners round a little, more on bigger art: --r-* below, and tileRadius in wall/engine.ts on the atlas.
    ============================================================ */
@@ -12,15 +14,56 @@
 
 :root {
   color-scheme: dark;
-  --g-bg: #050507;
+  /* The ground, as channels for washes and fades that thin out over it. */
+  --g-bg-rgb: 5 5 7;
+  --g-bg: rgb(var(--g-bg-rgb));
+  /* Overlays on the ground: light on the dark one, ink on the light one. */
+  --g-tint: 255 255 255;
   --g-ink: #f4f2fb;
   --g-ink-2: rgba(244, 242, 251, 0.64);
   --g-ink-3: rgba(244, 242, 251, 0.4);
+  --g-on-ink: #08080c;
+  --g-on-accent: #08080c;
+  /* What a hover over an accent mixes in: brighter on dark, deeper on light. */
+  --g-accent-shift: white;
   --g-line: rgba(255, 255, 255, 0.09);
   --g-line-2: rgba(255, 255, 255, 0.16);
   --g-glass: rgba(13, 13, 19, 0.66);
   --g-glass-solid: rgba(15, 15, 22, 0.92);
   --g-hover: rgba(255, 255, 255, 0.07);
+  --g-fill: rgba(255, 255, 255, 0.055);
+  --g-fill-2: rgba(255, 255, 255, 0.1);
+  --g-track: rgba(255, 255, 255, 0.14);
+  --g-scroll: rgba(255, 255, 255, 0.18);
+  /* A hairline around art, so covers the color of the ground keep their shape. */
+  --g-rim: rgba(255, 255, 255, 0.075);
+  --g-art-bg: #111117;
+  --g-art-empty: #15151c;
+  --g-tip: rgba(8, 8, 12, 0.84);
+  --g-dock: rgba(11, 11, 16, 0.72);
+  --g-form: rgba(10, 10, 15, 0.72);
+  --g-tour: linear-gradient(120deg, rgba(6, 6, 9, 0.9), rgba(6, 6, 9, 0.7));
+  --g-good: #8ff0b8;
+  --g-bad: #ff9a9a;
+  --g-danger: #ff8a8a;
+
+  /* Shadows: deep on the dark ground, soft and warm on the light one. */
+  --g-shadow-pop: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+  --g-shadow-panel: 0 40px 100px -20px rgba(0, 0, 0, 0.9);
+  --g-shadow-dock: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+  --g-shadow-thumb: 0 6px 18px -6px rgba(0, 0, 0, 0.7);
+  --g-shadow-float: 0 10px 30px -6px rgba(0, 0, 0, 0.6);
+  --g-shadow-card: 0 10px 24px -14px rgba(0, 0, 0, 0.7);
+  --g-shadow-lift: 0 18px 36px -18px rgba(0, 0, 0, 0.8);
+  /* How strongly a lifted card's shadow takes the cover's color. */
+  --g-glow-mix: 80%;
+  --g-shadow-hero: 0 50px 120px -30px rgba(0, 0, 0, 0.85);
+  --g-shadow-stage: 0 40px 120px -20px rgba(0, 0, 0, 0.9);
+
+  /* The stage, darker than the rest: a room with the lights down. */
+  --g-stage-rgb: 3 3 4;
+  --g-stage-glow: blur(90px) saturate(1.6) brightness(0.55);
+  --g-stage-title-shadow: 0 2px 30px rgba(0, 0, 0, 0.6);
 
   --font-display: 'Bricolage Grotesque', 'Geist', system-ui, sans-serif;
   --font-ui: 'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -35,6 +78,65 @@
   --ease-out: cubic-bezier(.2, .75, .12, 1);
   --gutter: clamp(20px, 4.5vw, 72px);
   --dock-h: 76px;
+}
+
+/* A white wall in daylight: warm paper, ink-dark type, and art that casts soft shadows in its own color
+   instead of glowing. The palettes swap too, to deep accents and pale washes. */
+html[data-theme='light'] {
+  color-scheme: light;
+  /* Neutral palette for screens with no art to take color from, such as connecting. */
+  --p-accent: #3d3a4a;
+  --p-deep: #e6e3ec;
+  --p-deep2: #efede8;
+  --g-bg-rgb: 243 241 236;
+  --g-tint: 30 26 40;
+  --g-ink: #17161e;
+  --g-ink-2: rgba(23, 22, 30, 0.7);
+  --g-ink-3: rgba(23, 22, 30, 0.52);
+  --g-on-ink: #f8f7f3;
+  --g-on-accent: #ffffff;
+  --g-accent-shift: black;
+  --g-line: rgba(30, 26, 40, 0.1);
+  --g-line-2: rgba(30, 26, 40, 0.18);
+  --g-glass: rgba(255, 255, 255, 0.64);
+  --g-glass-solid: rgba(253, 252, 250, 0.94);
+  --g-hover: rgba(30, 26, 40, 0.06);
+  --g-fill: rgba(255, 255, 255, 0.6);
+  --g-fill-2: rgba(255, 255, 255, 0.92);
+  --g-track: rgba(30, 26, 40, 0.13);
+  --g-scroll: rgba(30, 26, 40, 0.2);
+  --g-rim: rgba(30, 26, 40, 0.08);
+  --g-art-bg: #e6e3dc;
+  --g-art-empty: #dedad2;
+  --g-tip: rgba(255, 255, 255, 0.92);
+  --g-dock: rgba(255, 255, 255, 0.76);
+  --g-form: rgba(255, 255, 255, 0.74);
+  --g-tour: linear-gradient(120deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.76));
+  --g-good: #1d7f4e;
+  --g-bad: #b9362f;
+  --g-danger: #b9362f;
+
+  --g-shadow-pop: 0 1px 2px rgba(48, 38, 28, 0.06), 0 24px 60px -18px rgba(48, 38, 28, 0.3);
+  --g-shadow-panel: 0 1px 2px rgba(48, 38, 28, 0.06), 0 40px 90px -24px rgba(48, 38, 28, 0.34);
+  --g-shadow-dock: 0 1px 2px rgba(48, 38, 28, 0.06), 0 24px 50px -18px rgba(48, 38, 28, 0.32);
+  --g-shadow-thumb: 0 1px 2px rgba(48, 38, 28, 0.1), 0 6px 14px -6px rgba(48, 38, 28, 0.4);
+  --g-shadow-float: 0 10px 24px -8px rgba(48, 38, 28, 0.42);
+  --g-shadow-card: 0 1px 2px rgba(48, 38, 28, 0.08), 0 14px 26px -16px rgba(48, 38, 28, 0.45);
+  --g-shadow-lift: 0 24px 40px -20px rgba(48, 38, 28, 0.38);
+  --g-glow-mix: 60%;
+  --g-shadow-hero: 0 2px 4px rgba(48, 38, 28, 0.06), 0 44px 90px -32px rgba(48, 38, 28, 0.5);
+  --g-shadow-stage: 0 2px 4px rgba(48, 38, 28, 0.06), 0 40px 100px -26px rgba(48, 38, 28, 0.45);
+
+  --g-stage-rgb: 244 242 237;
+  --g-stage-glow: blur(90px) saturate(1.5) brightness(1.12);
+  --g-stage-title-shadow: 0 1px 26px rgba(255, 255, 255, 0.8);
+}
+
+/* Switching themes crossfades the whole screen (switchTheme in theme.ts). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.5s;
+  animation-timing-function: ease;
 }
 
 * { box-sizing: border-box; }
@@ -82,7 +184,7 @@ kbd {
   border-radius: 5px;
   border: 1px solid var(--g-line-2);
   color: var(--g-ink-2);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgb(var(--g-tint) / 0.04);
 }
 
 .g-mono { font-family: var(--font-mono); font-size: 0.92em; letter-spacing: -0.01em; }
@@ -122,24 +224,24 @@ kbd {
   padding: 0 15px;
   border-radius: 999px;
   border: 1px solid var(--g-line);
-  background: rgba(255, 255, 255, 0.055);
+  background: var(--g-fill);
   color: var(--g-ink);
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
   transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s var(--ease-out), box-shadow 0.3s;
 }
-.g-pill:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); border-color: var(--g-line-2); }
+.g-pill:hover:not(:disabled) { background: var(--g-fill-2); border-color: var(--g-line-2); }
 .g-pill:active:not(:disabled) { transform: scale(0.97); }
-.g-pill.is-on { background: var(--g-ink); color: #0a0a0f; border-color: transparent; }
+.g-pill.is-on { background: var(--g-ink); color: var(--g-on-ink); border-color: transparent; }
 .g-pill.is-accent {
   background: var(--p-accent);
-  color: #08080c;
+  color: var(--g-on-accent);
   border-color: transparent;
   box-shadow: 0 8px 30px -8px color-mix(in oklab, var(--p-accent) 70%, transparent);
   transition: background 0.8s, box-shadow 0.8s, transform 0.2s var(--ease-out), --p-accent 1.2s;
 }
-.g-pill.is-accent:hover:not(:disabled) { background: color-mix(in oklab, var(--p-accent) 88%, white); }
+.g-pill.is-accent:hover:not(:disabled) { background: color-mix(in oklab, var(--p-accent) 88%, var(--g-accent-shift)); }
 .g-pill.is-big { height: 46px; padding: 0 22px; font-size: 14.5px; font-weight: 600; }
 .g-pill-x { display: inline-flex; margin-right: -5px; opacity: 0.7; }
 .g-pill-x:hover { opacity: 1; }
@@ -176,7 +278,7 @@ kbd {
   height: 44px;
   border-radius: 999px;
   background: var(--g-ink);
-  color: #07070a;
+  color: var(--g-on-ink);
   transition: transform 0.2s var(--ease-out), background 0.3s;
 }
 .g-play:hover { transform: scale(1.06); }
@@ -185,7 +287,8 @@ kbd {
   width: 52px;
   height: 52px;
   background: var(--p-accent);
-  box-shadow: 0 10px 30px -6px rgba(0, 0, 0, 0.6);
+  color: var(--g-on-accent);
+  box-shadow: var(--g-shadow-float);
 }
 
 .g-spinner {
@@ -213,17 +316,17 @@ kbd {
   border-radius: var(--cover-r);
   /* Keeps Safari clipping the corners while the image inside scales. */
   isolation: isolate;
-  background: #111117;
+  background: var(--g-art-bg);
   user-select: none;
   -webkit-user-select: none;
 }
-/* A hairline of light around the edge, so dark covers keep their shape on the dark ground. */
+/* A hairline around the edge, so dark covers keep their shape on the dark ground, and pale ones on the light. */
 .g-cover::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.075);
+  box-shadow: inset 0 0 0 1px var(--g-rim);
   pointer-events: none;
 }
 .g-cover > .g-mosaic,
@@ -240,8 +343,8 @@ kbd {
 .g-mosaic { display: block; }
 .g-mosaic.is-empty {
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 60%),
-    #15151c;
+    linear-gradient(135deg, rgb(var(--g-tint) / 0.05), transparent 60%),
+    var(--g-art-empty);
 }
 
 /* ── Wordmark ────────────────────────────────────────────── */
@@ -338,7 +441,7 @@ kbd {
   align-items: center;
   gap: 16px;
   pointer-events: none;
-  background: linear-gradient(to bottom, rgba(5, 5, 7, 0.82), rgba(5, 5, 7, 0.4) 60%, transparent);
+  background: linear-gradient(to bottom, rgb(var(--g-bg-rgb) / 0.82), rgb(var(--g-bg-rgb) / 0.4) 60%, transparent);
 }
 .g-topbar > * { pointer-events: auto; }
 .g-topbar-left { display: flex; align-items: center; gap: 10px; justify-self: start; }
@@ -365,7 +468,7 @@ kbd {
   transition: background 0.25s, color 0.25s;
 }
 .g-arrangements button:hover { color: var(--g-ink); }
-.g-arrangements button.is-on { background: var(--g-ink); color: #08080c; }
+.g-arrangements button.is-on { background: var(--g-ink); color: var(--g-on-ink); }
 
 /* Search lights tiles on the atlas; this is just its input. */
 .g-spotlight {
@@ -416,7 +519,7 @@ kbd {
   border: 1px solid var(--g-line);
   -webkit-backdrop-filter: blur(30px);
   backdrop-filter: blur(30px);
-  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+  box-shadow: var(--g-shadow-pop);
   color: var(--g-ink);
   animation: g-pop 0.25s var(--ease-out);
 }
@@ -457,7 +560,7 @@ kbd {
   border: 1px solid var(--g-line);
   -webkit-backdrop-filter: blur(30px);
   backdrop-filter: blur(30px);
-  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+  box-shadow: var(--g-shadow-pop);
   display: grid;
   animation: g-pop 0.22s var(--ease-out);
   z-index: 5;
@@ -476,7 +579,7 @@ kbd {
 }
 .g-menu > button:hover, .g-menu > a:hover { background: var(--g-hover); color: var(--g-ink); }
 .g-menu > button.is-on { color: var(--p-accent); }
-.g-menu > .is-danger:hover { color: #ff8a8a; }
+.g-menu > .is-danger:hover { color: var(--g-danger); }
 .g-genre-menu { max-height: 60vh; overflow-y: auto; min-width: 260px; }
 .g-menu-note, .g-menu-keys {
   display: grid;
@@ -540,10 +643,11 @@ kbd {
   max-width: 300px;
   padding: 9px 13px 10px;
   border-radius: 12px;
-  background: rgba(8, 8, 12, 0.84);
+  background: var(--g-tip);
   border: 1px solid var(--g-line);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
+  box-shadow: var(--g-shadow-thumb);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.15s;
@@ -575,10 +679,11 @@ kbd {
   width: min(400px, 34vw);
   padding: 26px 28px 28px;
   border-radius: 22px;
-  background: linear-gradient(120deg, rgba(6, 6, 9, 0.9), rgba(6, 6, 9, 0.7));
+  background: var(--g-tour);
   border: 1px solid var(--g-line);
   -webkit-backdrop-filter: blur(24px);
   backdrop-filter: blur(24px);
+  box-shadow: var(--g-shadow-pop);
 }
 .g-tour-title {
   font-family: var(--font-display);
@@ -654,11 +759,11 @@ kbd {
   align-items: center;
   gap: 16px;
   border-radius: 22px;
-  background: rgba(11, 11, 16, 0.72);
+  background: var(--g-dock);
   border: 1px solid var(--g-line);
   -webkit-backdrop-filter: blur(28px) saturate(1.5);
   backdrop-filter: blur(28px) saturate(1.5);
-  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+  box-shadow: var(--g-shadow-dock);
   animation: g-rise 0.6s var(--ease-out);
 }
 @keyframes g-rise { from { transform: translate(-50%, 30px); opacity: 0; } }
@@ -677,7 +782,7 @@ kbd {
   height: 56px;
   overflow: hidden;
   border-radius: 10px;
-  box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.7);
+  box-shadow: var(--g-shadow-thumb);
   transition: transform 0.25s var(--ease-out);
 }
 .g-dock-art:hover { transform: scale(1.04); }
@@ -691,6 +796,7 @@ kbd {
   display: grid;
   place-items: center;
   background: rgba(0, 0, 0, 0.5);
+  color: #fff;
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -730,7 +836,7 @@ kbd {
   width: 100%;
   height: 3px;
   border-radius: 3px;
-  background: rgba(255, 255, 255, 0.14);
+  background: var(--g-track);
   overflow: hidden;
   transition: height 0.2s;
 }
@@ -762,7 +868,7 @@ kbd {
   padding: 2px 7px;
   border-radius: 6px;
   background: var(--g-ink);
-  color: #000;
+  color: var(--g-on-ink);
   font-family: var(--font-mono);
   font-size: 10.5px;
   pointer-events: none;
@@ -780,12 +886,12 @@ kbd {
 .g-volume input::-webkit-slider-runnable-track {
   height: 3px;
   border-radius: 3px;
-  background: linear-gradient(to right, var(--g-ink) calc(var(--v) * 100%), rgba(255, 255, 255, 0.16) 0);
+  background: linear-gradient(to right, var(--g-ink) calc(var(--v) * 100%), var(--g-track) 0);
 }
 .g-volume input::-moz-range-track {
   height: 3px;
   border-radius: 3px;
-  background: linear-gradient(to right, var(--g-ink) calc(var(--v) * 100%), rgba(255, 255, 255, 0.16) 0);
+  background: linear-gradient(to right, var(--g-ink) calc(var(--v) * 100%), var(--g-track) 0);
 }
 .g-volume input::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -826,7 +932,7 @@ kbd {
   border: 1px solid var(--g-line);
   -webkit-backdrop-filter: blur(30px);
   backdrop-filter: blur(30px);
-  box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.9);
+  box-shadow: var(--g-shadow-panel);
   transform: translateX(calc(100% + 30px));
   transition: transform 0.5s var(--ease-out);
 }
@@ -847,7 +953,7 @@ kbd {
   color: var(--g-ink);
 }
 .g-queue-empty { padding: 0 22px; color: var(--g-ink-3); }
-.g-queue-list { list-style: none; margin: 0; padding: 4px 10px 16px; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.18) transparent; }
+.g-queue-list { list-style: none; margin: 0; padding: 4px 10px 16px; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: var(--g-scroll) transparent; }
 .g-queue-item { position: relative; }
 .g-queue-hit {
   width: 100%;
@@ -879,7 +985,8 @@ kbd {
   padding: 10px 18px;
   border-radius: 999px;
   background: var(--g-ink);
-  color: #08080c;
+  color: var(--g-on-ink);
+  box-shadow: var(--g-shadow-float);
   font-weight: 500;
   font-size: 13px;
   opacity: 0;
@@ -897,7 +1004,7 @@ kbd {
   background: var(--g-bg);
   padding-bottom: calc(var(--dock-h) + 80px);
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+  scrollbar-color: var(--g-scroll) transparent;
   animation: g-fade 0.45s ease both;
   transition: --p-accent 1.2s, --p-deep 1.4s, --p-deep2 1.4s;
 }
@@ -918,8 +1025,8 @@ kbd {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(90% 70% at 25% 35%, transparent 0%, rgba(5, 5, 7, 0.55) 70%, rgba(5, 5, 7, 0.85) 100%),
-    linear-gradient(to bottom, rgba(5, 5, 7, 0.1), rgba(5, 5, 7, 0.55) 60%, rgba(5, 5, 7, 0.92));
+    radial-gradient(90% 70% at 25% 35%, transparent 0%, rgb(var(--g-bg-rgb) / 0.55) 70%, rgb(var(--g-bg-rgb) / 0.85) 100%),
+    linear-gradient(to bottom, rgb(var(--g-bg-rgb) / 0.1), rgb(var(--g-bg-rgb) / 0.55) 60%, rgb(var(--g-bg-rgb) / 0.92));
 }
 
 .g-page-error, .g-empty { padding: 140px var(--gutter); color: var(--g-ink-2); font-size: 15px; }
@@ -961,9 +1068,7 @@ kbd {
 
 .g-hero-art { --cover-r: var(--r-lg); position: relative; isolation: isolate; aspect-ratio: 1; transform-origin: 0 0; }
 .g-hero-art > .g-cover {
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.06),
-    0 50px 120px -30px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 0 0 1px var(--g-rim), var(--g-shadow-hero);
 }
 .g-hero-glow {
   position: absolute;
@@ -990,7 +1095,7 @@ kbd {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.075);
+  box-shadow: inset 0 0 0 1px var(--g-rim);
   pointer-events: none;
 }
 .g-quad.is-four { grid-template-columns: repeat(2, 1fr); }
@@ -1015,7 +1120,7 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
 .g-fingerprint-grid { width: 42px; height: 42px; flex: none; border-radius: 7px; box-shadow: 0 0 0 1px var(--g-line); }
 .g-fingerprint-swatches { display: flex; flex-wrap: wrap; gap: 6px 16px; }
 .g-swatch { display: inline-flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--g-ink-2); text-transform: uppercase; }
-.g-swatch i { width: 12px; height: 12px; display: inline-block; border-radius: var(--r-xs); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1); }
+.g-swatch i { width: 12px; height: 12px; display: inline-block; border-radius: var(--r-xs); box-shadow: 0 0 0 1px var(--g-rim); }
 
 .g-bio { position: relative; max-width: 66ch; max-height: 9.6em; overflow: hidden; margin: 0 0 24px; }
 .g-bio:not(.is-open) { -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent); mask-image: linear-gradient(to bottom, #000 55%, transparent); }
@@ -1037,7 +1142,7 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
   border-radius: 12px;
   transition: background 0.15s;
 }
-.g-track:hover { background: rgba(255, 255, 255, 0.05); }
+.g-track:hover { background: var(--g-hover); }
 .g-track-hit {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr);
@@ -1075,14 +1180,14 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
 .g-tracks.is-loading span {
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.08), rgba(255,255,255,.04));
+  background: linear-gradient(90deg, rgb(var(--g-tint) / 0.04), rgb(var(--g-tint) / 0.08), rgb(var(--g-tint) / 0.04));
   background-size: 200% 100%;
   animation: g-shimmer 1.4s linear infinite;
 }
 .g-grid.is-loading span {
   aspect-ratio: 1;
   border-radius: var(--r-md);
-  background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.075), rgba(255,255,255,.04));
+  background: linear-gradient(90deg, rgb(var(--g-tint) / 0.04), rgb(var(--g-tint) / 0.075), rgb(var(--g-tint) / 0.04));
   background-size: 200% 100%;
   animation: g-shimmer 1.4s linear infinite;
 }
@@ -1127,16 +1232,16 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
   margin-bottom: 8px;
   border-radius: var(--cover-r);
   transition: transform 0.45s var(--ease-out), box-shadow 0.45s var(--ease-out);
-  box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.7);
+  box-shadow: var(--g-shadow-card);
 }
 .g-card-hit:focus-visible { outline: none; }
 .g-card-hit:focus-visible .g-card-art { outline: 2px solid var(--p-accent); outline-offset: 3px; }
 .g-card-hit:hover .g-card-art, .g-card-hit:focus-visible .g-card-art {
   transform: translateY(-6px) scale(1.02);
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 26px 50px -18px color-mix(in oklab, var(--glow, #000) 80%, transparent),
-    0 18px 36px -18px rgba(0, 0, 0, 0.8);
+    0 0 0 1px var(--g-rim),
+    0 26px 50px -18px color-mix(in oklab, var(--glow, #000) var(--g-glow-mix), transparent),
+    var(--g-shadow-lift);
 }
 .g-card-title { font-size: 14px; font-weight: 600; letter-spacing: -0.005em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .g-card-sub { font-size: 12.5px; color: var(--g-ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color 0.2s; }
@@ -1161,7 +1266,7 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: #030304;
+  background: rgb(var(--g-stage-rgb));
   animation: g-fade 0.6s ease both;
   transition: --p-accent 1.2s;
 }
@@ -1171,7 +1276,7 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
   inset: -12%;
   background-size: cover;
   background-position: center;
-  filter: blur(90px) saturate(1.6) brightness(0.55);
+  filter: var(--g-stage-glow);
   transition: background-image 1.2s;
 }
 .g-stage-field { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0.95; }
@@ -1179,10 +1284,10 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 75% 80% at 50% 40%, transparent 30%, rgba(3, 3, 4, 0.55) 100%),
-    linear-gradient(to bottom, transparent 62%, rgba(3, 3, 4, 0.8));
+    radial-gradient(ellipse 75% 80% at 50% 40%, transparent 30%, rgb(var(--g-stage-rgb) / 0.55) 100%),
+    linear-gradient(to bottom, transparent 62%, rgb(var(--g-stage-rgb) / 0.8));
 }
-.g-stage.no-field .g-stage-vignette { background: radial-gradient(ellipse at 50% 45%, transparent, rgba(3, 3, 4, 0.6)); }
+.g-stage.no-field .g-stage-vignette { background: radial-gradient(ellipse at 50% 45%, transparent, rgb(var(--g-stage-rgb) / 0.6)); }
 
 .g-fades { transition: opacity 0.7s ease; }
 .g-stage.is-idle .g-fades { opacity: 0; pointer-events: none; }
@@ -1197,7 +1302,7 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: 20px 24px 36px;
-  background: linear-gradient(to bottom, rgba(3, 3, 4, 0.55), transparent);
+  background: linear-gradient(to bottom, rgb(var(--g-stage-rgb) / 0.55), transparent);
 }
 .g-stage-top .g-eyebrow { justify-self: center; letter-spacing: 0.12em; }
 .g-stage-top .g-eyebrow .g-link { color: var(--g-ink-2); text-transform: none; letter-spacing: 0; font-family: var(--font-ui); font-size: 13px; }
@@ -1220,10 +1325,10 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
   flex: none;
   overflow: hidden;
   border-radius: var(--r-lg);
-  background: #0a0a0f;
+  background: var(--g-art-bg);
   box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.07),
-    0 40px 120px -20px rgba(0, 0, 0, 0.9),
+    0 0 0 1px var(--g-rim),
+    var(--g-shadow-stage),
     0 0 140px -30px color-mix(in oklab, var(--p-accent) 50%, transparent);
   transition: box-shadow 1.2s;
 }
@@ -1235,7 +1340,7 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
   position: absolute;
   inset: -30% -18% -24%;
   z-index: -1;
-  background: radial-gradient(closest-side, rgba(3, 3, 4, 0.62), rgba(3, 3, 4, 0.3) 60%, transparent);
+  background: radial-gradient(closest-side, rgb(var(--g-stage-rgb) / 0.62), rgb(var(--g-stage-rgb) / 0.3) 60%, transparent);
   pointer-events: none;
 }
 .g-stage-title {
@@ -1246,7 +1351,7 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
   line-height: 1;
   letter-spacing: -0.04em;
   text-wrap: balance;
-  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.6);
+  text-shadow: var(--g-stage-title-shadow);
   animation: g-title-in 0.9s var(--ease-out) both;
 }
 @keyframes g-title-in {
@@ -1282,13 +1387,13 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
   padding: 5px;
   border-radius: 10px;
   text-align: left;
-  background: rgba(5, 5, 8, 0.4);
+  background: rgb(var(--g-stage-rgb) / 0.4);
   border: 1px solid var(--g-line);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   transition: background 0.2s, border-color 0.2s;
 }
-.g-stage-next-item:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--g-line-2); }
+.g-stage-next-item:hover { background: var(--g-fill-2); border-color: var(--g-line-2); }
 .g-stage-next-item > span { display: grid; min-width: 0; }
 .g-stage-next-title { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .g-stage-next-artist { font-size: 11.5px; color: var(--g-ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1310,9 +1415,10 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(ellipse 55% 70% at 30% 50%, rgba(5, 5, 7, 0.82), rgba(5, 5, 7, 0.4) 70%, rgba(5, 5, 7, 0.2)),
-    radial-gradient(ellipse 30% 50% at 78% 50%, rgba(5, 5, 7, 0.65), transparent);
+    radial-gradient(ellipse 55% 70% at 30% 50%, rgb(var(--g-bg-rgb) / 0.82), rgb(var(--g-bg-rgb) / 0.4) 70%, rgb(var(--g-bg-rgb) / 0.2)),
+    radial-gradient(ellipse 30% 50% at 78% 50%, rgb(var(--g-bg-rgb) / 0.65), transparent);
 }
+.g-connect-theme { position: fixed; top: 18px; right: 18px; z-index: 2; }
 .g-connect-inner {
   position: relative;
   display: grid;
@@ -1348,11 +1454,11 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
   gap: 14px;
   padding: 28px;
   border-radius: 26px;
-  background: rgba(10, 10, 15, 0.72);
+  background: var(--g-form);
   border: 1px solid var(--g-line);
   -webkit-backdrop-filter: blur(30px) saturate(1.4);
   backdrop-filter: blur(30px) saturate(1.4);
-  box-shadow: 0 40px 100px -30px rgba(0, 0, 0, 0.8);
+  box-shadow: var(--g-shadow-panel);
 }
 .g-field { display: grid; gap: 7px; }
 .g-field span {
@@ -1367,19 +1473,39 @@ button.g-artist-link:hover { text-decoration: underline; text-underline-offset: 
   padding: 0 14px;
   border-radius: 12px;
   border: 1px solid var(--g-line-2);
-  background: rgba(255, 255, 255, 0.04);
+  background: rgb(var(--g-tint) / 0.04);
   color: var(--g-ink);
   font: inherit;
   font-size: 15px;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
-.g-field input:focus { border-color: var(--g-ink-2); box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.07); }
-.g-connect-go { justify-content: center; margin-top: 8px; background: var(--g-ink); color: #08080c; }
-.g-connect-message { min-height: 18px; margin: 0; font-size: 13px; color: #8ff0b8; }
-.g-connect-message.is-error { color: #ff9a9a; }
+.g-field input:focus { border-color: var(--g-ink-2); box-shadow: 0 0 0 4px rgb(var(--g-tint) / 0.07); }
+.g-connect-go { justify-content: center; margin-top: 8px; background: var(--g-ink); color: var(--g-on-ink); }
+.g-connect-message { min-height: 18px; margin: 0; font-size: 13px; color: var(--g-good); }
+.g-connect-message.is-error { color: var(--g-bad); }
 .g-connect-alt { margin: 0; font-size: 12.5px; color: var(--g-ink-3); }
 .g-connect-alt a { color: var(--g-ink-2); }
+
+/* ── Light: what the tokens can't say ─────────────────────── */
+/* The wordmark's lights, deepened so they read on paper. */
+html[data-theme='light'] .g-wordmark-grid i:nth-child(1) { --c: #e8365c; }
+html[data-theme='light'] .g-wordmark-grid i:nth-child(2) { --c: #f08a12; }
+html[data-theme='light'] .g-wordmark-grid i:nth-child(3) { --c: #e9bf16; }
+html[data-theme='light'] .g-wordmark-grid i:nth-child(4) { --c: #a24ff0; }
+html[data-theme='light'] .g-wordmark-grid i:nth-child(6) { --c: #18c47a; }
+html[data-theme='light'] .g-wordmark-grid i:nth-child(7) { --c: #ea4fbf; }
+html[data-theme='light'] .g-wordmark-grid i:nth-child(8) { --c: #5263f0; }
+html[data-theme='light'] .g-wordmark-grid i:nth-child(9) { --c: #1aaee0; }
+/* Art on a light wall tints the room rather than lighting it: softer, and lifted so dark covers don't muddy the paper. */
+html[data-theme='light'] .g-wash-art { opacity: 0.42; filter: blur(110px) saturate(1.5) brightness(1.15); }
+html[data-theme='light'] .g-hero-glow { opacity: 0.5; filter: blur(60px) saturate(1.5); }
+html[data-theme='light'] .g-dock-glow { opacity: 0.4; }
+html[data-theme='light'] .g-stage-glow { opacity: 0.7; }
+html[data-theme='light'] .g-stage-field { opacity: 0.85; }
+/* The playing tile's halo, more of a ring and less of a glow, which would only gray the paper. */
+html[data-theme='light'] .g-beacon { box-shadow: 0 0 0 2px var(--p-accent), 0 10px 30px -6px color-mix(in oklab, var(--p-accent) 55%, transparent); }
+html[data-theme='light'] .g-beacon::after { box-shadow: 0 0 0 6px color-mix(in oklab, var(--p-accent) 22%, transparent); }
 
 /* ── Narrower desktops: six arrangements and the filters have to share one bar ── */
 @media (max-width: 1600px) {

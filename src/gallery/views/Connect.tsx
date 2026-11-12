@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { connect } from '../../core/connect';
 import { useStore } from '../../core/store';
+import { switchTheme, useLight } from '../theme';
+import { MoonIcon, SunIcon } from '../widgets/Icons';
 import { PixelField } from '../widgets/pixelField';
 
 /** The way in: a wall of drifting light, waiting for a library to show. */
@@ -12,6 +14,7 @@ export function Connect() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; isError: boolean } | null>(null);
+  const light = useLight();
 
   useEffect(() => {
     const field = new PixelField(canvasRef.current!, { demo: true });
@@ -37,6 +40,9 @@ export function Connect() {
     <main className="g-connect">
       <canvas ref={canvasRef} className="g-connect-field" aria-hidden="true" />
       <div className="g-connect-vignette" aria-hidden="true" />
+      <button className="g-icon-btn g-connect-theme" onClick={switchTheme} aria-label={light ? 'Dark gallery' : 'Light gallery'} title={light ? 'Dark gallery' : 'Light gallery'}>
+        {light ? <MoonIcon size={18} /> : <SunIcon size={18} />}
+      </button>
       <div className="g-connect-inner">
         <div className="g-connect-brand">
           <span className="g-wordmark-grid is-big" aria-hidden="true">{Array.from({ length: 9 }, (_, i) => <i key={i} />)}</span>

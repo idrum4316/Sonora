@@ -4,9 +4,10 @@ import { useStore } from '../../core/store';
 import { search3, type SearchResult } from '../../core/subsonic';
 import { ARRANGEMENTS, genresOf, useGallery } from '../library';
 import { artistPath, back, go, type Route } from '../router';
+import { switchTheme, useLight } from '../theme';
 import { atlasApi } from '../wall/Atlas';
 import { Cover } from '../widgets/Cover';
-import { BackIcon, CloseIcon, GridIcon, HeartIcon, MenuIcon, PlayIcon, SearchIcon, StackIcon, TourIcon, UnheardIcon } from '../widgets/Icons';
+import { BackIcon, CloseIcon, GridIcon, HeartIcon, MenuIcon, MoonIcon, PlayIcon, SearchIcon, StackIcon, SunIcon, TourIcon, UnheardIcon } from '../widgets/Icons';
 
 /** The wordmark: a 3×3 grid of lights, one per arrangement of a cover's colors. */
 export function Wordmark({ onClick }: { onClick?: () => void }) {
@@ -227,6 +228,7 @@ function AppMenu() {
   const ref = useRef<HTMLDivElement>(null);
   const config = useStore(s => s.config);
   const clearConfig = useStore(s => s.clearConfig);
+  const light = useLight();
 
   useEffect(() => {
     if (!open) return;
@@ -244,6 +246,10 @@ function AppMenu() {
             <span className="g-eyebrow">Connected</span>
             <span className="g-mono">{config?.username}@{config?.serverUrl.replace(/^https?:\/\//, '')}</span>
           </div>
+          <button role="menuitem" onClick={switchTheme}>
+            <span>{light ? 'Dark gallery' : 'Light gallery'}</span>
+            {light ? <MoonIcon size={17} /> : <SunIcon size={17} />}
+          </button>
           <a href="/" role="menuitem">Classic interface</a>
           <a href="/terminal/" role="menuitem">Terminal interface</a>
           <div className="g-menu-keys">

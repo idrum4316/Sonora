@@ -480,11 +480,11 @@ export function generatedSample(seed: string): ArtSample {
 
 // ── Palettes ─────────────────────────────────────────────────────────────────
 export interface Palette {
-  /** Bright, legible on the dark gallery. */
+  /** Legible on the gallery's ground: bright on the dark one, deep on the light one. */
   accent: string;
-  /** Deep, for washes behind content. */
+  /** For washes behind content: deep on the dark ground, a pale tint on the light one. */
   deep: string;
-  /** A second deep color, for gradients. */
+  /** A second wash color, for gradients. */
   deep2: string;
   /** Up to four distinct colors straight from the art, for swatches. */
   swatches: string[];
@@ -497,13 +497,26 @@ export const NEUTRAL_PALETTE: Palette = {
   swatches: [],
 };
 
+export const NEUTRAL_LIGHT_PALETTE: Palette = {
+  accent: '#3d3a4a',
+  deep: '#e6e3ec',
+  deep2: '#efede8',
+  swatches: [],
+};
+
+/** Lightness of each palette color on each ground. The light accent is dark enough for text on paper, and for white text on it. */
+const TONES = {
+  dark: { accent: 0.82, deep: 0.26, deep2: 0.18, wash: 0.09 },
+  light: { accent: 0.5, deep: 0.9, deep2: 0.94, wash: 0.06 },
+};
+
 function hexToLab(hex: string): [number, number, number] {
   const n = parseInt(hex, 16);
   return srgbToOklab((n >> 16) & 255, (n >> 8) & 255, n & 255);
 }
 
-export function paletteOf(sample: ArtSample | null): Palette {
-  if (!sample) return NEUTRAL_PALETTE;
+export function paletteOf(sample: ArtSample | null, light = false): Palette {
+  if (!sample) return light ? NEUTRAL_LIGHT_PALETTE : NEUTRAL_PALETTE;
   const labs = sample.grid.map(hexToLab);
 
   // The most different colors in the grid, picked greedily from the most colorful one.
@@ -525,10 +538,11 @@ export function paletteOf(sample: ArtSample | null): Palette {
   const gray = sample.c < 0.025;
   const second = labs[picked[1] ?? picked[0]];
   const h2 = (Math.atan2(second[2], second[1]) * 180 / Math.PI + 360) % 360;
+  const t = light ? TONES.light : TONES.dark;
   return {
-    accent: lchToHex({ l: 0.82, c: gray ? 0.02 : chroma, h: sample.h }),
-    deep: lchToHex({ l: 0.26, c: gray ? 0.01 : Math.min(0.09, chroma), h: sample.h }),
-    deep2: lchToHex({ l: 0.18, c: gray ? 0.01 : Math.min(0.08, chroma), h: h2 }),
+    accent: lchToHex({ l: t.accent, c: gray ? 0.02 : chroma, h: sample.h }),
+    deep: lchToHex({ l: t.deep, c: gray ? 0.01 : Math.min(t.wash, chroma), h: sample.h }),
+    deep2: lchToHex({ l: t.deep2, c: gray ? 0.01 : Math.min(t.wash - 0.01, chroma), h: h2 }),
     swatches: picked.map(i => `#${sample.grid[i]}`),
   };
 }

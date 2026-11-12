@@ -7,6 +7,7 @@ import {
   albumAtlasId, albumSample, ARRANGEMENTS, countsPlays, LISTENING_ARRANGEMENTS, listeningLine, litMask, useGallery,
 } from '../library';
 import { albumPath, artistPath, go, launch } from '../router';
+import { useLight } from '../theme';
 import { Mosaic } from '../widgets/Cover';
 import { FitIcon, MinusIcon, PlayIcon, PlusIcon, TargetIcon } from '../widgets/Icons';
 import { tileRadius, WallEngine } from './engine';
@@ -40,6 +41,7 @@ export function Atlas({ active }: { active: boolean }) {
   const touring = useGallery(s => s.touring);
   const locateTick = useGallery(s => s.locateTick);
   const sampleVersion = useSamples(s => s.version);
+  const light = useLight();
   const blocked = useSamples(s => s.blocked);
   const playingAlbumId = useStore(s => s.currentTrack?.albumId);
 
@@ -118,10 +120,10 @@ export function Atlas({ active }: { active: boolean }) {
   useEffect(() => {
     engineRef.current?.setTiles(albums.map(a => {
       const s = albumSample(a);
-      return { coverArt: a.coverArt, atlasId: albumAtlasId(a), glow: s ? paletteOf(s).accent : undefined };
+      return { coverArt: a.coverArt, atlasId: albumAtlasId(a), glow: s ? paletteOf(s, light).accent : undefined };
     }));
     engineRef.current?.requestDraw();
-  }, [albums, sampleVersion]);
+  }, [albums, sampleVersion, light]);
 
   const lastResort = useRef(0);
   const laidOut = useRef<{ arrangement: string; library: string } | null>(null);
@@ -322,7 +324,7 @@ export function Atlas({ active }: { active: boolean }) {
 
 function TourCard({ album }: { album: Album }) {
   const sample = getSample(album.coverArt);
-  const palette = paletteOf(sample);
+  const palette = paletteOf(sample, useLight());
   const playAlbum = useStore(s => s.playAlbum);
   return (
     <div className="g-tour-inner" style={{ '--p-accent': palette.accent } as CSSProperties}>

@@ -54,3 +54,6 @@ export const MenuIcon = (p: IconProps) => <Svg {...p}><circle cx="5.5" cy="12" r
 /** A note with a slash: music not heard yet. */
 export const UnheardIcon = (p: IconProps) => <Svg {...p}><path d="M10 17.5V5.5l8-1.5v10" /><circle cx="7.5" cy="17.5" r="2.5" /><circle cx="15.5" cy="14" r="2.5" /><path d="M4 4l16 16" /></Svg>;
 export const SparkIcon = (p: IconProps) => <Svg {...p}><path d="M12 3v5M12 16v5M3 12h5M16 12h5M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18" /></Svg>;
+export const SunIcon = (p: IconProps) => <Svg {...p}><circle cx="12" cy="12" r="4" /><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6" /></Svg>;
+export const MoonIcon = (p: IconProps) => <Svg {...p}><path d="M19.5 14.6A8 8 0 0 1 9.4 4.5a8 8 0 1 0 10.1 10.1z" /></Svg>;
+

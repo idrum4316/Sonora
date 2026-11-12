@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '../core/store';
 import { ensureSample, getSample, paletteOf, useSamples, type Palette } from './art';
+import { useLight } from './theme';
 
-/** The colors of a cover, read on demand. Neutral until they're known, and when they can't be read. */
+/**
+ * The colors of a cover, fitted to the theme, read on demand. Neutral until they're known, and when they
+ * can't be read.
+ */
 export function usePalette(coverArt: string | undefined): Palette {
   // Re-render as samples arrive, then pick this cover's out of them.
   useSamples(s => s.version);
@@ -12,8 +16,9 @@ export function usePalette(coverArt: string | undefined): Palette {
     void ensureSample(coverArt).then(() => { if (live) setLoaded(n => n + 1); });
     return () => { live = false; };
   }, [coverArt]);
+  const light = useLight();
   const sample = getSample(coverArt);
-  return useMemo(() => paletteOf(sample), [sample]);
+  return useMemo(() => paletteOf(sample, light), [sample, light]);
 }
 
 /** The playing track's colors. */

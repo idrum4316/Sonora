@@ -1,5 +1,6 @@
 import { readDecorative, readLevels } from '../../core/audioTap';
 import { reducedMotion } from '../motion';
+import { isLight, onThemeChange } from '../theme';
 
 /**
  * The cover art blown up into a wall of square lights that play the music.
@@ -51,6 +52,7 @@ export class PixelField {
   private frame = 0;
   private last = 0;
   private resizeObserver: ResizeObserver;
+  private stopThemeSync: () => void;
   private demoHue = Math.random() * 360;
   private disposed = false;
   private wantedArt = '';
@@ -60,6 +62,8 @@ export class PixelField {
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(canvas);
     this.resize();
+    // A still wall has stopped drawing, so repaint it in the new theme.
+    this.stopThemeSync = onThemeChange(() => this.wake());
     if (opts.demo) this.setPlaying(true);
   }
 
@@ -67,6 +71,7 @@ export class PixelField {
     this.disposed = true;
     cancelAnimationFrame(this.frame);
     this.resizeObserver.disconnect();
+    this.stopThemeSync();
   }
 
   setArt(url: string | null) {
@@ -153,22 +158,26 @@ export class PixelField {
     ctx.drawImage(img, (this.cols - dw) / 2, (this.rows - dh) / 2, dw, dh);
   }
 
-  /** Slow-moving fields of color, for the demo. */
+  /**
+   * Slow-moving fields of color, for the demo. On the dark ground they add up like colored light; on the
+   * light one they multiply like inks, so paper shows where none fall.
+   */
   private paintDemo(now: number) {
     const ctx = this.src.getContext('2d')!;
     const t = now / 1000;
     const { cols, rows } = this;
-    ctx.fillStyle = '#07070b';
+    const light = isLight();
+    ctx.fillStyle = light ? '#f3f1ec' : '#07070b';
     ctx.fillRect(0, 0, cols, rows);
-    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalCompositeOperation = light ? 'multiply' : 'lighter';
     for (let k = 0; k < 4; k++) {
       const hue = (this.demoHue + k * 70 + t * 6) % 360;
       const x = cols * (0.5 + 0.42 * Math.sin(t * (0.07 + k * 0.023) + k * 2.1));
       const y = rows * (0.5 + 0.4 * Math.cos(t * (0.05 + k * 0.019) + k * 1.3));
       const r = Math.max(cols, rows) * (0.42 + 0.1 * Math.sin(t * 0.2 + k));
       const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-      g.addColorStop(0, `hsla(${hue}, 85%, 58%, 0.9)`);
-      g.addColorStop(1, `hsla(${hue}, 85%, 50%, 0)`);
+      g.addColorStop(0, light ? `hsla(${hue}, 80%, 66%, 0.85)` : `hsla(${hue}, 85%, 58%, 0.9)`);
+      g.addColorStop(1, `hsla(${hue}, 85%, ${light ? 66 : 50}%, 0)`);
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, cols, rows);
     }

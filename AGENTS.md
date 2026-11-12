@@ -87,7 +87,8 @@ sonora/
     │   ├── views/Shell.tsx       # The screen: header, panes, player, status line
     │   └── widgets/              # Pane, VirtualList, ItemRow, PlayerLine, Spectrum, Glyphs, DialogOverlay, …
     └── gallery/                  # Gallery UI
-        ├── main.tsx              # Entry point: imports styles, starts sync and the audio tap, renders App
+        ├── main.tsx              # Entry point: imports styles, starts theme and audio sync and the audio tap, renders App
+        ├── theme.ts              # Follows the shared dark/light theme; switchTheme, isLight, onThemeChange
         ├── App.tsx               # Shows the connect screen or the shell
         ├── router.ts             # Hash routes (#/album/id, #/now, …) and shared-element "flights"
         ├── library.ts            # Local store: every album, arrangement, search and filters, tour
@@ -265,7 +266,8 @@ docker compose up -d
 
 ### Gallery UI Patterns
 - The art is the interface. Covers stay square and whole, with text beside or below them, never over them. Their corners round a little, more on bigger art: `--r-*` and `--cover-r` in `gallery.css`, and `tileRadius` in `wall/engine.ts` for atlas tiles, which stay square while they're too small to show it It's a digital, screen-lit look: pixels, grids and light. No LP or vinyl imagery
-- Always dark. It doesn't follow the theme or accent settings: color comes from the art. `usePalette` turns a cover into `--p-accent`, `--p-deep` and `--p-deep2`, and views set them with `paletteStyle`. They're registered with `@property`, so they fade as covers change
+- Dark or light, following the shared `theme` setting (`theme.ts`; its menu and connect screen can switch it). Dark, covers glow; light, it's a white wall and covers cast soft shadows in their own color. It ignores the accent setting: color comes from the art. `usePalette` turns a cover into `--p-accent`, `--p-deep` and `--p-deep2`, fitted to the theme (`paletteOf` in `art.ts`: a bright accent and deep washes on dark, a deep accent and pale washes on light), and views set them with `paletteStyle`. They're registered with `@property`, so they fade as covers change
+- Every color that differs between themes is a `--g-*` token at the top of `gallery.css`, overridden under `html[data-theme='light']`. Use those, not raw colors. Canvases can't read them, so `wall/engine.ts` and `widgets/pixelField.ts` keep their own per-theme colors and repaint through `onThemeChange`
 - The atlas (`wall/engine.ts`) draws every album on one canvas. Far out, a tile is its 3×3 color grid from the mosaic atlas in `art.ts`; closer, the cover at the size the screen needs. It only draws while something moves, so an idle atlas costs nothing
 - Color samples come from 40px cover fetches with CORS, a size no `<img>` uses, so they never collide with a cached copy fetched without CORS. They're cached in localStorage (`sonora-gallery-colors-v1`). If the server sends no CORS headers for art, Spectrum can't sort and says so, and everything else still works
 - Views other than the atlas open over it in `.g-layer`, so it keeps its place. Opening from a cover calls `openFrom` or `launch`, and `HeroArt` flies the hero in from where the cover was

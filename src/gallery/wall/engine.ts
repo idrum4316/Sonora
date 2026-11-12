@@ -2,6 +2,7 @@ import { atlas, atlasSlot, onImageReady, peekImage, TILE_SIZES, wantImage } from
 import type { Layout } from '../layouts';
 import { cellKey } from '../layouts';
 import { reducedMotion } from '../motion';
+import { isLight, onThemeChange } from '../theme';
 
 /**
  * The atlas: every album as a tile on one endless canvas, panned and zoomed like a map.
@@ -66,6 +67,38 @@ const easeOutBack = (t: number) => {
 };
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
+/** What the canvas paints itself, by theme. Covers glow on the dark wall and cast shadows on the light one. */
+interface Ink {
+  /** A tile whose colors aren't known yet. */
+  empty: string;
+  /** The plate behind a raised tile, which casts its glow or shadow. */
+  plate: string;
+  /** A raised tile's glow or shadow when its colors aren't known. */
+  glow: string;
+  /** How far a raised tile's shadow falls, as a fraction of its size. */
+  drop: number;
+  label: string;
+  minorLabel: string;
+}
+
+const DARK_INK: Ink = {
+  empty: '#17171f',
+  plate: '#0b0b10',
+  glow: 'rgba(255, 255, 255, 0.5)',
+  drop: 0,
+  label: 'rgba(240, 238, 255, 0.34)',
+  minorLabel: 'rgba(240, 238, 255, 0.42)',
+};
+
+const LIGHT_INK: Ink = {
+  empty: '#e2dfd8',
+  plate: '#ffffff',
+  glow: 'rgba(40, 32, 24, 0.35)',
+  drop: 0.07,
+  label: 'rgba(28, 25, 36, 0.3)',
+  minorLabel: 'rgba(28, 25, 36, 0.48)',
+};
+
 /**
  * A tile's corner radius at a size in CSS pixels, close to the covers' radii elsewhere in the gallery.
  * Small tiles stay square: their corners would round off less than a pixel, and far out the library
@@ -120,6 +153,7 @@ export class WallEngine {
   private active = true;
   private disposers: (() => void)[] = [];
   private smoothing = true;
+  private ink: Ink = isLight() ? LIGHT_INK : DARK_INK;
 
   onHover: (index: number) => void = () => {};
   onOpen: (index: number, rect: Rect) => void = () => {};
@@ -133,6 +167,14 @@ export class WallEngine {
     resize.observe(canvas);
     this.disposers.push(() => resize.disconnect());
     this.disposers.push(onImageReady(() => this.requestDraw()));
+    // Repaints at once, so the theme's crossfade captures the new wall rather than the old one.
+    this.disposers.push(onThemeChange(light => {
+      this.ink = light ? LIGHT_INK : DARK_INK;
+      if (!this.active || !this.w) return;
+      cancelAnimationFrame(this.frame);
+      this.frame = 0;
+      this.draw(performance.now());
+    }));
 
     const on = <K extends keyof HTMLElementEventMap>(type: K, fn: (e: HTMLElementEventMap[K]) => void, opts?: AddEventListenerOptions) => {
       canvas.addEventListener(type, fn as EventListener, opts);
@@ -619,7 +661,7 @@ export class WallEngine {
       this.setSmoothing(false);
       ctx.drawImage(atlas, slot.x, slot.y, 3, 3, x, y, s, s);
     } else {
-      ctx.fillStyle = '#17171f';
+      ctx.fillStyle = this.ink.empty;
       ctx.fillRect(x, y, s, s);
     }
   }
@@ -655,7 +697,8 @@ export class WallEngine {
 
     this.drawLabels();
 
-    // The spotlit and hovered tiles go on top, raised and glowing in their own color.
+    // The spotlit and hovered tiles go on top, raised and glowing in their own color, or on the light
+    // wall, lifted off it over a shadow of that color.
     for (const i of spot === this.hover ? [spot] : [spot, this.hover]) {
       if (i < 0 || i >= this.n) continue;
       const size = this.curSize[i];
@@ -667,14 +710,16 @@ export class WallEngine {
       ctx.save();
       ctx.globalAlpha = Math.max(0.35, this.lit[i]);
       // The glow comes from a rounded plate behind the tile, since the tile itself is clipped to its corners.
-      ctx.shadowColor = this.tiles[i].glow ?? 'rgba(255,255,255,0.5)';
+      ctx.shadowColor = this.tiles[i].glow ?? this.ink.glow;
       ctx.shadowBlur = Math.min(i === spot ? 90 : 60, 8 + s * 0.35);
-      ctx.fillStyle = '#0b0b10';
+      ctx.shadowOffsetY = s * this.ink.drop;
+      ctx.fillStyle = this.ink.plate;
       ctx.beginPath();
       ctx.roundRect(cx - s / 2, cy - s / 2, s, s, tileRadius(s));
       ctx.fill();
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
       this.drawTile(i, cx - s / 2, cy - s / 2, s);
       ctx.restore();
       this.smoothing = ctx.imageSmoothingEnabled;
@@ -698,10 +743,10 @@ export class WallEngine {
       ctx.textAlign = label.align;
       if (label.major) {
         ctx.font = `700 ${px}px "Bricolage Grotesque", system-ui, sans-serif`;
-        ctx.fillStyle = 'rgba(240, 238, 255, 0.34)';
+        ctx.fillStyle = this.ink.label;
       } else {
         ctx.font = `500 ${px}px "Geist Mono", ui-monospace, monospace`;
-        ctx.fillStyle = 'rgba(240, 238, 255, 0.42)';
+        ctx.fillStyle = this.ink.minorLabel;
       }
       ctx.fillText(label.text, sx, sy);
     }

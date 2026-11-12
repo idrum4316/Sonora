@@ -7,6 +7,15 @@
     <meta name="description" content="Sonora Gallery — a visual tour of your music library" />
     <meta name="theme-color" content="#050507" />
     <title>Sonora Gallery</title>
+    <script>
+      // The stored theme, before the first paint, so a light gallery doesn't flash dark while it loads.
+      try {
+        if (JSON.parse(localStorage.getItem('sonora-store')).state.theme === 'light') {
+          document.documentElement.dataset.theme = 'light';
+          document.querySelector('meta[name="theme-color"]').content = '#f3f1ec';
+        }
+      } catch { /* dark, the default */ }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,300..800&family=Geist:wght@300..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet" />

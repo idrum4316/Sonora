@@ -4,9 +4,11 @@ import './gallery.css';
 import { startAudioSync } from '../core/audioSync';
 import { startAudioTap } from '../core/audioTap';
 import { App } from './App';
+import { startThemeSync } from './theme';
 
-// The gallery has its own look, always dark, with color taken from the art, so it skips the
-// theme and accent sync the other UIs use.
+// The gallery follows the shared dark or light theme, but takes its color from the art, so it skips
+// the accent sync the other UIs use.
+startThemeSync();
 startAudioSync();
 startAudioTap();
 
