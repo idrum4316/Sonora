@@ -6,9 +6,9 @@ import type { Song } from '../../core/subsonic';
 import { coverUrl, type ArtSample, type Palette } from '../art';
 import { reducedMotion } from '../motion';
 import { albumPath, artistPath, go, land } from '../router';
-import { useUi } from '../ui';
+import { pickForSong, useUi } from '../ui';
 import { Cover, LiveBars, Mosaic } from '../widgets/Cover';
-import { AddIcon, BackIcon, ForwardIcon, HeartIcon, NextUpIcon, PlayIcon } from '../widgets/Icons';
+import { AddIcon, BackIcon, ForwardIcon, HeartIcon, NextUpIcon, PlayIcon, PlaylistAddIcon, PlaylistRemoveIcon } from '../widgets/Icons';
 
 /**
  * A view's hero art. If it was opened from a cover, it starts where that cover was and flies into place,
@@ -96,9 +96,13 @@ interface TrackListProps {
   songs: Song[];
   /** Shows each track's own cover and album, for lists that span albums. */
   mixed?: boolean;
+  /** Offers to take a track out of the list, for playlists you can edit. Gets the track's position. */
+  onRemove?: (song: Song, index: number) => void;
+  /** Holds the remove buttons while a removal is under way, since positions shift once it lands. */
+  removing?: boolean;
 }
 
-export function TrackList({ songs, mixed }: TrackListProps) {
+export function TrackList({ songs, mixed, onRemove, removing }: TrackListProps) {
   const currentId = useStore(s => s.currentTrack?.id);
   const isPlaying = useStore(s => s.isPlaying);
   const { playOrToggle, playNext, addToQueue } = useStore.getState();
@@ -135,6 +139,12 @@ export function TrackList({ songs, mixed }: TrackListProps) {
                     )}
                     <button className="g-icon-btn" onClick={() => { playNext(song); showToast(`Playing next: ${song.title}`); }} title="Play next"><NextUpIcon size={16} /></button>
                     <button className="g-icon-btn" onClick={() => { addToQueue(song); showToast(`Added to queue: ${song.title}`); }} title="Add to queue"><AddIcon size={16} /></button>
+                    <button className="g-icon-btn" onClick={() => pickForSong(song)} title="Add to playlist" aria-haspopup="dialog"><PlaylistAddIcon size={16} /></button>
+                    {onRemove && (
+                      <button className="g-icon-btn" onClick={() => onRemove(song, index)} disabled={removing} title="Remove from playlist">
+                        <PlaylistRemoveIcon size={16} />
+                      </button>
+                    )}
                     <button
                       className={`g-icon-btn${isStarred ? ' is-on' : ''}`}
                       title={isStarred ? 'Unfavorite' : 'Favorite'}

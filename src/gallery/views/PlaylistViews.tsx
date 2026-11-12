@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fmtDuration, plural } from '../../core/format';
 import { useStore } from '../../core/store';
-import { getPlaylist, getPlaylists, type Playlist, type PlaylistDetail } from '../../core/subsonic';
+import { getPlaylist, getPlaylists, removeFromPlaylist, type Playlist, type PlaylistDetail, type Song } from '../../core/subsonic';
 import { paletteStyle, usePalette } from '../hooks';
 import { playlistPath } from '../router';
 import { useUi } from '../ui';
 import { Cover, CoverCard } from '../widgets/Cover';
 import { AddIcon, PlayIcon, ShuffleIcon } from '../widgets/Icons';
+import { ownsPlaylist } from '../widgets/PlaylistPicker';
 import { displayClass, HeroArt, shuffled, TrackList, Wash } from './parts';
 
 export function PlaylistsView() {
   const config = useStore(s => s.config);
   const playPlaylist = useStore(s => s.playPlaylist);
+  const playlistVersion = useStore(s => s.playlistVersion);
   const [playlists, setPlaylists] = useState<Playlist[] | null>(null);
 
   useEffect(() => {
@@ -20,7 +22,7 @@ export function PlaylistsView() {
     getPlaylists(config).then(p => live && setPlaylists(p)).catch(() => live && setPlaylists([]));
     document.title = 'Playlists · Sonora Gallery';
     return () => { live = false; };
-  }, [config]);
+  }, [config, playlistVersion]);
 
   const lead = playlists?.find(p => p.coverArt)?.coverArt;
   const palette = usePalette(lead);
@@ -57,11 +59,14 @@ export function PlaylistsView() {
 
 export function PlaylistView({ id }: { id: string }) {
   const config = useStore(s => s.config);
+  const playlistVersion = useStore(s => s.playlistVersion);
   const { playTrack, addMultipleToQueue } = useStore.getState();
   const showToast = useUi(s => s.showToast);
   const [playlist, setPlaylist] = useState<PlaylistDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [removing, setRemoving] = useState(false);
 
+  // Fetched again whenever a playlist changes, as adding to this one from its own tracks would.
   useEffect(() => {
     if (!config) return;
     let live = true;
@@ -69,7 +74,32 @@ export function PlaylistView({ id }: { id: string }) {
       .then(p => { if (live) { setPlaylist(p); document.title = `${p.name} · Sonora Gallery`; } })
       .catch(e => live && setError(e instanceof Error ? e.message : 'Could not load this playlist'));
     return () => { live = false; };
-  }, [config, id]);
+  }, [config, id, playlistVersion]);
+
+  const editable = !!playlist && ownsPlaylist(playlist, config?.username);
+
+  /**
+   * Tracks are removed by position, and this list may have been loaded a while ago. So check the
+   * position still holds this song first, or a playlist edited elsewhere would lose the wrong track.
+   */
+  const remove = async (song: Song, index: number) => {
+    if (!config || !playlist || removing) return;
+    setRemoving(true);
+    try {
+      const current = await getPlaylist(config, id);
+      if (current.entry?.[index]?.id === song.id) {
+        await removeFromPlaylist(config, id, [index]);
+        showToast(`Removed ${song.title} from ${playlist.name}`);
+      } else {
+        showToast(`${playlist.name} changed on the server, so nothing was removed`);
+      }
+    } catch (e) {
+      showToast(`Couldn't remove ${song.title}: ${e instanceof Error ? e.message : 'the server said no'}`);
+    }
+    // Reloads this list, with the server's positions, and the playlists page's counts.
+    useStore.getState().bumpPlaylistVersion();
+    setRemoving(false);
+  };
 
   const songs = playlist?.entry ?? [];
   // The playlist pictured by the albums it draws from, nine at most.
@@ -88,7 +118,7 @@ export function PlaylistView({ id }: { id: string }) {
   const grid = covers.length >= 9 ? 9 : covers.length >= 4 ? 4 : 0;
   const palette = usePalette(covers[0] ?? playlist?.coverArt);
 
-  if (error) return <div className="g-page"><p className="g-page-error">{error}</p></div>;
+  if (error && !playlist) return <div className="g-page"><p className="g-page-error">{error}</p></div>;
 
   return (
     <div className="g-page g-album-page" style={paletteStyle(palette)}>
@@ -116,7 +146,7 @@ export function PlaylistView({ id }: { id: string }) {
             <button className="g-pill is-big" disabled={!songs.length} onClick={() => { const s = shuffled(songs); playTrack(s[0], s, 0); }}><ShuffleIcon size={18} /> Shuffle</button>
             <button className="g-pill is-big" disabled={!songs.length} onClick={() => { addMultipleToQueue(songs); showToast(`Queued ${playlist?.name}`); }}><AddIcon size={18} /> Queue</button>
           </div>
-          {playlist ? <TrackList songs={songs} mixed /> : <div className="g-tracks is-loading">{Array.from({ length: 8 }, (_, i) => <span key={i} />)}</div>}
+          {playlist ? <TrackList songs={songs} mixed onRemove={editable ? remove : undefined} removing={removing} /> : <div className="g-tracks is-loading">{Array.from({ length: 8 }, (_, i) => <span key={i} />)}</div>}
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@ import { Cover } from '../widgets/Cover';
 import { CloseIcon, CollapseIcon, ExpandIcon, GridIcon, QueueIcon, SparkIcon } from '../widgets/Icons';
 import { PixelCover } from '../widgets/PixelCover';
 import { PixelField } from '../widgets/pixelField';
-import { Progress, StarButton, Transport, Volume } from '../widgets/Player';
+import { PlaylistButton, Progress, StarButton, Transport, Volume } from '../widgets/Player';
 
 const FIELD_KEY = 'sonora-gallery-field';
 
@@ -129,7 +129,10 @@ export function Stage() {
           <div className="g-fades">
             <Progress className="is-stage" />
             <div className="g-stage-controls">
-              <StarButton size={20} />
+              <span className="g-stage-marks">
+                <StarButton size={20} />
+                <PlaylistButton size={20} />
+              </span>
               <Transport size="lg" />
               <Volume />
             </div>

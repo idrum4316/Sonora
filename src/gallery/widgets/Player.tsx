@@ -4,10 +4,10 @@ import { useStore } from '../../core/store';
 import { getSample } from '../art';
 import { useNowPalette, paletteStyle } from '../hooks';
 import { albumPath, artistPath, go } from '../router';
-import { useIsStarred, useUi } from '../ui';
+import { pickForSong, useIsStarred, useUi } from '../ui';
 import { Cover } from './Cover';
 import {
-  ExpandIcon, HeartIcon, NextIcon, PauseIcon, PlayIcon, PrevIcon, QueueIcon, RepeatIcon, ShuffleIcon, VolumeIcon,
+  ExpandIcon, HeartIcon, NextIcon, PauseIcon, PlayIcon, PlaylistAddIcon, PrevIcon, QueueIcon, RepeatIcon, ShuffleIcon, VolumeIcon,
 } from './Icons';
 
 /** Where the track is, as a bar you can click or drag along. */
@@ -124,6 +124,16 @@ export function StarButton({ size = 18 }: { size?: number }) {
   );
 }
 
+/** Adds the playing track to a playlist. */
+export function PlaylistButton({ size = 18 }: { size?: number }) {
+  const track = useStore(s => s.currentTrack);
+  return (
+    <button className="g-icon-btn" onClick={() => track && pickForSong(track)} disabled={!track} title="Add to playlist" aria-haspopup="dialog">
+      <PlaylistAddIcon size={size} />
+    </button>
+  );
+}
+
 /** The player that floats over every view but the stage. */
 export function Dock() {
   const track = useStore(s => s.currentTrack);
@@ -148,6 +158,7 @@ export function Dock() {
       </div>
       <div className="g-dock-side">
         <StarButton />
+        <PlaylistButton />
         <Volume />
         <button className={`g-icon-btn${queueOpen ? ' is-on' : ''}`} onClick={() => setQueueOpen(!queueOpen)} title="Queue (q)">
           <QueueIcon size={19} />

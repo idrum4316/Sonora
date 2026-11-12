@@ -9,7 +9,7 @@ import { useGallery } from '../library';
 import { albumPath } from '../router';
 import { useUi } from '../ui';
 import { CoverCard } from '../widgets/Cover';
-import { AddIcon, HeartIcon, PlayIcon, ShuffleIcon } from '../widgets/Icons';
+import { AddIcon, HeartIcon, PlayIcon, PlaylistAddIcon, ShuffleIcon } from '../widgets/Icons';
 import { ArtistLink, displayClass, Fingerprint, HeroArt, Shelf, shuffled, TrackList, Wash } from './parts';
 
 type AlbumDetail = Album & { song: Song[] };
@@ -20,6 +20,7 @@ export function AlbumView({ id }: { id: string }) {
   const library = useGallery(s => s.albums);
   const patchAlbum = useGallery(s => s.patchAlbum);
   const showToast = useUi(s => s.showToast);
+  const openPick = useUi(s => s.openPick);
   const { playTrack, addMultipleToQueue } = useStore.getState();
   const [detail, setDetail] = useState<AlbumDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +100,15 @@ export function AlbumView({ id }: { id: string }) {
             </button>
             <button className="g-pill is-big" disabled={!songs.length} onClick={() => { addMultipleToQueue(songs); showToast(`Queued ${album?.name}`); }} title="Add to queue">
               <AddIcon size={18} /> Queue
+            </button>
+            <button
+              className="g-icon-btn is-ring"
+              disabled={!songs.length}
+              onClick={() => album && openPick({ songs, title: album.name, subtitle: album.artist, coverArt: album.coverArt })}
+              title="Add album to playlist"
+              aria-haspopup="dialog"
+            >
+              <PlaylistAddIcon size={19} />
             </button>
             <button className={`g-icon-btn is-ring${isStarred ? ' is-on' : ''}`} onClick={toggleStar} aria-pressed={isStarred} title={isStarred ? 'Unfavorite album' : 'Favorite album'}>
               <HeartIcon size={19} filled={isStarred} />
