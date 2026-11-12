@@ -63,8 +63,9 @@ export function AddToPlaylistDialog({
   // Close on Escape
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
+    // Capture phase, so it still fires when a parent stops keydown bubbling
+    document.addEventListener('keydown', handleKey, true);
+    return () => document.removeEventListener('keydown', handleKey, true);
   }, [onClose]);
 
   // Close on backdrop click

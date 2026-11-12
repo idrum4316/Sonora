@@ -81,11 +81,12 @@ function TrackDropdown({ song, position, onClose }: {
     };
     const handleScroll = () => onClose();
 
-    document.addEventListener('keydown', handleKey);
+    // Capture phase: the wrapper below stops keydown from bubbling to the row
+    document.addEventListener('keydown', handleKey, true);
     document.addEventListener('mousedown', handleClick);
     document.addEventListener('scroll', handleScroll, true);
     return () => {
-      document.removeEventListener('keydown', handleKey);
+      document.removeEventListener('keydown', handleKey, true);
       document.removeEventListener('mousedown', handleClick);
       document.removeEventListener('scroll', handleScroll, true);
     };
@@ -95,8 +96,18 @@ function TrackDropdown({ song, position, onClose }: {
   const handleAddToQueue = () => { addToQueue(song); onClose(); };
   const handleAddToPlaylist = () => { setShowPlaylistDialog(true); };
 
+  // React synthetic events bubble through portals to the component tree's
+  // ancestors. The menu and dialog are rendered from inside a track row, so
+  // without this their clicks and keys would reach the row's play/pause handlers.
+  const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+
   return createPortal(
-    <>
+    <div
+      style={{ display: 'contents' }}
+      onClick={stop}
+      onKeyDown={stop}
+      onContextMenu={stop}
+    >
       <div
         ref={menuRef}
         className="track-menu"
@@ -118,7 +129,7 @@ function TrackDropdown({ song, position, onClose }: {
       {showPlaylistDialog && (
         <AddToPlaylistDialog songIds={[song.id]} onClose={onClose} />
       )}
-    </>,
+    </div>,
     document.body,
   );
 }
