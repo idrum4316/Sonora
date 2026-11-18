@@ -1,6 +1,7 @@
 import type { Song } from '../../core/subsonic';
 import { CoverArt, artClass } from './CoverArt';
 import { fmt } from '../../core/format';
+import { showsTrackArtist } from '../../core/library';
 import { IconPlay, IconPause, IconHeart } from './ui';
 import { TrackMoreButton } from './TrackMenu';
 
@@ -50,7 +51,7 @@ export function TrackRow({
   onRemove,
 }: TrackRowProps) {
   const isCurrentPlaying = isCurrentTrack && isPlaying;
-  const showArtist = alwaysShowArtist || song.artist !== albumArtist;
+  const showArtist = alwaysShowArtist || showsTrackArtist(song.artist, albumArtist);
 
   const rowClass = showAlbum ? 'pl-track-row' : 'track-row';
 

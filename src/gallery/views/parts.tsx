@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react';
 import { fmt } from '../../core/format';
-import { groupByDisc } from '../../core/library';
+import { groupByDisc, showsTrackArtist } from '../../core/library';
 import { useStore } from '../../core/store';
 import type { Song } from '../../core/subsonic';
 import { coverUrl, type ArtSample, type Palette } from '../art';
@@ -96,13 +96,15 @@ interface TrackListProps {
   songs: Song[];
   /** Shows each track's own cover and album, for lists that span albums. */
   mixed?: boolean;
+  /** The album's artist. A track names its own artist only when it differs from this. */
+  albumArtist?: string;
   /** Offers to take a track out of the list, for playlists you can edit. Gets the track's position. */
   onRemove?: (song: Song, index: number) => void;
   /** Holds the remove buttons while a removal is under way, since positions shift once it lands. */
   removing?: boolean;
 }
 
-export function TrackList({ songs, mixed, onRemove, removing }: TrackListProps) {
+export function TrackList({ songs, mixed, albumArtist, onRemove, removing }: TrackListProps) {
   const currentId = useStore(s => s.currentTrack?.id);
   const isPlaying = useStore(s => s.isPlaying);
   const { playOrToggle, playNext, addToQueue } = useStore.getState();
@@ -120,9 +122,16 @@ export function TrackList({ songs, mixed, onRemove, removing }: TrackListProps) 
             {disc.tracks.map(({ song, index }) => {
               const current = song.id === currentId;
               const isStarred = starred[song.id] ?? !!song.starred;
+              // A list that spans albums names every track's artist; an album's own list names it only
+              // when the track's artist differs from the album's.
+              const showArtist = mixed || showsTrackArtist(song.artist, albumArtist);
+              // The button's label replaces its contents for screen readers, so the artist the row
+              // shows has to be in the label too, the way the classic UI words it.
+              const artistLabel = showArtist && song.artist ? ` by ${song.artist}` : '';
+              const albumLabel = mixed && song.album ? `, from ${song.album}` : '';
               return (
                 <li key={`${song.id}-${index}`} className={`g-track${current ? ' is-current' : ''}`}>
-                  <button className="g-track-hit" onClick={() => playOrToggle(song, songs, index)} aria-label={`Play ${song.title}`}>
+                  <button className="g-track-hit" onClick={() => playOrToggle(song, songs, index)} aria-label={`Play ${song.title}${artistLabel}${albumLabel}`}>
                     <span className="g-track-n g-mono">
                       {current ? <LiveBars playing={isPlaying} /> : <span className="g-track-num">{String(mixed ? index + 1 : song.track ?? index + 1).padStart(2, '0')}</span>}
                       <PlayIcon size={14} className="g-track-play" />
@@ -130,7 +139,7 @@ export function TrackList({ songs, mixed, onRemove, removing }: TrackListProps) 
                     {mixed && <Cover coverArt={song.coverArt} size={96} className="g-track-art" />}
                     <span className="g-track-text">
                       <span className="g-track-title">{song.title}</span>
-                      {mixed && <span className="g-track-sub">{song.artist} · {song.album}</span>}
+                      {showArtist && <span className="g-track-sub">{mixed ? `${song.artist} · ${song.album}` : song.artist}</span>}
                     </span>
                   </button>
                   <span className="g-track-actions">

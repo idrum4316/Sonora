@@ -115,7 +115,7 @@ export function AlbumView({ id }: { id: string }) {
             </button>
           </div>
           <Fingerprint sample={sample} palette={palette} />
-          {detail ? <TrackList songs={songs} /> : <div className="g-tracks is-loading">{Array.from({ length: 8 }, (_, i) => <span key={i} />)}</div>}
+          {detail ? <TrackList songs={songs} albumArtist={detail.artist} /> : <div className="g-tracks is-loading">{Array.from({ length: 8 }, (_, i) => <span key={i} />)}</div>}
         </div>
       </div>
 

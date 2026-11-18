@@ -65,7 +65,7 @@ sonora/
     │   ├── artPalette.ts         # Colors from the playing track's cover art, for the album accent
     │   ├── connect.ts            # Normalizes the server URL and verifies the connection
     │   ├── format.ts             # fmt, fmtDuration
-    │   ├── library.ts            # groupByDisc
+    │   ├── library.ts            # groupByDisc, releaseType, showsTrackArtist
     │   ├── recentSearches.ts     # Recent search history
     │   └── tokens.css            # Design tokens (CSS vars), theme & accent overrides
     ├── classic/                  # Classic UI
@@ -311,6 +311,7 @@ docker compose up -d
 | `fmt`, `fmtDuration` | `src/core/format.ts` | Format durations; `fmt` expects whole seconds |
 | `groupByDisc` | `src/core/library.ts` | Group an album's songs by disc |
 | `releaseType` | `src/core/library.ts` | Call a release a Single, EP, or Album by its track count |
+| `showsTrackArtist` | `src/core/library.ts` | Whether a track names its own artist beside its title, since the album already names its artist |
 | `plural` | `src/core/format.ts` | "1 track", "2 tracks" |
 | `stripHtml` | `src/core/format.ts` | Plain text from a server's HTML, such as a biography |
 | `useSliderDrag` | `src/classic/utils/useSliderDrag.ts` | Handle slider drag interactions |

@@ -1,5 +1,13 @@
 import type { Song } from './subsonic';
 
+/**
+ * Whether a track names its own artist beside its title. A track's artist is worth naming when it
+ * differs from the album's, since the album already names its artist above the track list.
+ */
+export function showsTrackArtist(songArtist: string, albumArtist?: string): boolean {
+  return !!songArtist && songArtist !== albumArtist;
+}
+
 /** What to call a release, going by how many tracks it has. */
 export function releaseType(songCount: number): 'Single' | 'EP' | 'Album' {
   if (songCount <= 3) return 'Single';
